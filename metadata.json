@@ -1,0 +1,11 @@
+{
+  "description": "Integration GPaste with gnome-shell.", 
+  "name": "GPaste Integration", 
+  "shell-version": [
+    "3.8"
+  ], 
+  "url": "https://github.com/awamper/gpaste-integration", 
+  "uuid": "gpaste_integration@awamper.gmail.com",
+  "settings-schema": "org.gnome.shell.extensions.gpaste-integration",
+  "version": 0
+}

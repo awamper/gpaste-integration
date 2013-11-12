@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+
+  <schema path="/org/gnome/shell/extensions/gpaste-integration/" id="org.gnome.shell.extensions.gpaste-integration">
+
+    <key type="i" name="width-percents">
+        <default>50</default>
+    </key>
+
+    <key type="i" name="height-percents">
+        <default>100</default>
+    </key>
+
+  </schema>
+</schemalist>
