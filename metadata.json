@@ -1,5 +1,5 @@
 {
-  "description": "Integration GPaste with gnome-shell.", 
+  "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Delete> - delete element.\n<Up>/<Down> - select.", 
   "name": "GPaste Integration", 
   "shell-version": [
     "3.8"
