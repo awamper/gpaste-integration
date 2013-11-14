@@ -2,7 +2,7 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Tweener = imports.ui.tweener;
 const Signals = imports.signals;
-const Panel = imports.ui.panel;
+const Animation = imports.ui.animation;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -170,7 +170,7 @@ const GPasteItemsView = new Lang.Class({
         show_spinner = show_spinner || false;
 
         if(show_spinner) {
-            let spinner = new Panel.AnimatedIcon(
+            let spinner = new Animation.AnimatedIcon(
                 Utils.SPINNER_ICON,
                 Utils.SPINNER_ICON_SIZE
             );

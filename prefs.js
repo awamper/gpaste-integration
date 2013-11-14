@@ -196,19 +196,18 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         this.parent(params);
         this._settings = Utils.getSettings();
 
-        let notebook = new GPaste.SettingsUiNotebook();
-        notebook.fill();
-
+        let widget = new GPaste.SettingsUiWidget({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin: 12
+        });
+        let stack = widget.get_child_at(0, 1);
         let extension_page = this._get_extension_page();
-        notebook.append_page(extension_page.page, extension_page.label);
+        stack.add_titled(extension_page, "Extension", "Extension");
 
-        this.add(notebook);
+        this.add(widget);
     },
 
     _get_extension_page: function() {
-        let page_label = new Gtk.Label({
-            label: 'Extension'
-        });
         let page = new PrefsGrid(this._settings);
 
         let range_properties = {
@@ -228,11 +227,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             range_properties
         )
 
-        let result = {
-            label: page_label,
-            page: page
-        };
-        return result;
+        return page;
     }
 });
 

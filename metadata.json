@@ -1,10 +1,10 @@
 {
   "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Delete> - delete element.\n<Up>/<Down> - select.", 
-  "name": "GPaste Integration", 
+  "name": "GPaste Integration",
   "shell-version": [
-    "3.8"
-  ], 
-  "url": "https://github.com/awamper/gpaste-integration", 
+    "3.10"
+  ],
+  "url": "https://github.com/awamper/gpaste-integration",
   "uuid": "gpaste_integration@awamper.gmail.com",
   "settings-schema": "org.gnome.shell.extensions.gpaste-integration",
   "version": 0

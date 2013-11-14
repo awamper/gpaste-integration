@@ -1,3 +1,4 @@
+const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Panel = imports.ui.panel;
@@ -12,10 +13,17 @@ const Utils = Me.imports.utils;
 
 const GPasteIntegrationButton = new Lang.Class({
     Name: 'GPasteIntegrationButton',
-    Extends: PanelMenu.SystemStatusButton,
+    Extends: PanelMenu.Button,
 
     _init: function() {
-        this.parent(Utils.ICONS.indicator);
+        this.parent(0.0, "gpaste-integration");
+
+        let icon = new St.Icon({
+            icon_name: Utils.ICONS.indicator,
+            style_class: 'system-status-icon'
+        });
+        this.actor.add_child(icon);
+
         this._gpaste = new GPasteIntegration.GPasteIntegration();
         this._gpaste.client.connect(
             'tracking',
@@ -57,19 +65,13 @@ const GPasteIntegrationButton = new Lang.Class({
         }));
         this.menu.addMenuItem(track_item);
 
-        let clear_history_item = new PopupMenu.PopupImageMenuItem(
-            'Clear history',
-            Utils.ICONS.clear            
-        );
+        let clear_history_item = new PopupMenu.PopupMenuItem('Clear history');
         clear_history_item.connect('activate', Lang.bind(this, function() {
             this._gpaste.client.empty();
         }));
         this.menu.addMenuItem(clear_history_item);
 
-        let preferences_item = new PopupMenu.PopupImageMenuItem(
-            "Preferences",
-            Utils.ICONS.preferences
-        );
+        let preferences_item = new PopupMenu.PopupMenuItem("Preferences");
         preferences_item.connect("activate", Lang.bind(this, function() {
             Utils.launch_extension_prefs(Me.uuid);
             this._gpaste.hide(false);

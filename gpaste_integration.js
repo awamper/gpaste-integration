@@ -25,15 +25,6 @@ const GPasteIntegration = new Lang.Class({
 
     _init: function() {
         this._client = new GPaste.Client();
-        this._client.connect('changed', Lang.bind(this, function() {
-            this._items_view.set_display_mode(
-                GPasteItemsView.ViewMode.TEXT
-            );
-            this._update_history();
-
-            if(this.is_open) this._items_view.show_all();
-        }));
-        this._client.connect('show-history', Lang.bind(this, this.toggle));
 
         this.actor = new St.BoxLayout({
             reactive: true,
@@ -48,8 +39,11 @@ const GPasteIntegration = new Lang.Class({
             'key-release-event',
             Lang.bind(this, this._on_key_release_event)
         );
-        Main.layoutManager.panelBox.add_actor(this.actor);
-        this.actor.lower_bottom();
+        Main.uiGroup.add_actor(this.actor);
+        Main.uiGroup.set_child_below_sibling(
+            this.actor,
+            Main.layoutManager.panelBox
+        );
 
         this._table = new St.Table({
             style_class: 'gpaste-box',
@@ -125,6 +119,16 @@ const GPasteIntegration = new Lang.Class({
         this._delete_queue = [];
         this._resize();
         this._update_history();
+
+        this._client.connect('show-history', Lang.bind(this, this.toggle));
+        this._client.connect('changed', Lang.bind(this, function() {
+            this._items_view.set_display_mode(
+                GPasteItemsView.ViewMode.TEXT
+            );
+            this._update_history();
+
+            if(this.is_open) this._items_view.show_all();
+        }));
     },
 
     _on_item_clicked: function(object, button, item) {
@@ -315,10 +319,13 @@ const GPasteIntegration = new Lang.Class({
         let my_width = primary.width / 100 * width_percents;
         let my_height = available_height / 100 * height_percents;
 
-        this.actor.x = primary.width - my_width;
-        this._hidden_y = this.actor.get_parent().height - my_height;
+        this._hidden_y =
+            primary.y
+            + Main.layoutManager.panelBox.height
+            - my_height;
         this._target_y = this._hidden_y + my_height;
 
+        this.actor.x = primary.width - my_width;
         this.actor.y = this._hidden_y;
         this.actor.width = my_width;
         this.actor.height = my_height;
