@@ -336,9 +336,27 @@ const GPasteIntegration = new Lang.Class({
     },
 
     activate_item: function(item) {
-        this._client.select(item.id);
-        this._search_entry.set_text('')
+        [x, y] = item.actor.get_transformed_position();
+        let clone = new Clutter.Clone({
+            source: item.actor,
+            width: item.actor.width,
+            height: item.actor.height,
+            x: x,
+            y: y
+        });
+        Main.uiGroup.add_child(clone);
         this.hide(false);
+
+        Tweener.addTween(clone, {
+            time: 1,
+            opacity: 0,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                clone.destroy();
+                this._client.select(item.id);
+                this._search_entry.set_text('')
+            })
+        });
     },
 
     delete_item: function(item) {
