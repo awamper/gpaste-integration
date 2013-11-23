@@ -191,26 +191,13 @@ const GPasteIntegration = new Lang.Class({
     _on_key_press_event: function(o, e) {
         let symbol = e.get_key_symbol()
         let ch = Utils.get_unichar(symbol);
+        let selected_count = this._items_view.get_selected().length;
 
         if(symbol === Clutter.Escape) {
             this.hide();
             return true;
         }
-        else if(ch) {
-            this._search_entry.set_text(ch);
-            this._search_entry.grab_key_focus();
-            return true;
-        }
-        else {
-            return false;
-        }
-    },
-
-    _on_key_release_event: function(o, e) {
-        let symbol = e.get_key_symbol()
-        let selected_count = this._items_view.get_selected().length;
-
-        if(symbol === Clutter.Up) {
+        else if(symbol === Clutter.Up) {
             if(selected_count > 0) {
                 this._items_view.select_previous();
             }
@@ -230,7 +217,20 @@ const GPasteIntegration = new Lang.Class({
 
             return true;
         }
-        else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+        else if(ch) {
+            this._search_entry.set_text(ch);
+            this._search_entry.grab_key_focus();
+            return true;
+        }
+        else {
+            return false;
+        }
+    },
+
+    _on_key_release_event: function(o, e) {
+        let symbol = e.get_key_symbol()
+
+        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
             let selected = this._items_view.get_selected();
 
             if(selected.length === 1) {
