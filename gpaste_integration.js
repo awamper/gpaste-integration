@@ -19,6 +19,10 @@ const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 
 const ANIMATION_TIME = 0.5;
+const CONNECTION_IDS = {
+    client_changed: 0,
+    client_show_history: 0
+};
 
 const GPasteIntegration = new Lang.Class({
     Name: "GPasteIntegration",
@@ -119,15 +123,18 @@ const GPasteIntegration = new Lang.Class({
         this._resize();
         this._update_history();
 
-        this._client.connect('show-history', Lang.bind(this, this.toggle));
-        this._client.connect('changed', Lang.bind(this, function() {
-            this._items_view.set_display_mode(
-                GPasteItemsView.ViewMode.TEXT
-            );
-            this._update_history();
+        CONNECTION_IDS.client_show_history =
+            this._client.connect('show-history', Lang.bind(this, this.toggle));
+        CONNECTION_IDS.client_changed = this._client.connect('changed',
+            Lang.bind(this, function() {
+                this._items_view.set_display_mode(
+                    GPasteItemsView.ViewMode.TEXT
+                );
+                this._update_history();
 
-            if(this.is_open) this._items_view.show_all();
-        }));
+                if(this.is_open) this._items_view.show_all();
+            })
+        );
     },
 
     _on_item_clicked: function(object, button, item) {
@@ -334,6 +341,11 @@ const GPasteIntegration = new Lang.Class({
         this._statusbar.remove_message(message_id);
     },
 
+    _disconnect_all: function() {
+        this._client.disconnect(CONNECTION_IDS.client_changed);
+        this._client.disconnect(CONNECTION_IDS.client_show_history);
+    },
+
     activate_item: function(item) {
         [x, y] = item.actor.get_transformed_position();
         let clone = new Clutter.Clone({
@@ -448,6 +460,7 @@ const GPasteIntegration = new Lang.Class({
     },
 
     destroy: function() {
+        this._disconnect_all();
         this.actor.destroy();
     },
 
