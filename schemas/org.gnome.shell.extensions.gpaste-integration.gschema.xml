@@ -11,5 +11,9 @@
         <default>100</default>
     </key>
 
+    <key type="i" name="filter-max-results">
+        <default>50</default>
+    </key>
+
   </schema>
 </schemalist>
