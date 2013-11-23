@@ -19,21 +19,16 @@ const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 
 const ANIMATION_TIME = 0.5;
+const CONNECTION_IDS = {
+    client_changed: 0,
+    client_show_history: 0
+};
 
 const GPasteIntegration = new Lang.Class({
     Name: "GPasteIntegration",
 
     _init: function() {
         this._client = new GPaste.Client();
-        this._client.connect('changed', Lang.bind(this, function() {
-            this._items_view.set_display_mode(
-                GPasteItemsView.ViewMode.TEXT
-            );
-            this._update_history();
-
-            if(this.is_open) this._items_view.show_all();
-        }));
-        this._client.connect('show-history', Lang.bind(this, this.toggle));
 
         this.actor = new St.BoxLayout({
             reactive: true,
@@ -124,6 +119,19 @@ const GPasteIntegration = new Lang.Class({
         this._delete_queue = [];
         this._resize();
         this._update_history();
+
+        CONNECTION_IDS.client_show_history =
+            this._client.connect('show-history', Lang.bind(this, this.toggle));
+        CONNECTION_IDS.client_changed = this._client.connect('changed',
+            Lang.bind(this, function() {
+                this._items_view.set_display_mode(
+                    GPasteItemsView.ViewMode.TEXT
+                );
+                this._update_history();
+
+                if(this.is_open) this._items_view.show_all();
+            })
+        );
     },
 
     _on_item_clicked: function(object, button, item) {
@@ -327,10 +335,33 @@ const GPasteIntegration = new Lang.Class({
         this._statusbar.remove_message(message_id);
     },
 
+    _disconnect_all: function() {
+        this._client.disconnect(CONNECTION_IDS.client_changed);
+        this._client.disconnect(CONNECTION_IDS.client_show_history);
+    },
+
     activate_item: function(item) {
-        this._client.select(item.id);
-        this._search_entry.set_text('')
+        [x, y] = item.actor.get_transformed_position();
+        let clone = new Clutter.Clone({
+            source: item.actor,
+            width: item.actor.width,
+            height: item.actor.height,
+            x: x,
+            y: y
+        });
+        Main.uiGroup.add_child(clone);
         this.hide(false);
+
+        Tweener.addTween(clone, {
+            time: 1,
+            opacity: 0,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                clone.destroy();
+                this._client.select(item.id);
+                this._search_entry.set_text('')
+            })
+        });
     },
 
     delete_item: function(item) {
@@ -423,6 +454,7 @@ const GPasteIntegration = new Lang.Class({
     },
 
     destroy: function() {
+        this._disconnect_all();
         this.actor.destroy();
     },
 
