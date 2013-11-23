@@ -9,6 +9,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const GPasteItem = Me.imports.gpaste_item;
 const Fuzzy = Me.imports.fuzzy;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const ViewMode = {
     TEXT: 0,
@@ -35,10 +36,10 @@ const GPasteItemsView = new Lang.Class({
         this._displayed_items = [];
         this._display_mode = ViewMode.TEXT;
 
-        this.connect(
-            'displayed-items-changed',
-            Lang.bind(this, this._on_items_changed)
-        );
+        // this.connect(
+        //     'displayed-items-changed',
+        //     Lang.bind(this, this._on_items_changed)
+        // );
         this.connect(
             'display-mode-changed',
             Lang.bind(this, this._on_display_mode_changed)
@@ -55,8 +56,11 @@ const GPasteItemsView = new Lang.Class({
     },
 
     _on_display_mode_changed: function() {
-        for(let i = 0; i < this.items.length; i++) {
-            this.change_display_mode_for_item(this.items[i]);
+        for(let i = 0; i < this._displayed_items.length; i++) {
+            this.set_display_mode_for_item(
+                this._displayed_items[i],
+                this._display_mode
+            );
         }
     },
 
@@ -137,13 +141,7 @@ const GPasteItemsView = new Lang.Class({
     },
 
     set_items: function(items) {
-        this._items = [];
-
-        if(this.displayed_length > 0) {
-            this._displayed_items = [];
-            this.emit('displayed-items-changed');
-        }
-
+        this.clear();
         this.add_items(items);
     },
 
@@ -209,16 +207,14 @@ const GPasteItemsView = new Lang.Class({
         this.emit("displayed-items-changed");
     },
 
-    change_display_mode_for_item: function(item) {
+    set_display_mode_for_item: function(item, mode) {
         if(!item instanceof GPasteItem.GPasteItem) return;
 
-        if(this._display_mode === ViewMode.TEXT) {
-            item.set_label('');
-            item.set_label(item.content);
+        if(mode === ViewMode.TEXT) {
+            item.show_text();
         }
         else {
-            item.set_label_markup('');
-            item.set_label_markup(item.markup);
+            item.show_markup();
         }
     },
 
@@ -237,24 +233,25 @@ const GPasteItemsView = new Lang.Class({
         if(Utils.is_blank(term)) return;
 
         this.hide_all();
+        this.set_display_mode(ViewMode.MARKUP);
 
         let options = {
-            pre: "<span foreground='white' font_weight='heavy'>",
-            post: "</span>",
-            extract: function(arg) { return arg.content; },
+            pre: GPasteItem.HIGHLIGHT_MARKUP.START,
+            post: GPasteItem.HIGHLIGHT_MARKUP.STOP,
+            extract: function(arg) { return arg.get_text(); },
             escape: true,
-            max_distance: 30
+            max_distance: 30,
+            max_results: Utils.SETTINGS.get_int(PrefsKeys.FILTER_MAX_RESULTS)
         }
         let fuzzy = new Fuzzy.Fuzzy(options);
         let matches = fuzzy.filter(term, this.items);
 
         for(let i = 0; i < matches.length; i++) {
             let item = matches[i].original;
-            item.markup = matches[i].string;
+            item.set_markup(matches[i].string);
             this.show_item(item);
         }
 
-        this.set_display_mode(ViewMode.MARKUP);
         this.actor.vscroll.adjustment.value = 0;
         this.select_first();
     },
@@ -265,10 +262,9 @@ const GPasteItemsView = new Lang.Class({
             return;
         }
 
-        if(this._box.get_children().indexOf(item.actor) === -1) {
-            this._box.add_child(item.actor);
-        }
         if(this._displayed_items.indexOf(item) === -1) {
+            this.set_display_mode_for_item(item, this._display_mode);
+            this._box.add_child(item.actor);
             this._displayed_items.push(item);
             this.emit("displayed-items-changed");
         }
@@ -292,18 +288,10 @@ const GPasteItemsView = new Lang.Class({
         this.hide_all();
 
         for(let i = 0; i < this.items.length; i++) {
-            let item = this.items[i];
-
-            if(this._box.get_children().indexOf(item.actor) === -1) {
-                this._box.add_child(item.actor);
-            }
-
-            item.show();
-            this._displayed_items.push(item);
+            this.show_item(this.items[i]);
         }
 
         this.select_first();
-        this.emit("displayed-items-changed");
     },
 
     hide_all: function() {

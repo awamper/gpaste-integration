@@ -114,7 +114,6 @@ const GPasteIntegration = new Lang.Class({
             x_align: St.Align.END
         });
 
-        this._settings = Utils.getSettings();
         this._open = false;
         this._delete_queue = [];
         this._resize();
@@ -308,10 +307,10 @@ const GPasteIntegration = new Lang.Class({
             StatusBar.MESSAGE_TYPES.info,
             true
         );
-        let width_percents = this._settings.get_int(
+        let width_percents = Utils.SETTINGS.get_int(
             PrefsKeys.WIDTH_PERCENTS_KEY
         );
-        let height_percents = this._settings.get_int(
+        let height_percents = Utils.SETTINGS.get_int(
             PrefsKeys.HEIGHT_PERCENTS_KEY
         );
         let primary = Main.layoutManager.primaryMonitor;
@@ -467,7 +466,7 @@ const GPasteIntegration = new Lang.Class({
         for(let i = 0; i < arr.length; i++) {
             let item_data = {
                 id: i,
-                content: arr[i],
+                text: arr[i],
                 markup: false
             };
             items.push(new GPasteItem.GPasteItem(item_data));

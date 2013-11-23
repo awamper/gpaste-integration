@@ -19,7 +19,8 @@ const Fuzzy = new Lang.Class({
             // escape html symbols
             escape: false,
             case_sensitive: false,
-            max_distance: 50
+            max_distance: 50,
+            max_results: 0
         });
     },
 
@@ -30,11 +31,6 @@ const Fuzzy = new Lang.Class({
              .replace(/>/g, "&gt;")
              .replace(/"/g, "&quot;")
              .replace(/'/g, "&#039;");
-    },
-
-    // Does `pattern` fuzzy match `string`?
-    test: function(pattern, string) {
-        return this.match(pattern, string) !== null;
     },
 
     // If `pattern` matches `string`, wrap each matching character
@@ -125,34 +121,40 @@ const Fuzzy = new Lang.Class({
     //     }]
     //
     filter: function(pattern, arr) {
-        return arr.reduce(Lang.bind(this, function(prev, element, idx, arr) {
-            let str = element;
+        let results = [];
+
+        for(let i = 0; i < arr.length; i++) {
+            let string = arr[i];
 
             if(this.opts.extract) {
-                str = this.opts.extract(element);
+                string = this.opts.extract(string);
             }
 
-            let rendered = this.match(pattern, str);
+            let result = this.match(pattern, string);
 
-            if(rendered != null) {
-                prev[prev.length] = {
-                    string: rendered.rendered,
-                    score: rendered.score,
-                    index: idx,
-                    original: element,
-                };
+            if(result !== null) {
+                results.push({
+                    string: result.rendered,
+                    score: result.score,
+                    index: i,
+                    original: arr[i]
+                });
             }
-
-            return prev;
-        }), [])
+        }
 
         // Sort by score. Browsers are inconsistent wrt stable/unstable
         // sorting, so force stable by using the index in the case of tie.
         // See http://ofb.net/~sethml/is-sort-stable.html
-        .sort(function(a, b) {
+        results.sort(function(a, b) {
             let compare = b.score - a.score;
             if(compare) return compare;
             return a.index - b.index;
         });
+
+        if(this.opts.max_results > 0) {
+            results = results.slice(0, this.opts.max_results);
+        }
+
+        return results;
     }
 });

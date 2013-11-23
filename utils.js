@@ -13,6 +13,8 @@ const ICONS = {
 const SPINNER_ICON = global.datadir + '/theme/process-working.svg';
 const SPINNER_ICON_SIZE = 24;
 
+const SETTINGS = getSettings();
+
 function launch_extension_prefs(uuid) {
     const Shell = imports.gi.Shell;
     let appSys = Shell.AppSystem.get_default();
