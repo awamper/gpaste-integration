@@ -227,7 +227,7 @@ const GPasteIntegration = new Lang.Class({
                 this._items_view.select_previous();
             }
             else {
-                this._items_view.select_first();
+                this._items_view.select_first_visible();
             }
 
             return true;
@@ -237,7 +237,7 @@ const GPasteIntegration = new Lang.Class({
                 this._items_view.select_next();
             }
             else {
-                this._items_view.select_first();
+                this._items_view.select_first_visible();
             }
 
             return true;
