@@ -432,6 +432,17 @@ const GPasteItemsView = new Lang.Class({
         }
     },
 
+    select_first_visible: function() {
+        for(let i = 0; i < this.displayed_length; i++) {
+            let item = this.displayed_items[i];
+
+            if(this._is_actor_visible_on_scroll(item.actor, this.actor.vscroll.adjustment)) {
+                this.select(item.actor);
+                break;
+            }
+        }
+    },
+
     get items() {
         return this._items;
     },
