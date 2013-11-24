@@ -1,6 +1,7 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Pango = imports.gi.Pango;
+const Tweener = imports.ui.tweener;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -11,6 +12,7 @@ const HIGHLIGHT_MARKUP = {
     STOP: '</span>'
 };
 const MAX_DISPLAYED_STRING_LENGTH = 300;
+const SHORTCUT_LABEL_ANIMATION_TIME = 0.3;
 
 const GPasteItem = new Lang.Class({
     Name: "GPasteItem",
@@ -36,12 +38,34 @@ const GPasteItem = new Lang.Class({
         this._markup_label.clutter_text.set_max_length(MAX_DISPLAYED_STRING_LENGTH);
         this.set_markup(this._markup);
 
-        this.actor = new St.BoxLayout({
+        this._shortcut = 0;
+        this._shortcut_label = new St.Label({
+            style_class: 'gpaste-shortcut-label',
+            opacity: 0,
+        });
+
+        this.actor = new St.Table({
             style_class: "gpaste-item-box",
             reactive: true
         });
-        this.actor.add_child(this._label);
-        this.actor.add_child(this._markup_label);
+        this.actor.add(this._label, {
+            row: 0,
+            col: 0
+        });
+        this.actor.add(this._markup_label, {
+            row: 0,
+            col: 0
+        });
+        this.actor.add(this._shortcut_label, {
+            row: 0,
+            col: 0,
+            x_expand: false,
+            y_expand: false,
+            x_fill: false,
+            y_fill: false,
+            x_align: St.Align.START,
+            y_align: St.Align.MIDDLE
+        });
 
         this.show_text();
     },
@@ -103,11 +127,40 @@ const GPasteItem = new Lang.Class({
     },
 
     hide: function() {
+        this.hide_shortcut();
         this.actor.hide();
     },
 
     show: function() {
         this.actor.show();
+    },
+
+    show_shortcut: function() {
+        if(this._shortcut < 1 || this._shortcut > 9) return;
+        if(this._shortcut_label.opacity === 255) return;
+
+        this._shortcut_label.show();
+
+        Tweener.removeTweens(this._shortcut_label);
+        Tweener.addTween(this._shortcut_label, {
+            opacity: 255,
+            time: SHORTCUT_LABEL_ANIMATION_TIME,
+            transition: 'easeOutQuad'
+        });
+    },
+
+    hide_shortcut: function() {
+        if(this._shortcut_label.opacity === 0) return;
+
+        Tweener.removeTweens(this._shortcut_label);
+        Tweener.addTween(this._shortcut_label, {
+            opacity: 0,
+            time: SHORTCUT_LABEL_ANIMATION_TIME,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                this._shortcut_label.hide();
+            })
+        });
     },
 
     destroy: function() {
@@ -119,5 +172,19 @@ const GPasteItem = new Lang.Class({
 
     get id() {
         return this._id;
+    },
+
+    set shortcut(number) {
+        if(number >= 1 && number <= 9) {
+            this._shortcut = number;
+            this._shortcut_label.set_text(number.toString());
+        }
+        else {
+            this._shortcut = 0;
+        }
+    },
+
+    get shortcut() {
+        return this._shortcut;
     }
 });

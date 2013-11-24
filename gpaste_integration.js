@@ -201,7 +201,21 @@ const GPasteIntegration = new Lang.Class({
         let ch = Utils.get_unichar(symbol);
         let selected_count = this._items_view.get_selected().length;
 
-        if(symbol === Clutter.Escape) {
+        if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
+            this._items_view.show_shortcuts();
+            return false;
+        }
+        else if(e.has_control_modifier()) {
+            let unichar = Utils.get_unichar(symbol);
+            let number = parseInt(unichar);
+            
+            if(number !== NaN && number >= 1 && number <= 9) {
+                this._activate_by_shortcut(number);
+            }
+
+            return false;
+        }
+        else if(symbol === Clutter.Escape) {
             this.hide();
             return true;
         }
@@ -238,7 +252,12 @@ const GPasteIntegration = new Lang.Class({
     _on_key_release_event: function(o, e) {
         let symbol = e.get_key_symbol()
 
-        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+        if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
+            this._items_view.hide_shortcuts();
+
+            return true;
+        }
+        else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
             let selected = this._items_view.get_selected();
 
             if(selected.length === 1) {
@@ -338,6 +357,17 @@ const GPasteIntegration = new Lang.Class({
     _disconnect_all: function() {
         this._client.disconnect(CONNECTION_IDS.client_changed);
         this._client.disconnect(CONNECTION_IDS.client_show_history);
+    },
+
+    _activate_by_shortcut: function(shortcut) {
+        for(let i = 0; i < this._items_view.displayed_length; i++) {
+            let item = this._items_view.displayed_items[i];
+
+            if(item.shortcut === shortcut) {
+                this.activate_item(item);
+                break;
+            }
+        }
     },
 
     activate_item: function(item) {
