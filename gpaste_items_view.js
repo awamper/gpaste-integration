@@ -92,9 +92,42 @@ const GPasteItemsView = new Lang.Class({
 
     _is_actor_visible_on_scroll: function(actor, v_adjustment) {
         return (
-            actor.y - actor.height >= v_adjustment.value
+            actor.y >= v_adjustment.value
             && actor.y + actor.height < (v_adjustment.value + v_adjustment.page_size)
         );
+    },
+
+    show_shortcuts: function() {
+        let current_number = 1;
+
+        for(let i = 0; i < this.displayed_length; i++) {
+            let item = this._displayed_items[i];
+            item.shortcut = 0;
+
+            if(current_number > 1 && current_number <= 9) {
+                item.shortcut = current_number;
+                item.show_shortcut();
+                current_number++;
+            }
+            else if(current_number >= 9) {
+                continue;
+            }
+            else {
+                if(this._is_actor_visible_on_scroll(item.actor, this.actor.vscroll.adjustment)) {
+                    item.shortcut = current_number;
+                    item.show_shortcut();
+                    current_number++;
+                }
+            }
+        }
+    },
+
+    hide_shortcuts: function() {
+        for(let i = 0; i < this.displayed_length; i++) {
+            let item = this._displayed_items[i];
+            item.shortcut = 0;
+            item.hide_shortcut();
+        }
     },
 
     remove_item: function(item) {
@@ -405,6 +438,10 @@ const GPasteItemsView = new Lang.Class({
 
     get length() {
         return this._items.length
+    },
+
+    get displayed_items() {
+        return this._displayed_items;
     },
 
     get displayed_length() {
