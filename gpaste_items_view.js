@@ -90,7 +90,9 @@ const GPasteItemsView = new Lang.Class({
         );
     },
 
-    _is_actor_visible_on_scroll: function(actor, v_adjustment) {
+    _is_actor_visible_on_scroll: function(actor, scroll) {
+        let v_adjustment = scroll.vscroll.adjustment;
+
         return (
             actor.y >= v_adjustment.value
             && actor.y + actor.height < (v_adjustment.value + v_adjustment.page_size)
@@ -113,7 +115,7 @@ const GPasteItemsView = new Lang.Class({
                 continue;
             }
             else {
-                if(this._is_actor_visible_on_scroll(item.actor, this.actor.vscroll.adjustment)) {
+                if(this._is_actor_visible_on_scroll(item.actor, this.actor)) {
                     item.shortcut = current_number;
                     item.show_shortcut();
                     current_number++;
@@ -398,7 +400,7 @@ const GPasteItemsView = new Lang.Class({
 
             let vscroll = this.actor.vscroll.adjustment;
 
-            if(!this._is_actor_visible_on_scroll(next_actor, vscroll)) {
+            if(!this._is_actor_visible_on_scroll(next_actor, this.actor)) {
                 vscroll.value =
                     (next_actor.y + next_actor.height)
                     - vscroll.page_size;
@@ -426,7 +428,7 @@ const GPasteItemsView = new Lang.Class({
 
             let vscroll = this.actor.vscroll.adjustment;
 
-            if(!this._is_actor_visible_on_scroll(previous_actor, vscroll)) {
+            if(!this._is_actor_visible_on_scroll(previous_actor, this.actor)) {
                 vscroll.value = previous_actor.y - previous_actor.height;
             }
         }
@@ -436,7 +438,7 @@ const GPasteItemsView = new Lang.Class({
         for(let i = 0; i < this.displayed_length; i++) {
             let item = this.displayed_items[i];
 
-            if(this._is_actor_visible_on_scroll(item.actor, this.actor.vscroll.adjustment)) {
+            if(this._is_actor_visible_on_scroll(item.actor, this.actor)) {
                 this.select(item.actor);
                 break;
             }
