@@ -36,23 +36,10 @@ const GPasteItemsView = new Lang.Class({
         this._displayed_items = [];
         this._display_mode = ViewMode.TEXT;
 
-        // this.connect(
-        //     'displayed-items-changed',
-        //     Lang.bind(this, this._on_items_changed)
-        // );
         this.connect(
             'display-mode-changed',
             Lang.bind(this, this._on_display_mode_changed)
         );
-    },
-
-    _on_items_changed: function() {
-        if(this.displayed_length === 0) {
-            this.show_message("Empty");
-        }
-        else {
-            this.hide_message();
-        }
     },
 
     _on_display_mode_changed: function() {
@@ -180,56 +167,6 @@ const GPasteItemsView = new Lang.Class({
         this.add_items(items);
     },
 
-    show_message: function(text, show_spinner) {
-        this.hide_message();
-
-        let message_box = new St.BoxLayout();
-        let message = new St.Label({
-            text: text,
-            style_class: 'gpaste-items-view-message'
-        });
-        message_box.add_actor(message);
-
-        this._message_bin = new St.BoxLayout();
-        this._message_bin.add(message_box, {
-            x_fill: false,
-            y_fill: false,
-            expand: true,
-            x_align: St.Align.MIDDLE,
-            y_align: St.Align.MIDDLE
-        });
-        this.actor.add_actor(this._message_bin);
-
-        show_spinner = show_spinner || false;
-
-        if(show_spinner) {
-            let spinner = new Panel.AnimatedIcon(
-                Utils.SPINNER_ICON,
-                Utils.SPINNER_ICON_SIZE
-            );
-            spinner.play();
-            this._message_bin.add_actor(spinner.actor);
-        }
-    },
-
-    hide_message: function() {
-        if(this._message_bin) {
-            this._message_bin.destroy();
-            this._message_bin = false;
-            this.actor.add_actor(this._box);
-        }
-    },
-
-    get_labels: function() {
-        let labels = [];
-
-        for(let i = 0; i < this._items.length; i++) {
-            labels.push(this._items[i].content);
-        }
-
-        return labels;
-    },
-
     clear: function() {
         for(let i = 0; i < this.items.length; i++) {
             let item = this.items[i];
@@ -291,28 +228,34 @@ const GPasteItemsView = new Lang.Class({
         this.select_first();
     },
 
-    show_item: function(item) {
+    show_item: function(item, emit_signal) {
         if(!item) {
             log("gpaste_items_view.js:show_item(): Bad item '%s'".format(item));
             return;
         }
 
+        emit_signal = emit_signal !== undefined ? emit_signal : true;
+
         if(this._displayed_items.indexOf(item) === -1) {
             this.set_display_mode_for_item(item, this._display_mode);
             this._box.add_child(item.actor);
             this._displayed_items.push(item);
-            this.emit("displayed-items-changed");
+
+            if(emit_signal) this.emit("displayed-items-changed");
         }
 
         item.show();
     },
 
-    hide_item: function(item) {
+    hide_item: function(item, emit_signal) {
         let index = this._displayed_items.indexOf(item);
+
+        emit_signal = emit_signal !== undefined ? emit_signal : true;
 
         if(index !== -1) {
             this._displayed_items.splice(index, 1);
-            this.emit("displayed-items-changed");
+
+            if(emit_signal) this.emit("displayed-items-changed");
         }
 
         this._box.remove_child(item.actor);
@@ -323,9 +266,10 @@ const GPasteItemsView = new Lang.Class({
         this.hide_all();
 
         for(let i = 0; i < this.items.length; i++) {
-            this.show_item(this.items[i]);
+            this.show_item(this.items[i], false);
         }
 
+        this.emit("displayed-items-changed");
         this.select_first();
     },
 

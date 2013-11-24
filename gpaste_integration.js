@@ -46,6 +46,11 @@ const GPasteIntegration = new Lang.Class({
         Main.layoutManager.panelBox.add_actor(this.actor);
         this.actor.lower_bottom();
 
+        this._status_label = new St.Label({
+            style_class: 'gpaste-items-view-status-label',
+            text: 'Empty',
+            visible: false
+        });
         this._table = new St.Table({
             style_class: 'gpaste-box',
             homogeneous: false
@@ -58,6 +63,10 @@ const GPasteIntegration = new Lang.Class({
         this._items_view.connect(
             "item-clicked",
             Lang.bind(this, this._on_item_clicked)
+        );
+        this._items_view.connect(
+            "displayed-items-changed",
+            Lang.bind(this, this._on_items_changed)
         );
         this._items_counter = new GPasteItemsCounter.GPasteItemsCounter(
             this._items_view
@@ -81,6 +90,17 @@ const GPasteIntegration = new Lang.Class({
             col_span: 3,
             x_fill: true,
             y_fill: true,
+            x_align: St.Align.MIDDLE,
+            y_align: St.Align.MIDDLE
+        });
+        this._table.add(this._status_label, {
+            row: 1,
+            col: 0,
+            col_span: 3,
+            x_expand: true,
+            y_expand: true,
+            x_fill: false,
+            y_fill: false,
             x_align: St.Align.MIDDLE,
             y_align: St.Align.MIDDLE
         });
@@ -147,6 +167,15 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
+    _on_items_changed: function() {
+        if(this._items_view.displayed_length > 0) {
+            this._status_label.hide();
+        }
+        else {
+            this._status_label.show();
+        }
+    },
+
     _init_search_entry: function() {
         this._search_entry = new St.Entry({
             style_class: "gpaste-search-entry",
@@ -182,13 +211,10 @@ const GPasteIntegration = new Lang.Class({
         let history = this._client.get_history();
 
         if(history === null) {
-            this._items_view.show_message(
-                "Couldn't connect to GPaste daemon"
-            );
+            Main.notify("GpasteIntegration: Couldn't connect to GPaste daemon");
             this.history = [];
         }
         else if(history.length < 1) {
-            this._items_view.show_message("Empty");
             this.history = [];
         }
         else {
