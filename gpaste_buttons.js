@@ -28,56 +28,51 @@ const GPasteButtons = new Lang.Class({
 
     _init_track_changes_button: function() {
         let button_params = {
+            icon_name: Utils.ICONS.toggle,
+            label_text: '',
+            tip_text: 'Track changes',
             button_style_class: 'gpaste-toggle-button',
             toggle_mode: true,
-            statusbar: this._statusbar
-        };
-
-        this._track_changes_btn = new ButtonsBar.ButtonsBarButton(
-            Utils.ICONS.toggle,
-            '',
-            'Track changes',
-            button_params,
-            Lang.bind(this, function() {
+            statusbar: this._statusbar,
+            action: Lang.bind(this, function() {
                 let checked = this.track_changes_btn.get_checked();
                 this._client.track(checked);
             })
-        );
+        };
+
+        this._track_changes_btn = new ButtonsBar.ButtonsBarButton(button_params);
     },
 
     _init_clear_button: function() {
         let button_params = {
+            icon_name: Utils.ICONS.clear,
+            label_text: '',
+            tip_text: 'Clear history',
             button_style_class: 'gpaste-button',
-            statusbar: this._statusbar
-        };
-
-        this._clear_btn = new ButtonsBar.ButtonsBarButton(
-            Utils.ICONS.clear,
-            '',
-            'Clear history',
-            button_params,
-            Lang.bind(this, Lang.bind(this, function() {
+            statusbar: this._statusbar,
+            confirmation_dialog: true,
+            action: Lang.bind(this, Lang.bind(this, function() {
                 this._gpaste_integration.hide(true);
                 this._client.empty();
             }))
-        );
+        };
+
+        this._clear_btn = new ButtonsBar.ButtonsBarButton(button_params);
     },
 
     _init_prefs_button: function() {
         let button_params = {
+            icon_name: Utils.ICONS.preferences,
+            label_text: '',
+            tip_text: 'Preferences',
             button_style_class: 'gpaste-button',
-            statusbar: this._statusbar
-        };
-        this._prefs_btn = new ButtonsBar.ButtonsBarButton(
-            Utils.ICONS.preferences,
-            '',
-            'Preferences',
-            button_params,
-            Lang.bind(this, function() {
+            statusbar: this._statusbar,
+            action: Lang.bind(this, function() {
                 Utils.launch_extension_prefs(Me.uuid);
                 this._gpaste_integration.hide(false);
             })
-        );
+        };
+        this._prefs_btn = new ButtonsBar.ButtonsBarButton(button_params);
     },
 
     get actor() {

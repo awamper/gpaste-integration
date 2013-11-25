@@ -2,23 +2,149 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
+const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
+const ConfirmationDialog = new Lang.Class({
+    Name: "ConfirmationDialog",
+
+    _init: function(label_text, button) {
+        this.actor = new St.Table({
+            style_class: 'gpaste-confirm-dialog-box',
+            visible: false,
+            homogeneous: false,
+            reactive: true
+        });
+
+        this._label = new St.Label({
+            text: label_text,
+            style_class: 'gpaste-confirm-dialog-label'
+        });
+
+        this._ok_button = new St.Button({
+            label: 'Yes',
+            style_class: 'gpaste-confirm-dialog-button'
+        });
+        this._ok_button.connect("clicked", Lang.bind(this, this.on_confirmed));
+
+        this._cancel_button = new St.Button({
+            label: "No",
+            style_class: 'gpaste-confirm-dialog-button'
+        });
+        this._cancel_button.connect("clicked", Lang.bind(this, this.on_cancel));
+
+        this.actor.add(this._label, {
+            row: 0,
+            col: 0,
+            x_expand: true,
+            y_expand: true,
+            x_fill: true,
+            y_fill: true,
+            x_align: St.Align.MIDDLE,
+            y_align: St.Align.MIDDLE
+        });
+        this.actor.add(this._ok_button, {
+            row: 1,
+            col: 0,
+            x_expand: false,
+            y_expand: false,
+            x_fill: false,
+            y_fill: false,
+            x_align: St.Align.END
+        });
+        this.actor.add(this._cancel_button, {
+            row: 1,
+            col: 1,
+            x_expand: false,
+            y_expand: false,
+            x_fill: false,
+            y_fill: false,
+            x_align: St.Align.END
+        });
+
+        this.on_confirm = null;
+        this._button = button;
+
+        Main.uiGroup.add_child(this.actor);
+    },
+
+    _reposition: function() {
+        let button_position = this._button.actor.get_transformed_position();
+        this.actor.x = button_position[0] - this.actor.width;
+        this.actor.y = button_position[1] - this.actor.height;
+    },
+
+    on_confirmed: function() {
+        this.hide();
+
+        if(typeof(this.on_confirm) === 'function') {
+            this.on_confirm();
+        }
+    },
+
+    on_cancel: function() {
+        this.hide();
+    },
+
+    show: function() {
+        if(this.actor.visible) return;
+
+        this._reposition();
+        Main.pushModal(this.actor, {
+            keybindingMode: Shell.KeyBindingMode.NORMAL
+        });
+
+        this.actor.opacity = 0;
+        this.actor.show();
+
+        Tweener.removeTweens(this.actor);
+        Tweener.addTween(this.actor, {
+            opacity: 255,
+            time: 0.3,
+            transition: 'easeOutQuad',
+        });
+    },
+
+    hide: function() {
+        if(!this.actor.visible) return;
+
+        Main.popModal(this.actor);
+
+        Tweener.removeTweens(this.actor);
+        Tweener.addTween(this.actor, {
+            opacity: 0,
+            time: 0.3,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                this.actor.hide();
+                this.actor.opacity = 255;
+            })
+        });
+    },
+});
+
 const ButtonsBarButton = new Lang.Class({
     Name: 'ButtonsBarButton',
 
-    _init: function(icon_name, label_text, tip_text, params, action) {
+    _init: function(params) {
         this.params = Params.parse(params, {
+            icon_name: '',
+            label_text: '',
+            tip_text: '',
             button_style_class: 'gpaste-button',
             box_style_class: 'gpaste-button-box',
             track_hover: true,
             reactive: true,
             toggle_mode: false,
             icon_style: 'gpaste-buttons-bar-icon',
-            statusbar: false
+            statusbar: false,
+            action: false,
+            confirmation_dialog: false,
+            confirmation_dialog_label: "Are you sure?"
         });
         this._button_box = new St.BoxLayout({
             style_class: this.params.box_style_class
@@ -36,20 +162,28 @@ const ButtonsBarButton = new Lang.Class({
         this._button.add_actor(this._button_content);
         this._button_box.add_actor(this._button);
 
-        if(typeof(action) == 'function') {
-            this._button.connect('clicked', Lang.bind(this, function() {
-                if(this._sensitive) action();
-            }));
+        if(typeof(this.params.action) === 'function') {
+            this._button.connect(
+                'clicked',
+                Lang.bind(this, this._on_button_clicked)
+            );
+        }
+
+        if(this.params.confirmation_dialog) {
+            this._confirmation_dialog = new ConfirmationDialog(
+                this.params.confirmation_dialog_label,
+                this
+            );
         }
 
         this._icon = false;
         this._label = false;
-        this._label_text = label_text;
-        this._tip_text = tip_text;
+        this._label_text = this.params.label_text;
+        this._tip_text = this.params.tip_text;
 
-        if(!Utils.is_blank(icon_name)) {
+        if(!Utils.is_blank(this.params.icon_name)) {
             this._icon = new St.Icon({
-                icon_name: icon_name,
+                icon_name: this.params.icon_name,
                 style_class: this.params.icon_style
             });
 
@@ -123,6 +257,19 @@ const ButtonsBarButton = new Lang.Class({
         }
     },
 
+    _on_button_clicked: function() {
+        if(!this._sensitive) return;
+
+        if(this._confirmation_dialog !== undefined) {
+            this._confirmation_dialog.on_confirm =
+                Lang.bind(this, this.params.action);
+            this._confirmation_dialog.show();
+        }
+        else {
+            this.params.action();
+        }
+    },
+
     connect: function(signal, callback) {
         this.button.connect(signal, callback);
     },
@@ -147,6 +294,10 @@ const ButtonsBarButton = new Lang.Class({
     },
 
     destroy: function() {
+        if(this._confirmation_dialog) {
+            this._confirmation_dialog.destroy();
+        }
+
         this.params = null;
         this._label_text = null;
         this._tip_text = null;
