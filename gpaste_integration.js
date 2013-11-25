@@ -21,7 +21,8 @@ const PrefsKeys = Me.imports.prefs_keys;
 const ANIMATION_TIME = 0.5;
 const CONNECTION_IDS = {
     client_changed: 0,
-    client_show_history: 0
+    client_show_history: 0,
+    captured_event: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -168,6 +169,29 @@ const GPasteIntegration = new Lang.Class({
                 }
             })
         );
+    },
+
+    _on_captured_event: function(object, event) {
+        if(event.type() !== Clutter.EventType.BUTTON_PRESS) return;
+
+        let [x, y, mods] = global.get_pointer();
+
+        if(x < this.actor.x || y > (this.actor.y + this.actor.height)) {
+            this.hide();
+        }
+    },
+
+    _connect_captured_event: function() {
+        CONNECTION_IDS.captured_event = global.stage.connect(
+            'captured-event',
+            Lang.bind(this, this._on_captured_event)
+        );
+    },
+
+    _disconnect_captured_event: function() {
+        if(CONNECTION_IDS.captured_event > 0) {
+            global.stage.disconnect(CONNECTION_IDS.captured_event);
+        }
     },
 
     _on_item_clicked: function(object, button, item) {
@@ -402,6 +426,7 @@ const GPasteIntegration = new Lang.Class({
     _disconnect_all: function() {
         this._client.disconnect(CONNECTION_IDS.client_changed);
         this._client.disconnect(CONNECTION_IDS.client_show_history);
+        this._disconnect_captured_event();
     },
 
     _activate_by_shortcut: function(shortcut) {
@@ -502,6 +527,7 @@ const GPasteIntegration = new Lang.Class({
             this._search_entry.grab_key_focus();
         }
 
+        this._connect_captured_event();
         this._items_view.actor.vscroll.adjustment.value = 0;
         this._items_view.select_first();
     },
@@ -511,6 +537,7 @@ const GPasteIntegration = new Lang.Class({
 
         Main.popModal(this.actor);
         this._open = false;
+        this._disconnect_captured_event();
         this._items_view.unselect_all();
         animation = animation === undefined ? true : animation;
 
