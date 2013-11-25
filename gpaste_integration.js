@@ -136,7 +136,7 @@ const GPasteIntegration = new Lang.Class({
         });
 
         this._open = false;
-        this._delete_queue = [];
+        this._last_selected_item_id = null;
         this._resize();
         this._update_history();
 
@@ -149,7 +149,20 @@ const GPasteIntegration = new Lang.Class({
                 );
                 this._update_history();
 
-                if(this.is_open) this._items_view.show_all();
+                if(this.is_open) {
+                    this._items_view.show_all();
+
+                    if(this._last_selected_item_id !== null) {
+                        let item = this._items_view.items[
+                            this._last_selected_item_id
+                        ];
+                        this._items_view.select(item.actor);
+                        this._last_selected_item_id = null;
+                    }
+                    else {
+                        this._items_view.select_first_visible();
+                    }
+                }
             })
         );
     },
@@ -421,8 +434,29 @@ const GPasteIntegration = new Lang.Class({
     },
 
     delete_item: function(item) {
-        this._delete_queue.push(item.id);
-        this._items_view.remove_item(item);
+        if(this._items_view.length === 1) {
+            this._client.empty();
+            this.hide();
+            return;
+        }
+
+        let id = item.id;
+        let total_items = this._items_view.length;
+        this._items_view.remove_item(item, Lang.bind(this, function() {
+            if(this._items_view.length > 1) {
+                if(total_items === id + 1) {
+                    this._last_selected_item_id = id - 1;
+                }
+                else {
+                    this._last_selected_item_id = id;
+                }
+            }
+            else {
+                this._last_selected_item_id = null;
+            }
+
+            this._client.delete(id);
+        }));
     },
 
     show: function(animation, target) {
@@ -463,6 +497,7 @@ const GPasteIntegration = new Lang.Class({
         }
 
         this._items_view.actor.vscroll.adjustment.value = 0;
+        this._items_view.select_first();
     },
 
     hide: function(animation, target) {
@@ -487,16 +522,6 @@ const GPasteIntegration = new Lang.Class({
         else {
             this.actor.hide();
             this.actor.y = this._hidden_y;
-        }
-
-        if(this._delete_queue.length > 0) {
-            Mainloop.idle_add(Lang.bind(this, function() {
-                for(let i = 0; i < this._delete_queue.length; i++) {
-                    this._client.delete(this._delete_queue[i]);
-                }
-
-                this._delete_queue = [];
-            }));
         }
     },
 

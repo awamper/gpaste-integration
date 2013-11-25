@@ -119,15 +119,15 @@ const GPasteItemsView = new Lang.Class({
         }
     },
 
-    remove_item: function(item) {
+    remove_item: function(item, on_complete_callback) {
+        item.actor.set_pivot_point(0.5, 0.5);
         Tweener.removeTweens(item.actor);
         Tweener.addTween(item.actor, {
             time: 0.3,
             transition: 'easeOutQuad',
             opacity: 0,
-            height: 2,
+            scale_y: 0,
             onComplete: Lang.bind(this, function() {
-                this.select_next();
                 let index = this.items.indexOf(item);
                 let displayed_index = this._displayed_items.indexOf(item);
 
@@ -141,6 +141,7 @@ const GPasteItemsView = new Lang.Class({
                 }
 
                 item.destroy();
+                on_complete_callback();
             })
         });
     },
@@ -270,7 +271,6 @@ const GPasteItemsView = new Lang.Class({
         }
 
         this.emit("displayed-items-changed");
-        this.select_first();
     },
 
     hide_all: function() {
