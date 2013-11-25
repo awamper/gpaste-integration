@@ -131,3 +131,28 @@
     font-weight: bold;
     color: white;
 }
+
+.gpaste-confirm-dialog-box {
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.gpaste-confirm-dialog-label {
+    padding: 5px;
+    size: 20px;
+}
+
+.gpaste-confirm-dialog-button {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 5px;
+    padding-left: 5px;
+    size: 20px;
+    color: white;
+    transition-duration: 300ms;
+}
+
+.gpaste-confirm-dialog-button:hover {
+    color: #3465a4;
+    transition-duration: 300ms;
+}
