@@ -15,6 +15,7 @@ const GPasteItemsCounter = Me.imports.gpaste_items_counter;
 const GPasteItemsView = Me.imports.gpaste_items_view;
 const GPasteItem = Me.imports.gpaste_item;
 const GPasteButtons = Me.imports.gpaste_buttons;
+const GpasteHistorySwitcher = Me.imports.gpaste_history_switcher;
 const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 
@@ -58,6 +59,8 @@ const GPasteIntegration = new Lang.Class({
         });
         this.actor.add_actor(this._table);
 
+        this._history_switcher =
+            new GpasteHistorySwitcher.GpasteHistorySwitcher(this);
         this._statusbar = new StatusBar.StatusBar();
         this._init_search_entry();
         this._items_view = new GPasteItemsView.GPasteItemsView(this._statusbar);
@@ -533,6 +536,7 @@ const GPasteIntegration = new Lang.Class({
         this._open = false;
         this._disconnect_captured_event();
         this._items_view.unselect_all();
+        this._history_switcher.hide();
         animation = animation === undefined ? true : animation;
 
         if(animation) {
@@ -563,6 +567,7 @@ const GPasteIntegration = new Lang.Class({
 
     destroy: function() {
         this._disconnect_all();
+        this._history_switcher.destroy();
         this.actor.destroy();
     },
 
@@ -594,5 +599,9 @@ const GPasteIntegration = new Lang.Class({
 
     get client() {
         return this._client;
+    },
+
+    get history_switcher() {
+        return this._history_switcher;
     }
 });

@@ -19,9 +19,11 @@ const GPasteButtons = new Lang.Class({
 
         this._buttons_bar = new ButtonsBar.ButtonsBar();
         this._init_track_changes_button();
+        this._init_switch_history_button();
         this._init_clear_button();
         this._init_prefs_button();
         this._buttons_bar.add_button(this._track_changes_btn);
+        this._buttons_bar.add_button(this._histories_btn);
         this._buttons_bar.add_button(this._clear_btn);
         this._buttons_bar.add_button(this._prefs_btn);
     },
@@ -41,6 +43,20 @@ const GPasteButtons = new Lang.Class({
         };
 
         this._track_changes_btn = new ButtonsBar.ButtonsBarButton(button_params);
+    },
+
+    _init_switch_history_button: function() {
+        let button_params = {
+            icon_name: Utils.ICONS.switch_history,
+            label_text: '',
+            tip_text: 'Switch history',
+            button_style_class: 'gpaste-button',
+            statusbar: this._statusbar,
+            action: Lang.bind(this, function() {
+                this._gpaste_integration.history_switcher.toggle();
+            })
+        };
+        this._histories_btn = new ButtonsBar.ButtonsBarButton(button_params);
     },
 
     _init_clear_button: function() {
