@@ -7,7 +7,8 @@ const ICONS = {
     toggle: 'emblem-synchronizing-symbolic',
     clear: 'edit-clear-all-symbolic',
     delete: 'edit-delete-symbolic',
-    indicator: 'edit-paste-symbolic'
+    indicator: 'edit-paste-symbolic',
+    switch_history: 'view-list-symbolic'
 };
 
 const SPINNER_ICON = global.datadir + '/theme/process-working.svg';

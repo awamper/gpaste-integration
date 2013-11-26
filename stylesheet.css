@@ -156,3 +156,29 @@
     color: #3465a4;
     transition-duration: 300ms;
 }
+
+.gpaste-histories-box {
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.gpaste-histories-item-box {
+    /* nothing */
+}
+
+.gpaste-histories-item-box:hover {
+    background-color: #3465a4;
+    color: white;
+    transition-duration: 20ms;
+}
+
+.gpaste-histories-item-box:active {
+    background-color: #0D4CA3;
+    color: white;
+    transition-duration: 50ms;
+}
+
+.gpaste-histories-item-button {
+    font-size: 15px;
+    padding: 5px;
+}
