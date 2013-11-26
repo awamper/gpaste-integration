@@ -389,6 +389,7 @@ const GPasteIntegration = new Lang.Class({
             this._search_entry.set_secondary_icon(this._inactive_icon);
             this._items_view.set_display_mode(GPasteItemsView.ViewMode.TEXT);
             this._items_view.show_all();
+            this._items_view.select_first();
         }
     },
 
