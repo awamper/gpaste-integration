@@ -11,15 +11,17 @@ const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
-const GPasteItemsCounter = Me.imports.gpaste_items_counter;
-const GPasteItemsView = Me.imports.gpaste_items_view;
-const GPasteItem = Me.imports.gpaste_item;
+const ListView = Me.imports.list_view;
+const GPasteListView = Me.imports.gpaste_list_view;
+const GPasteListViewRenderer = Me.imports.gpaste_list_view_renderer;
 const GPasteButtons = Me.imports.gpaste_buttons;
 const GpasteHistorySwitcher = Me.imports.gpaste_history_switcher;
 const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
+const Fuzzy = Me.imports.fuzzy;
 
 const ANIMATION_TIME = 0.5;
+
 const CONNECTION_IDS = {
     client_changed: 0,
     client_show_history: 0,
@@ -63,19 +65,41 @@ const GPasteIntegration = new Lang.Class({
             new GpasteHistorySwitcher.GpasteHistorySwitcher(this);
         this._statusbar = new StatusBar.StatusBar();
         this._init_search_entry();
-        this._items_view = new GPasteItemsView.GPasteItemsView(this._statusbar);
-        this._items_view.connect(
-            "item-clicked",
-            Lang.bind(this, this._on_item_clicked)
-        );
-        this._items_view.connect(
-            "displayed-items-changed",
+        
+        this._list_model = new ListView.Model();
+        this._list_model.set_validator(Lang.bind(this, function(item) {
+            return !Utils.is_blank(item.text);
+        }));
+        this._list_model.connect(
+            "changed::items",
             Lang.bind(this, this._on_items_changed)
         );
-        this._items_counter = new GPasteItemsCounter.GPasteItemsCounter(
-            this._items_view
+
+        this._list_view = new GPasteListView.GPasteListView({
+            scrollview_style: 'gpaste-list-view-scrollbox',
+            box_style: 'gpaste-list-view-box',
+            shortcut_style: 'gpaste-shortcut-label'
+        });
+        this._list_view.set_model(this._list_model);
+        this._list_view.set_renderer(
+            GPasteListViewRenderer.GPasteListViewRenderer
         );
+        this._list_view.connect(
+            "clicked",
+            Lang.bind(this, this._on_item_clicked)
+        );
+
+        this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
+
+        let fuzzy_options = {
+            pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
+            post: GPasteListViewRenderer.HIGHLIGHT_MARKUP.STOP,
+            extract: function(arg) { return arg.text; },
+            escape: true,
+            max_distance: 30
+        }
+        this._fuzzy_search = new Fuzzy.Fuzzy(fuzzy_options);
 
         this._table.add(this._search_entry, {
             row: 0,
@@ -88,7 +112,7 @@ const GPasteIntegration = new Lang.Class({
             y_align: St.Align.START,
             x_align: St.Align.START
         });
-        this._table.add(this._items_view.actor, {
+        this._table.add(this._list_view.actor, {
             row: 1,
             col: 0,
             col_span: 3,
@@ -148,23 +172,26 @@ const GPasteIntegration = new Lang.Class({
             this._client.connect('show-history', Lang.bind(this, this.toggle));
         CONNECTION_IDS.client_changed = this._client.connect('changed',
             Lang.bind(this, function() {
-                this._items_view.set_display_mode(
-                    GPasteItemsView.ViewMode.TEXT
-                );
                 this._update_history();
 
                 if(this.is_open) {
-                    this._items_view.show_all();
+                    this._show_all();
 
                     if(this._last_selected_item_id !== null) {
-                        let item = this._items_view.items[
+                        let display = this._list_view.get_display_for_index(
                             this._last_selected_item_id
-                        ];
-                        this._items_view.select(item.actor);
-                        this._last_selected_item_id = null;
+                        );
+
+                        if(display) {
+                            this._list_view.select(display);
+                            this._last_selected_item_id = null;
+                        }
+                        else {
+                            this._list_view.select_first_visible();
+                        }
                     }
                     else {
-                        this._items_view.select_first_visible();
+                        this._list_view.select_first_visible();
                     }
                 }
             })
@@ -194,21 +221,21 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
-    _on_item_clicked: function(object, button, item) {
+    _on_item_clicked: function(object, button, display, model, index) {
         switch(button) {
             case Clutter.BUTTON_SECONDARY:
-                this.delete_item(item);
+                this.delete_item(model, index);
                 break;
             case Clutter.BUTTON_MIDDLE:
                 break;
             default:
-                this.activate_item(item);
+                this.activate_item(model, index);
                 break;
         }
     },
 
     _on_items_changed: function() {
-        if(this._items_view.displayed_length > 0) {
+        if(this._list_model.length > 0) {
             this._status_label.hide();
         }
         else {
@@ -265,10 +292,9 @@ const GPasteIntegration = new Lang.Class({
     _on_key_press_event: function(o, e) {
         let symbol = e.get_key_symbol()
         let ch = Utils.get_unichar(symbol);
-        let selected_count = this._items_view.get_selected().length;
 
         if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
-            this._items_view.show_shortcuts();
+            this._list_view.show_shortcuts();
             return false;
         }
         else if(e.has_control_modifier()) {
@@ -286,21 +312,25 @@ const GPasteIntegration = new Lang.Class({
             return true;
         }
         else if(symbol === Clutter.Up) {
-            if(selected_count > 0) {
-                this._items_view.select_previous();
+            let selected_index = this._list_view.get_selected_index();
+
+            if(selected_index !== -1) {
+                this._list_view.select_previous();
             }
             else {
-                this._items_view.select_first_visible();
+                this._list_view.select_first_visible();
             }
 
             return true;
         }
         else if(symbol === Clutter.Down) {
-            if(selected_count > 0) {
-                this._items_view.select_next();
+            let selected_index = this._list_view.get_selected_index();
+
+            if(selected_index !== -1) {
+                this._list_view.select_next();
             }
             else {
-                this._items_view.select_first_visible();
+                this._list_view.select_first_visible();
             }
 
             return true;
@@ -319,24 +349,24 @@ const GPasteIntegration = new Lang.Class({
         let symbol = e.get_key_symbol()
 
         if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
-            this._items_view.hide_shortcuts();
+            this._list_view.hide_shortcuts();
 
             return true;
         }
         else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
-            let selected = this._items_view.get_selected();
+            let selected_index = this._list_view.get_selected_index();
 
-            if(selected.length === 1) {
-                this.activate_item(selected[0]);
+            if(selected_index !== -1) {
+                this.activate_item(this._list_model, selected_index);
             }
 
             return true;
         }
         else if(symbol == Clutter.Delete) {
-            let selected = this._items_view.get_selected();
+            let selected_index = this._list_view.get_selected_index();
 
-            if(selected.length === 1) {
-                this.delete_item(selected[0]);
+            if(selected_index !== -1) {
+                this.delete_item(this._list_model, selected_index);
             }
 
             return true;
@@ -377,16 +407,16 @@ const GPasteIntegration = new Lang.Class({
     _on_search_text_changed: function() {
         if(!this._is_empty_entry(this._search_entry)) {
             this._search_entry.set_secondary_icon(this._active_icon);
-            this._items_view.filter(this._search_entry.text);
+            Mainloop.idle_add(
+                Lang.bind(this, this._filter, this._search_entry.text)
+            );
         }
         else {
             if(this._search_entry.text === this._search_entry.hint_text) return;
 
-            this.actor.grab_key_focus();
+            // this.actor.grab_key_focus();
             this._search_entry.set_secondary_icon(this._inactive_icon);
-            this._items_view.set_display_mode(GPasteItemsView.ViewMode.TEXT);
-            this._items_view.show_all();
-            this._items_view.select_first();
+            this._show_all();
         }
     },
 
@@ -427,65 +457,65 @@ const GPasteIntegration = new Lang.Class({
         this._disconnect_captured_event();
     },
 
-    _activate_by_shortcut: function(shortcut) {
-        for(let i = 0; i < this._items_view.displayed_length; i++) {
-            let item = this._items_view.displayed_items[i];
-
-            if(item.shortcut === shortcut) {
-                this.activate_item(item);
-                break;
-            }
-        }
+    _activate_by_shortcut: function(number) {
+        let index = this._list_view.get_index_for_shortcut(number);
+        if(index === -1) return;
+        this.activate_item(this._list_model, index);
     },
 
-    activate_item: function(item) {
-        [x, y] = item.actor.get_transformed_position();
-        let clone = new Clutter.Clone({
-            source: item.actor,
-            width: item.actor.width,
-            height: item.actor.height,
-            x: x,
-            y: y
-        });
-        Main.uiGroup.add_child(clone);
+    _show_items: function(items) {
+        this._list_model.set_items(items);
+        this._list_view.select_first_visible();
+    },
+
+    _filter: function(term) {
+        if(Utils.is_blank(term)) return;
+
+        let matches = this._fuzzy_search.filter(term, this.history);
+        let items = [];
+
+        for(let i = 0; i < matches.length; i++) {
+            let item = Object.create(matches[i].original);
+            item.markup = matches[i].string;
+            items.push(item);
+        }
+
+        this._show_items(items);
+    },
+
+    _show_all: function() {
+        this._show_items(this.history);
+    },
+
+    activate_item: function(model, index) {
+        this._client.select(model.get(index).id);
+        let display = this._list_view.get_display_for_index(index);
         this.hide(false);
 
-        Tweener.addTween(clone, {
-            time: 1,
-            opacity: 0,
-            transition: 'easeOutQuad',
-            onComplete: Lang.bind(this, function() {
-                clone.destroy();
-                this._client.select(item.id);
-                this._search_entry.set_text('')
-            })
-        });
+        if(display) this._list_view.fade_out_display(display);
+
+        this._search_entry.set_text('');
     },
 
-    delete_item: function(item) {
-        if(this._items_view.length === 1) {
+    delete_item: function(model, index) {
+        if(model.length <= 1) {
             this._client.empty();
+            this._last_selected_item_id = null;
             this.hide();
             return;
         }
 
-        let id = item.id;
-        let total_items = this._items_view.length;
-        this._items_view.remove_item(item, Lang.bind(this, function() {
-            if(this._items_view.length > 1) {
-                if(total_items === id + 1) {
-                    this._last_selected_item_id = id - 1;
-                }
-                else {
-                    this._last_selected_item_id = id;
-                }
-            }
-            else {
-                this._last_selected_item_id = null;
-            }
+        let deleted_id = model.get(index).id;
+        model.delete(index);
 
-            this._client.delete(id);
-        }));
+        if(model.length === deleted_id) {
+            this._last_selected_item_id = deleted_id - 1;
+        }
+        else {
+            this._last_selected_item_id = deleted_id;
+        }
+
+        this._client.delete(deleted_id);
     },
 
     show: function(animation, target) {
@@ -501,7 +531,7 @@ const GPasteIntegration = new Lang.Class({
         this._open = true;
         this.actor.show();
         this._resize();
-        this._items_view.show_all();
+        this._show_all();
         target = target === undefined ? this._target_y : target;
 
         if(animation) {
@@ -521,13 +551,13 @@ const GPasteIntegration = new Lang.Class({
                 0,
                 this._search_entry.text.length
             );
-            this._items_view.filter(this._search_entry.text);
+            this._filter(this._search_entry.text);
             this._search_entry.grab_key_focus();
         }
 
         this._connect_captured_event();
-        this._items_view.actor.vscroll.adjustment.value = 0;
-        this._items_view.select_first();
+        this._list_view.reset_scroll();
+        this._list_view.select_first();
     },
 
     hide: function(animation, target) {
@@ -536,7 +566,8 @@ const GPasteIntegration = new Lang.Class({
         Main.popModal(this.actor);
         this._open = false;
         this._disconnect_captured_event();
-        this._items_view.unselect_all();
+        this._list_view.unselect_all();
+        this._list_view.hide_shortcuts();
         this._history_switcher.hide();
         animation = animation === undefined ? true : animation;
 
@@ -567,6 +598,9 @@ const GPasteIntegration = new Lang.Class({
     },
 
     destroy: function() {
+        this._statusbar.destroy();
+        this._list_view.destroy();
+        this._items_counter.destroy();
         this._disconnect_all();
         this._history_switcher.destroy();
         this.actor.destroy();
@@ -582,7 +616,6 @@ const GPasteIntegration = new Lang.Class({
 
     set history(arr) {
         this._history = [];
-        let items = [];
 
         for(let i = 0; i < arr.length; i++) {
             let item_data = {
@@ -590,12 +623,8 @@ const GPasteIntegration = new Lang.Class({
                 text: arr[i],
                 markup: false
             };
-            items.push(new GPasteItem.GPasteItem(item_data));
             this._history.push(item_data);
         }
-
-        this._items_view.clear();
-        this._items_view.set_items(items);
     },
 
     get client() {
