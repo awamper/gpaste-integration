@@ -91,6 +91,10 @@ const GPasteButtons = new Lang.Class({
         this._prefs_btn = new ButtonsBar.ButtonsBarButton(button_params);
     },
 
+    destroy: function() {
+        this._buttons_bar.destroy();
+    },
+
     get actor() {
         return this._buttons_bar.actor;
     },
