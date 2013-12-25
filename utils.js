@@ -45,20 +45,6 @@ function escape_html(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
-function wordwrap(str, width, brk, cut) {
-    brk = brk || '\n';
-    width = width || 75;
-    cut = cut || false;
-
-    if (!str) { return str; }
-
-    let regex =
-        '.{1,' + width + '}(\\s|$)' + (cut ? '|.{' + width +
-        '}|.+$' : '|\\S+?(\\s|$)');
-
-    return str.match( RegExp(regex, 'g') ).join( brk );
-}
-
 function get_unichar(keyval) {
     let ch = Clutter.keysym_to_unicode(keyval);
 
@@ -68,28 +54,6 @@ function get_unichar(keyval) {
     else {
         return false;
     }
-}
-
-function array_search(term, arr) {
-    let temp = [];
-
-    for(let i = 0; i < arr.length; i++) {
-        term = term.toLowerCase();
-        let str = arr[i].toLowerCase();
-        let r = str.search(term);
-        if(r === -1) continue;
-        temp.push([r, arr[i]]);
-    }
-
-    temp.sort(function(a, b) {return a[0] > b[0]});
-
-    let result = [];
-
-    for(let i = 0; i < temp.length; i++) {
-        result.push(temp[i][1]);
-    }
-
-    return result;
 }
 
 /**
