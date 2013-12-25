@@ -538,7 +538,7 @@ const GPasteIntegration = new Lang.Class({
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
                 time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeOutQuad',
+                transition: 'easeOutBack',
                 y: target
             });
         }
@@ -575,7 +575,7 @@ const GPasteIntegration = new Lang.Class({
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
                 time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeOutQuad',
+                transition: 'easeInBack',
                 y: this._hidden_y,
                 onComplete: Lang.bind(this, function() {
                     this.actor.hide();
