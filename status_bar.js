@@ -119,6 +119,7 @@ const StatusBar = new Lang.Class({
             this._spinner.actor.show();
         }
         else {
+            this._spinner.stop();
             this._spinner.actor.hide();
         }
 
@@ -168,6 +169,7 @@ const StatusBar = new Lang.Class({
     },
 
     remove_message: function(id) {
+        this._spinner.stop();
         this.hide_message(id);
         delete this._messages[id];
         this.show_last();
