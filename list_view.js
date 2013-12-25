@@ -577,7 +577,7 @@ const ListView = new Lang.Class({
     },
 
     reset_scroll: function() {
-        this.scroll_to_value(0);
+        if(this._v_adjustment.value > 0) this.scroll_to_value(0);
     },
 
     clear: function() {
