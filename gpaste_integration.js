@@ -598,10 +598,11 @@ const GPasteIntegration = new Lang.Class({
     },
 
     destroy: function() {
+        this._disconnect_all();
+        this._buttons.destroy();
         this._statusbar.destroy();
         this._list_view.destroy();
         this._items_counter.destroy();
-        this._disconnect_all();
         this._history_switcher.destroy();
         this.actor.destroy();
     },
