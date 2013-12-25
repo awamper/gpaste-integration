@@ -228,17 +228,6 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             range_properties
         )
 
-        let spin_properties = {
-            lower: 0,
-            upper: 255,
-            step_increment: 5
-        };
-        page.add_spin(
-            'Max filter results:',
-            PrefsKeys.FILTER_MAX_RESULTS,
-            spin_properties
-        )
-
 		let result = {
             label: page_label,
             page: page
