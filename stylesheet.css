@@ -46,13 +46,57 @@
     border: 2px solid #3465a4;
 }
 
-.gpaste-items-view-box {
+.gpaste-list-view-box {
     spacing: 5px;
-    background-color: rgba(0, 0, 0, 0);
 }
 
-.gpaste-items-view-scrollbox {
+.gpaste-list-view-scrollbox {
     padding-top: 10px;
+}
+
+.gpaste-list-view-scrollbox StScrollView.vfade {
+    -st-vfade-offset: 60px;
+}
+
+.gpaste-list-view-scrollbox StScrollView.hfade {
+    -st-hfade-offset: 60px;
+}
+
+.gpaste-list-view-scrollbox StScrollView StScrollBar {
+    min-width: 8px;
+    min-height: 8px;
+}
+
+.gpaste-list-view-scrollbox StScrollBar StBin#trough {
+    padding-left: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 0px;
+}
+
+.gpaste-list-view-scrollbox StScrollBar StBin#vhandle {
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid #242424;
+    border-radius: 0px;
+    transition-duration: 300ms;
+}
+
+.gpaste-list-view-scrollbox StScrollBar StBin#hhandle {
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid #242424;
+    border-radius: 0px;
+    transition-duration: 300ms;
+}
+
+.gpaste-list-view-scrollbox StScrollBar StBin#hhandle:hover,
+.gpaste-list-view-scrollbox StScrollBar StBin#vhandle:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+    transition-duration: 300ms;
+}
+
+.gpaste-list-view-scrollbox StScrollBar StBin#hhandle:active,
+.gpaste-list-view-scrollbox StScrollBar StBin#vhandle:active {
+    background-color: rgba(255, 255, 255, 0.7);
+    transition-duration: 300ms;
 }
 
 .gpaste-items-view-status-label {
