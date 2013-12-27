@@ -21,11 +21,16 @@ const PrefsKeys = Me.imports.prefs_keys;
 const Fuzzy = Me.imports.fuzzy;
 
 const ANIMATION_TIME = 0.5;
+const FILTER_TIMEOUT_MS = 200;
 
 const CONNECTION_IDS = {
     client_changed: 0,
     client_show_history: 0,
     captured_event: 0
+};
+
+const TIMEOUT_IDS = {
+    FILTER: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -408,9 +413,14 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_search_text_changed: function() {
+        if(TIMEOUT_IDS.FILTER !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.FILTER);
+            TIMEOUT_IDS.FILTER = 0;
+        }
+
         if(!this._is_empty_entry(this._search_entry)) {
             this._search_entry.set_secondary_icon(this._active_icon);
-            Mainloop.idle_add(
+            TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
                 Lang.bind(this, this._filter, this._search_entry.text)
             );
         }
