@@ -317,7 +317,7 @@ const ListView = new Lang.Class({
         });
     },
 
-    _connect_display_signals: function(display, index) {
+    _connect_display_signals: function(display) {
         display.connect("enter-event",
             Lang.bind(this, function(o, e) {
                 this.unselect_all();
@@ -339,6 +339,7 @@ const ListView = new Lang.Class({
             Lang.bind(this, function(o, e) {
                 let button = e.get_button();
                 this.unset_active(display);
+                let index = this._displays.indexOf(display);
                 this.emit("clicked", button, display, this.model, index);
             })
         );
@@ -381,7 +382,7 @@ const ListView = new Lang.Class({
             let display = renderer.get_display(this.model, i);
             if(!display) continue;
             this._box.add_child(display);
-            this._connect_display_signals(display, index);
+            this._connect_display_signals(display);
             this._displays.push(display);
             this._add_shortcut_emblem_to_display(display);
             added_height += display.height;
