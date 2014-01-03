@@ -497,10 +497,14 @@ const GPasteIntegration = new Lang.Class({
         }
 
         this._show_items(items);
+        this._list_view.reset_scroll();
+        this._list_view.select_first();
     },
 
     _show_all: function() {
         this._show_items(this.history);
+        this._list_view.reset_scroll();
+        this._list_view.select_first();
     },
 
     activate_item: function(model, index) {
