@@ -56,6 +56,26 @@ function get_unichar(keyval) {
     }
 }
 
+function is_pointer_inside_actor(actor, x, y) {
+    let result = false;
+    let [actor_x, actor_y] = actor.get_transformed_position();
+    let [pointer_x, pointer_y] = global.get_pointer();
+
+    if(x) pointer_x = x;
+    if(y) pointer_y = y;
+
+    if(
+        pointer_x >= actor_x
+        && pointer_x <= (actor_x + actor.width)
+        && pointer_y >= actor_y
+        && pointer_y <= (actor_y + actor.height)
+    ) {
+        result = true;
+    }
+
+    return result;
+}
+
 /**
  * getSettings:
  * @schema: (optional): the GSettings schema id
