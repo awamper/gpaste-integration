@@ -28,7 +28,7 @@
     </key>
 
     <key type="b" name="enable-shortcuts">
-      <default>true</default>
+      <default>false</default>
     </key>
 
   </schema>
