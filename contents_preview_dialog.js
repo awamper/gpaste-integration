@@ -66,6 +66,10 @@ const ContentsPreviewView = new Lang.Class({
 
     get scroll() {
         return this._scroll_view;
+    },
+
+    get selection() {
+        return this._entry.clutter_text.get_selection()
     }
 });
 
@@ -104,6 +108,14 @@ const ContentsPreviewDialog = new Lang.Class({
 
             if(symbol === Clutter.Up) this._scroll_step_up();
             if(symbol === Clutter.Down) this._scroll_step_down();
+
+            if(symbol === Clutter.Control_L || symbol === Clutter.Control_R) {
+                let clipboard = St.Clipboard.get_default();
+                clipboard.set_text(
+                    St.ClipboardType.CLIPBOARD,
+                    this._contents_view.selection
+                );
+            }
 
             return true;
         }
