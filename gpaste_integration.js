@@ -19,6 +19,7 @@ const GpasteHistorySwitcher = Me.imports.gpaste_history_switcher;
 const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 const Fuzzy = Me.imports.fuzzy;
+const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 
 const ANIMATION_TIME = 0.5;
 const FILTER_TIMEOUT_MS = 200;
@@ -99,6 +100,8 @@ const GPasteIntegration = new Lang.Class({
 
         this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
+        this._contents_preview_dialog =
+            new ContentsPreviewDialog.ContentsPreviewDialog()
 
         let fuzzy_options = {
             pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
@@ -615,6 +618,12 @@ const GPasteIntegration = new Lang.Class({
         else {
             this.show();
         }
+    },
+
+    show_current_contents: function() {
+        if(this._contents_preview_dialog.shown) return;
+        let contents = this._client.get_element(0);
+        this._contents_preview_dialog.preview(contents);
     },
 
     destroy: function() {

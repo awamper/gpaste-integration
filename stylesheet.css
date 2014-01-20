@@ -226,3 +226,59 @@
     font-size: 15px;
     padding: 5px;
 }
+
+.gpaste-contents-preview-entry {
+    caret-color: white;
+    caret-size: 2px;
+    selected-color: black;
+}
+
+.gpaste-contents-preview-dialog {
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 0, 0, 1);
+}
+
+.gpaste-dialog-contents-view-box {
+    padding: 5px;
+    color: #C4C4C4;
+    background-color: #545353;
+    border: 1px solid #9C9C9C;
+}
+
+.gpaste-dialog-contents-view-box StScrollView StScrollBar {
+    min-width: 8px;
+    min-height: 8px;
+}
+
+.gpaste-dialog-contents-view-box StScrollBar StBin#trough {
+    padding-left: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 0px;
+}
+
+.gpaste-dialog-contents-view-box StScrollBar StBin#vhandle {
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid #242424;
+    border-radius: 0px;
+    transition-duration: 300ms;
+}
+
+.gpaste-dialog-contents-view-box StScrollBar StBin#hhandle {
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid #242424;
+    border-radius: 0px;
+    transition-duration: 300ms;
+}
+
+.gpaste-dialog-contents-view-box StScrollBar StBin#hhandle:hover,
+.gpaste-dialog-contents-view-box StScrollBar StBin#vhandle:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+    transition-duration: 300ms;
+}
+
+.gpaste-dialog-contents-view-box StScrollBar StBin#hhandle:active,
+.gpaste-dialog-contents-view-box StScrollBar StBin#vhandle:active {
+    background-color: rgba(255, 255, 255, 0.7);
+    transition-duration: 300ms;
+}

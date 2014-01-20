@@ -11,5 +11,25 @@
         <default>100</default>
     </key>
 
+    <key type="i" name="preview-max-width-px">
+        <default>700</default>
+    </key>
+
+    <key type="i" name="preview-max-height-px">
+        <default>500</default>
+    </key>
+
+    <key type="i" name="preview-min-width-px">
+        <default>300</default>
+    </key>
+
+    <key type="as" name="show-clipboard-contents">
+      <default><![CDATA[['<Super>Z']]]></default>
+    </key>
+
+    <key type="b" name="enable-shortcuts">
+      <default>true</default>
+    </key>
+
   </schema>
 </schemalist>

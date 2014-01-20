@@ -1,6 +1,8 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 const Panel = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
@@ -10,6 +12,11 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const GPasteIntegration = Me.imports.gpaste_integration;
 const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
+
+const SIGNAL_IDS = {
+    ENABLE_SHORTCUTS: 0
+};
 
 const GPasteIntegrationButton = new Lang.Class({
     Name: 'GPasteIntegrationButton',
@@ -38,6 +45,22 @@ const GPasteIntegrationButton = new Lang.Class({
         );
 
         this._add_menu_items();
+
+        if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_SHORTCUTS_KEY)) {
+            this.add_keybindings();
+        }
+
+        SIGNAL_IDS.ENABLE_SHORTCUTS =
+            Utils.SETTINGS.connect('changed::'+PrefsKeys.ENABLE_SHORTCUTS_KEY,
+                Lang.bind(this, function() {
+                    let enable = Utils.SETTINGS.get_boolean(
+                        PrefsKeys.ENABLE_SHORTCUTS_KEY
+                    );
+
+                    if(enable) this.add_keybindings();
+                    else this.remove_keybindings();
+                })
+            );
     },
 
     _onButtonPress: function(actor, event) {
@@ -83,7 +106,30 @@ const GPasteIntegrationButton = new Lang.Class({
         this._gpaste.client.on_extension_state_changed(state);
     },
 
+    add_keybindings: function() {
+        Main.wm.addKeybinding(
+            PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY,
+            Utils.SETTINGS,
+            Meta.KeyBindingFlags.NONE,
+            Shell.KeyBindingMode.NORMAL |
+            Shell.KeyBindingMode.MESSAGE_TRAY |
+            Shell.KeyBindingMode.OVERVIEW,
+            Lang.bind(this, function() {
+                this._gpaste.show_current_contents();
+            })
+        );
+    },
+
+    remove_keybindings: function() {
+        Main.wm.removeKeybinding(PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY);
+    },
+
     destroy: function() {
+        if(SIGNAL_IDS.ENABLE_SHORTCUTS > 0) {
+            Utils.SETTINGS.disconnect(SIGNAL_IDS.ENABLE_SHORTCUTS);
+        }
+
+        this.remove_keybindings();
         this._gpaste.destroy();
         this.parent();
     }
