@@ -41,8 +41,10 @@ const ContentsPreviewView = new Lang.Class({
             Pango.EllipsizeMode.NONE
         );
 
-        this._label_box = new St.BoxLayout();
-        this._label_box.add(this._entry);
+        this._label_box = new St.BoxLayout({
+            vertical: true
+        });
+        this._label_box.add_child(this._entry);
         this._scroll_view = new St.ScrollView({
             overlay_scrollbars: true
         });
