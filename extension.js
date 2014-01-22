@@ -13,6 +13,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const GPasteIntegration = Me.imports.gpaste_integration;
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
+const GPasteClient = Me.imports.gpaste_client;
 
 const SIGNAL_IDS = {
     ENABLE_SHORTCUTS: 0
@@ -32,7 +33,7 @@ const GPasteIntegrationButton = new Lang.Class({
         this.actor.add_child(icon);
 
         this._gpaste = new GPasteIntegration.GPasteIntegration();
-        this._gpaste.client.connect(
+        GPasteClient.get_client().connect(
             'tracking',
             Lang.bind(this, function(c, state) {
                 if(state) {
@@ -81,16 +82,18 @@ const GPasteIntegrationButton = new Lang.Class({
     _add_menu_items: function() {
         let track_item = new PopupMenu.PopupSwitchMenuItem("Track changes", true);
         track_item.connect('toggled', Lang.bind(this, function() {
-            this._gpaste.client.track(track_item.state);
+            GPasteClient.get_client().track(track_item.state);
         }));
-        this._gpaste.client.connect('tracking', Lang.bind(this, function(c, state) {
-            track_item.setToggleState(state);
-        }));
+        GPasteClient.get_client().connect('tracking',
+            Lang.bind(this, function(c, state) {
+                track_item.setToggleState(state);
+            })
+        );
         this.menu.addMenuItem(track_item);
 
         let clear_history_item = new PopupMenu.PopupMenuItem('Clear history');
         clear_history_item.connect('activate', Lang.bind(this, function() {
-            this._gpaste.client.empty();
+            GPasteClient.get_client().empty();
         }));
         this.menu.addMenuItem(clear_history_item);
 
@@ -103,7 +106,7 @@ const GPasteIntegrationButton = new Lang.Class({
     },
 
     on_state_changed: function(state) {
-        this._gpaste.client.on_extension_state_changed(state);
+        GPasteClient.get_client().on_extension_state_changed(state);
     },
 
     add_keybindings: function() {

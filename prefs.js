@@ -318,20 +318,27 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         this.parent(params);
         this._settings = Utils.getSettings();
 
-        let widget = new GPaste.SettingsUiWidget({
-            orientation: Gtk.Orientation.VERTICAL,
-            margin: 12
+        let notebook = new Gtk.Notebook({
+            margin_left: 5,
+            margin_top: 5,
+            margin_bottom: 5,
+            margin_right: 5,
+            expand: true
         });
-        let stack = widget.get_child_at(0, 1);
-        let extension_page = this._get_extension_page();
-        let keybindings_page = this._get_keybindings_page();
-        stack.add_titled(extension_page, "Extension", "Extension");
-        stack.add_titled(keybindings_page, "Extension shortcuts", "Extension shortcuts");
 
-        this.add(widget);
+        let main_page = this._get_main_page();
+        let keybindings_page = this._get_keybindings_page();
+
+        notebook.append_page(main_page.page, main_page.label);
+        notebook.append_page(keybindings_page.page, keybindings_page.label);
+
+        this.add(notebook);
     },
 
-    _get_extension_page: function() {
+    _get_main_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Main'
+        });
         let page = new PrefsGrid(this._settings);
 
         let range_properties = {
@@ -367,10 +374,16 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             spin_properties
         );
 
-        return page;
+        return {
+            page: page,
+            label: page_label
+        };
     },
 
     _get_keybindings_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Shortcuts'
+        });
         let page = new PrefsGrid(this._settings);
 
         let enable_shortcuts = page.add_boolean(
@@ -396,7 +409,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         keybindings_widget.set_sensitive(shortcuts_enabled);
         page.add_item(keybindings_widget)
 
-        return page;
+        return {
+            page: page,
+            label: page_label
+        };
     }
 });
 

@@ -8,6 +8,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
+const GPasteClient = Me.imports.gpaste_client;
 
 const GpasteHistorySwitcherItem = new Lang.Class({
     Name: 'GpasteHistorySwitcherItem',
@@ -101,18 +102,20 @@ const GpasteHistorySwitcher = new Lang.Class({
 
     _load_histories: function() {
         this.actor.destroy_all_children();
-        let histories = this._gpaste_integration.client.list_histories();
-
-        for(let i = 0; i < histories.length; i++) {
-            let history = new GpasteHistorySwitcherItem(histories[i]);
-            history.on_clicked = Lang.bind(this, function(history_item) {
-                this._gpaste_integration.client.switch_history(
-                    history_item.name
-                );
-                this.hide();
-            });
-            this.actor.add_child(history.actor);
-        }
+        GPasteClient.get_client().list_histories(
+            Lang.bind(this, function(histories) {
+                for(let i = 0; i < histories.length; i++) {
+                    let history = new GpasteHistorySwitcherItem(histories[i]);
+                    history.on_clicked = Lang.bind(this, function(history_item) {
+                        GPasteClient.get_client().switch_history(
+                            history_item.name
+                        );
+                        this.hide();
+                    });
+                    this.actor.add_child(history.actor);
+                }
+            })
+        );
     },
 
     show: function() {

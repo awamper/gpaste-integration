@@ -5,6 +5,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const ButtonsBar = Me.imports.buttons_bar;
+const GPasteClient = Me.imports.gpaste_client;
 
 const GPasteButtons = new Lang.Class({
     Name: "GPasteButtons",
@@ -12,10 +13,11 @@ const GPasteButtons = new Lang.Class({
     _init: function(gpaste_integration) {
         this._gpaste_integration = gpaste_integration;
         this._statusbar = this._gpaste_integration._statusbar;
-        this._client = this._gpaste_integration._client;
-        this._client.connect('tracking', Lang.bind(this, function(c, state) {
-            this.track_changes_btn.set_checked(state);
-        }));
+        GPasteClient.get_client().connect('tracking',
+            Lang.bind(this, function(c, state) {
+                this.track_changes_btn.set_checked(state);
+            })
+        );
 
         this._buttons_bar = new ButtonsBar.ButtonsBar();
         this._init_track_changes_button();
@@ -38,7 +40,7 @@ const GPasteButtons = new Lang.Class({
             statusbar: this._statusbar,
             action: Lang.bind(this, function() {
                 let checked = this.track_changes_btn.get_checked();
-                this._client.track(checked);
+                GPasteClient.get_client().track(checked);
             })
         };
 
@@ -69,7 +71,7 @@ const GPasteButtons = new Lang.Class({
             confirmation_dialog: true,
             action: Lang.bind(this, Lang.bind(this, function() {
                 this._gpaste_integration.hide(true);
-                this._client.empty();
+                GPasteClient.get_client().empty();
             }))
         };
 

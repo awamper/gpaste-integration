@@ -5,7 +5,6 @@ const Shell = imports.gi.Shell;
 const Tweener = imports.ui.tweener;
 const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
-const GPaste = imports.gi.GPaste;
 const Panel = imports.ui.panel;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -20,6 +19,7 @@ const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
+const GPasteClient = Me.imports.gpaste_client;
 
 const ANIMATION_TIME = 0.5;
 const FILTER_TIMEOUT_MS = 200;
@@ -38,8 +38,6 @@ const GPasteIntegration = new Lang.Class({
     Name: "GPasteIntegration",
 
     _init: function() {
-        this._client = new GPaste.Client();
-
         this.actor = new St.BoxLayout({
             reactive: true,
             track_hover:true,
@@ -179,32 +177,37 @@ const GPasteIntegration = new Lang.Class({
         this._resize();
         this._update_history();
 
-        CONNECTION_IDS.client_show_history =
-            this._client.connect('show-history', Lang.bind(this, this.toggle));
-        CONNECTION_IDS.client_changed = this._client.connect('changed',
+        CONNECTION_IDS.client_show_history = GPasteClient.get_client().connect(
+            'show-history',
+            Lang.bind(this, this.toggle)
+        );
+        CONNECTION_IDS.client_changed = GPasteClient.get_client().connect(
+            'changed',
             Lang.bind(this, function() {
-                this._update_history();
+                this._update_history(
+                    Lang.bind(this, function() {
+                        if(this.is_open) {
+                            this._show_all();
 
-                if(this.is_open) {
-                    this._show_all();
+                            if(this._last_selected_item_id !== null) {
+                                let display = this._list_view.get_display_for_index(
+                                    this._last_selected_item_id
+                                );
 
-                    if(this._last_selected_item_id !== null) {
-                        let display = this._list_view.get_display_for_index(
-                            this._last_selected_item_id
-                        );
-
-                        if(display) {
-                            this._list_view.select(display);
-                            this._last_selected_item_id = null;
+                                if(display) {
+                                    this._list_view.select(display);
+                                    this._last_selected_item_id = null;
+                                }
+                                else {
+                                    this._list_view.select_first_visible();
+                                }
+                            }
+                            else {
+                                this._list_view.select_first_visible();
+                            }
                         }
-                        else {
-                            this._list_view.select_first_visible();
-                        }
-                    }
-                    else {
-                        this._list_view.select_first_visible();
-                    }
-                }
+                    })
+                );
             })
         );
     },
@@ -285,19 +288,25 @@ const GPasteIntegration = new Lang.Class({
         );
     },
 
-    _update_history: function() {
-        let history = this._client.get_history();
+    _update_history: function(on_complete) {
+        GPasteClient.get_client().get_history(
+            Lang.bind(this, function(history) {
+                if(!history) {
+                    Main.notify(
+                        "GpasteIntegration: Couldn't connect to GPaste daemon"
+                    );
+                    this.history = [];
+                }
+                else if(history.length < 1) {
+                    this.history = [];
+                }
+                else {
+                    this.history = history;
+                }
 
-        if(history === null) {
-            Main.notify("GpasteIntegration: Couldn't connect to GPaste daemon");
-            this.history = [];
-        }
-        else if(history.length < 1) {
-            this.history = [];
-        }
-        else {
-            this.history = history;
-        }
+                if(typeof on_complete === 'function') on_complete();
+            })
+        );
     },
 
     _on_key_press_event: function(o, e) {
@@ -471,8 +480,8 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _disconnect_all: function() {
-        this._client.disconnect(CONNECTION_IDS.client_changed);
-        this._client.disconnect(CONNECTION_IDS.client_show_history);
+        GPasteClient.get_client().disconnect(CONNECTION_IDS.client_changed);
+        GPasteClient.get_client().disconnect(CONNECTION_IDS.client_show_history);
         this._disconnect_captured_event();
     },
 
@@ -511,7 +520,7 @@ const GPasteIntegration = new Lang.Class({
     },
 
     activate_item: function(model, index) {
-        this._client.select(model.get(index).id);
+        GPasteClient.get_client().select(model.get(index).id);
         let display = this._list_view.get_display_for_index(index);
         this.hide(false);
 
@@ -522,7 +531,7 @@ const GPasteIntegration = new Lang.Class({
 
     delete_item: function(model, index) {
         if(model.length <= 1) {
-            this._client.empty();
+            GPasteClient.get_client().empty();
             this._last_selected_item_id = null;
             this.hide();
             return;
@@ -538,7 +547,7 @@ const GPasteIntegration = new Lang.Class({
             this._last_selected_item_id = deleted_id;
         }
 
-        this._client.delete(deleted_id);
+        GPasteClient.get_client().delete_sync(deleted_id);
     },
 
     show: function(animation, target) {
@@ -622,8 +631,11 @@ const GPasteIntegration = new Lang.Class({
 
     show_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
-        let contents = this._client.get_element(0);
-        this._contents_preview_dialog.preview(contents);
+        GPasteClient.get_client().get_element(0,
+            Lang.bind(this, function(contents) {
+                this._contents_preview_dialog.preview(contents);
+            })
+        );
     },
 
     destroy: function() {
@@ -655,10 +667,6 @@ const GPasteIntegration = new Lang.Class({
             };
             this._history.push(item_data);
         }
-    },
-
-    get client() {
-        return this._client;
     },
 
     get history_switcher() {
