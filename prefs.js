@@ -2,7 +2,6 @@ const Lang = imports.lang;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
-const GPaste = imports.gi.GPaste;
 const Params = imports.misc.params;
 const ExtensionUtils = imports.misc.extensionUtils;
 
