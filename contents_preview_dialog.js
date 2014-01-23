@@ -15,7 +15,8 @@ const ContentsPreviewView = new Lang.Class({
 
     _init: function(contents) {
         let style_string =
-            'min-width: %spx; max-width: %spx; max-height: %spx;'.format(
+            'min-width: %spx; max-width: %spx; min-height: 80px; max-height: %spx;'
+            .format(
                 Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_MIN_WIDTH_PX_KEY),
                 Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_MAX_WIDTH_PX_KEY),
                 Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_MAX_HEIGHT_PX_KEY)
