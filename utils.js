@@ -20,8 +20,12 @@ function launch_extension_prefs(uuid) {
     const Shell = imports.gi.Shell;
     let appSys = Shell.AppSystem.get_default();
     let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-    app.launch(global.display.get_current_time_roundtrip(),
-               ['extension:///' + uuid], -1, null);
+    let info = app.get_app_info();
+    let timestamp = global.display.get_current_time_roundtrip();
+    info.launch_uris(
+        ['extension:///' + uuid],
+        global.create_app_launch_context(timestamp, -1)
+    );
 }
 
 function is_blank(str) {

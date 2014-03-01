@@ -3,57 +3,57 @@ const Gio = imports.gi.Gio;
 const Signals = imports.signals;
 
 const GPasteIface =
-   <interface name="org.gnome.GPaste">
-       <method name="GetHistory">
-           <arg type="as" direction="out" />
-       </method>
-       <method name="BackupHistory">
-           <arg type="s" direction="in" />
-       </method>
-       <method name="SwitchHistory">
-           <arg type="s" direction="in" />
-       </method>
-       <method name="DeleteHistory">
-           <arg type="s" direction="in" />
-       </method>
-       <method name="ListHistories">
-           <arg type="as" direction="out" />
-       </method>
-       <method name="Add">
-           <arg type="s" direction="in" />
-       </method>
-       <method name="AddFile">
-           <arg type="s" direction="in" />
-       </method>
-       <method name="GetElement">
-           <arg type="u" direction="in" />
-           <arg type="s" direction="out" />
-       </method>
-       <method name="Select">
-           <arg type="u" direction="in" />
-       </method>
-       <method name="Delete">
-           <arg type="u" direction="in" />
-       </method>
-       <method name="Empty" />
-       <method name="Track">
-           <arg type="b" direction="in" />
-       </method>
-       <method name="OnExtensionStateChanged">
-           <arg type="b" direction="in" />
-       </method>
-       <method name="Reexecute" />
-
-       <signal name="ReexecuteSelf" />
-       <signal name="Tracking">
-           <arg type="b" direction="out" />
-       </signal>
-       <signal name="Changed" />
-       <signal name="NameLost" />
-       <signal name="ShowHistory" />
-
-       <property name="Active" type="b" access="read" />
-   </interface>
+   '<node> \
+       <interface name="org.gnome.GPaste"> \
+           <method name="GetHistory"> \
+               <arg type="as" direction="out" /> \
+           </method> \
+           <method name="BackupHistory"> \
+               <arg type="s" direction="in" /> \
+           </method> \
+           <method name="SwitchHistory"> \
+               <arg type="s" direction="in" /> \
+           </method> \
+           <method name="DeleteHistory"> \
+               <arg type="s" direction="in" /> \
+           </method> \
+           <method name="ListHistories"> \
+               <arg type="as" direction="out" /> \
+           </method> \
+           <method name="Add"> \
+               <arg type="s" direction="in" /> \
+           </method> \
+           <method name="AddFile"> \
+               <arg type="s" direction="in" /> \
+           </method> \
+           <method name="GetElement"> \
+               <arg type="u" direction="in" /> \
+               <arg type="s" direction="out" /> \
+           </method> \
+           <method name="Select"> \
+               <arg type="u" direction="in" /> \
+           </method> \
+           <method name="Delete"> \
+               <arg type="u" direction="in" /> \
+           </method> \
+           <method name="Empty" /> \
+           <method name="Track"> \
+               <arg type="b" direction="in" /> \
+           </method> \
+           <method name="OnExtensionStateChanged"> \
+               <arg type="b" direction="in" /> \
+           </method> \
+           <method name="Reexecute" /> \
+           <signal name="ReexecuteSelf" /> \
+           <signal name="Tracking"> \
+               <arg type="b" direction="out" /> \
+           </signal> \
+           <signal name="Changed" /> \
+           <signal name="NameLost" /> \
+           <signal name="ShowHistory" /> \
+           <property name="Active" type="b" access="read" /> \
+       </interface> \
+    </node>';
 const GPasteProxy =
     Gio.DBusProxy.makeProxyWrapper(GPasteIface);
 
