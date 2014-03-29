@@ -1,5 +1,6 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
+const Gio = imports.gi.Gio;
 const Main = imports.ui.main;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -16,7 +17,8 @@ const PrefsKeys = Me.imports.prefs_keys;
 const GPasteClient = Me.imports.gpaste_client;
 
 const SIGNAL_IDS = {
-    ENABLE_SHORTCUTS: 0
+    ENABLE_SHORTCUTS: 0,
+    BUS_WATCHER: 0
 };
 
 const GPasteIntegrationButton = new Lang.Class({
@@ -138,19 +140,53 @@ const GPasteIntegrationButton = new Lang.Class({
     }
 });
 
-let gpaste_button;
+let gpaste_button = null;
+
+function show_button() {
+    if(gpaste_button === null) {
+        gpaste_button = new GPasteIntegrationButton();
+        gpaste_button.on_state_changed(true);
+        Main.panel.addToStatusArea('gpaste_integration', gpaste_button);
+    }
+}
+
+function hide_button() {
+    if(gpaste_button !== null) {
+        gpaste_button.destroy();
+        gpaste_button = null;
+    }
+}
+
+function watch_dbus() {
+    SIGNAL_IDS.BUS_WATCHER = Gio.bus_watch_name(
+        Gio.BusType.SESSION,
+        GPasteClient.DBUS_NAME,
+        0,
+        Lang.bind(this, function() {
+            show_button();
+        }),
+        Lang.bind(this, function() {
+            hide_button();
+        })
+    );
+}
+
+function unwatch_dbus() {
+    if(SIGNAL_IDS.BUS_WATCHER > 0) {
+        Gio.bus_unwatch_name(SIGNAL_IDS.BUS_WATCHER);
+        SIGNAL_IDS.BUS_WATCHER = 0;
+    }
+}
 
 function init(extension) {
     // nothing
 }
 
 function enable() {
-    gpaste_button = new GPasteIntegrationButton();
-    gpaste_button.on_state_changed(true);
-    Main.panel.addToStatusArea('gpaste_integration', gpaste_button);
+    watch_dbus();
 }
 
 function disable() {
-    gpaste_button.on_state_changed(false);
-    gpaste_button.destroy();
+    hide_button();
+    unwatch_dbus();
 }
