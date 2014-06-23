@@ -8,6 +8,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const PrefsKeys = Me.imports.prefs_keys;
 const Utils = Me.imports.utils;
+const TweenerTransitionTypes = Me.imports.tweener_transition_types;
 
 const KeybindingsWidget = new GObject.Class({
     Name: 'Keybindings.Widget',
@@ -215,7 +216,7 @@ const PrefsGrid = new GObject.Class({
         return this.add_row(text, item);
     },
 
-    add_spin: function(label, key, adjustment_properties, spin_properties) {
+    add_spin: function(label, key, adjustment_properties, type, spin_properties) {
         adjustment_properties = Params.parse(adjustment_properties, {
             lower: 0,
             upper: 100,
@@ -230,12 +231,20 @@ const PrefsGrid = new GObject.Class({
         }, true);
         let spin_button = new Gtk.SpinButton(spin_properties);
 
-        spin_button.set_value(this._settings.get_int(key));
-        spin_button.connect('value-changed', Lang.bind(this, function(spin) {
-            let value = spin.get_value_as_int();
+        if(type !== 'int') spin_button.set_digits(2);
 
-            if(this._settings.get_int(key) !== value) {
-                this._settings.set_int(key, value);
+        let get_method = type === 'int' ? 'get_int' : 'get_double';
+        let set_method = type === 'int' ? 'set_int' : 'set_double';
+
+        spin_button.set_value(this._settings[get_method](key));
+        spin_button.connect('value-changed', Lang.bind(this, function(spin) {
+            let value
+
+            if(type === 'int') value = spin.get_value_as_int();
+            else value = spin.get_value();
+
+            if(this._settings[get_method](key) !== value) {
+                this._settings[set_method](key, value);
             }
         }));
 
@@ -327,8 +336,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         let main_page = this._get_main_page();
         let keybindings_page = this._get_keybindings_page();
+        let animations = this._get_animations_page();
 
         notebook.append_page(main_page.page, main_page.label);
+        notebook.append_page(animations.page, animations.label);
         notebook.append_page(keybindings_page.page, keybindings_page.label);
 
         this.add(notebook);
@@ -365,12 +376,14 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         page.add_spin(
             'Preview max width(px):',
             PrefsKeys.PREVIEW_MAX_WIDTH_PX_KEY,
-            spin_properties
+            spin_properties,
+            'int'
         );
         page.add_spin(
             'Preview max height(px):',
             PrefsKeys.PREVIEW_MAX_HEIGHT_PX_KEY,
-            spin_properties
+            spin_properties,
+            'int'
         );
 
         return {
@@ -407,6 +420,62 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         let keybindings_widget = new KeybindingsWidget(keybindings);
         keybindings_widget.set_sensitive(shortcuts_enabled);
         page.add_item(keybindings_widget)
+
+        return {
+            page: page,
+            label: page_label
+        };
+    },
+
+    _get_animations_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Animations'
+        });
+        let page = new PrefsGrid(this._settings);
+        let adjustment_properties = {
+            lower: 0.1,
+            upper: 5.0,
+            step_increment: 0.1
+        };
+        let renderers = [];
+
+        for each(let transition in TweenerTransitionTypes.TWEENER_TRANSITION_TYPES) {
+            renderers.push({
+                title: transition,
+                value: transition
+            });
+        }
+
+        page.add_boolean(
+            'Animations:',
+            PrefsKeys.ENABLE_ANIMATIONS_KEY
+        );
+
+        page.add_combo(
+            'Open transition:',
+            PrefsKeys.OPEN_TRANSITION_TYPE_KEY,
+            renderers,
+            'string'
+        );
+        page.add_spin(
+            'Open animation time:',
+            PrefsKeys.OPEN_ANIMATION_TIME_KEY,
+            adjustment_properties,
+            'double'
+        );
+
+        page.add_combo(
+            'Close transition:',
+            PrefsKeys.CLOSE_TRANSITION_TYPE_KEY,
+            renderers,
+            'string'
+        );
+        page.add_spin(
+            'Close animation time:',
+            PrefsKeys.CLOSE_ANIMATION_TIME_KEY,
+            adjustment_properties,
+            'double'
+        );
 
         return {
             page: page,

@@ -21,7 +21,6 @@ const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 
-const ANIMATION_TIME = 0.5;
 const FILTER_TIMEOUT_MS = 200;
 
 const CONNECTION_IDS = {
@@ -556,7 +555,10 @@ const GPasteIntegration = new Lang.Class({
     show: function(animation, target) {
         if(this._open) return;
 
-        animation = animation === undefined ? true : animation;
+        animation =
+            animation === undefined
+            ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            : animation;
         let push_result = Main.pushModal(this.actor, {
             keybindingMode: Shell.KeyBindingMode.NORMAL
         });
@@ -570,10 +572,11 @@ const GPasteIntegration = new Lang.Class({
         target = target === undefined ? this._target_y : target;
 
         if(animation) {
+            let time = Utils.SETTINGS.get_double(PrefsKeys.OPEN_ANIMATION_TIME_KEY);
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
-                time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeOutBack',
+                time: time / St.get_slow_down_factor(),
+                transition: Utils.SETTINGS.get_string(PrefsKeys.OPEN_TRANSITION_TYPE_KEY),
                 y: target
             });
         }
@@ -604,13 +607,17 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.unselect_all();
         this._list_view.hide_shortcuts();
         this._history_switcher.hide();
-        animation = animation === undefined ? true : animation;
+        animation =
+            animation === undefined
+            ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            : animation;
 
         if(animation) {
+            let time = Utils.SETTINGS.get_double(PrefsKeys.CLOSE_ANIMATION_TIME_KEY);
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
-                time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeInBack',
+                time: time / St.get_slow_down_factor(),
+                transition: Utils.SETTINGS.get_string(PrefsKeys.CLOSE_TRANSITION_TYPE_KEY),
                 y: this._hidden_y,
                 onComplete: Lang.bind(this, function() {
                     this.actor.hide();
