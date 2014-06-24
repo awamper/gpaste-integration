@@ -324,31 +324,36 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
     _init: function(params) {
         this.parent(params);
+        this.set_orientation(Gtk.Orientation.VERTICAL);
+
         this._settings = Utils.getSettings();
 
-        let notebook = new Gtk.Notebook({
+        let main = this._get_main_page();
+        let keybindings = this._get_keybindings_page();
+        let animations = this._get_animations_page();
+
+        let stack = new Gtk.Stack({
+            transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
+            transition_duration: 500
+        });
+        let stack_switcher = new Gtk.StackSwitcher({
             margin_left: 5,
             margin_top: 5,
             margin_bottom: 5,
             margin_right: 5,
-            expand: true
+            stack: stack
         });
 
-        let main_page = this._get_main_page();
-        let keybindings_page = this._get_keybindings_page();
-        let animations = this._get_animations_page();
+        stack.add_titled(main.page, main.name, main.name);
+        stack.add_titled(animations.page, animations.name, animations.name);
+        stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
 
-        notebook.append_page(main_page.page, main_page.label);
-        notebook.append_page(animations.page, animations.label);
-        notebook.append_page(keybindings_page.page, keybindings_page.label);
-
-        this.add(notebook);
+        this.add(stack_switcher);
+        this.add(stack);
     },
 
     _get_main_page: function() {
-        let page_label = new Gtk.Label({
-            label: 'Main'
-        });
+        let name = 'Main';
         let page = new PrefsGrid(this._settings);
 
         let range_properties = {
@@ -388,14 +393,12 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         return {
             page: page,
-            label: page_label
+            name: name
         };
     },
 
     _get_keybindings_page: function() {
-        let page_label = new Gtk.Label({
-            label: 'Shortcuts'
-        });
+        let name = 'Keybindings';
         let page = new PrefsGrid(this._settings);
 
         let enable_shortcuts = page.add_boolean(
@@ -423,14 +426,12 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         return {
             page: page,
-            label: page_label
+            name: name
         };
     },
 
     _get_animations_page: function() {
-        let page_label = new Gtk.Label({
-            label: 'Animations'
-        });
+        let name = 'Animations';
         let page = new PrefsGrid(this._settings);
         let adjustment_properties = {
             lower: 0.1,
@@ -479,7 +480,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         return {
             page: page,
-            label: page_label
+            name: name
         };
     }
 });
