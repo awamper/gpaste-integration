@@ -329,8 +329,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         this._settings = Utils.getSettings();
 
         let main = this._get_main_page();
-        let keybindings = this._get_keybindings_page();
         let animations = this._get_animations_page();
+        let keybindings = this._get_keybindings_page();
 
         let stack = new Gtk.Stack({
             transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
@@ -389,6 +389,26 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.PREVIEW_MAX_HEIGHT_PX_KEY,
             spin_properties,
             'int'
+        );
+
+        page.add_boolean(
+            'Item details:',
+            PrefsKeys.ENABLE_ITEM_INFO_KEY
+        );
+        spin_properties = {
+            lower: 100,
+            upper: 2000,
+            step_increment: 100
+        };
+        page.add_spin(
+            'Item info timeout(ms):',
+            PrefsKeys.ITEM_INFO_TIMEOUT_KEY,
+            spin_properties,
+            'int'
+        );
+        page.add_boolean(
+            'Image preview:',
+            PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
         );
 
         return {

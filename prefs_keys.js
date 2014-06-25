@@ -10,3 +10,6 @@ const OPEN_ANIMATION_TIME_KEY = 'open-animation-time';
 const CLOSE_ANIMATION_TIME_KEY = 'close-animation-time';
 const OPEN_TRANSITION_TYPE_KEY = 'open-transition-type';
 const CLOSE_TRANSITION_TYPE_KEY = 'close-transition-type';
+const ENABLE_ITEM_INFO_KEY = 'enable-item-info';
+const ENABLE_IMAGE_PREVIEW_KEY = 'enable-image-preview';
+const ITEM_INFO_TIMEOUT_KEY = 'item-info-timeout';

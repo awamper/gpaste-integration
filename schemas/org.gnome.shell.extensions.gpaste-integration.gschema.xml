@@ -51,5 +51,17 @@
         <default>'easeInBack'</default>
     </key>
 
+    <key type="b" name="enable-item-info">
+      <default>true</default>
+    </key>
+
+    <key type="b" name="enable-image-preview">
+      <default>true</default>
+    </key>
+
+    <key type="i" name="item-info-timeout">
+        <default>700</default>
+    </key>
+
   </schema>
 </schemalist>
