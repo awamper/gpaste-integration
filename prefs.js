@@ -329,6 +329,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         this._settings = Utils.getSettings();
 
         let main = this._get_main_page();
+        let size = this._get_size_page();
         let animations = this._get_animations_page();
         let keybindings = this._get_keybindings_page();
 
@@ -345,6 +346,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         });
 
         stack.add_titled(main.page, main.name, main.name);
+        stack.add_titled(size.page, size.name, size.name);
         stack.add_titled(animations.page, animations.name, animations.name);
         stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
 
@@ -355,23 +357,6 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
     _get_main_page: function() {
         let name = 'Main';
         let page = new PrefsGrid(this._settings);
-
-        let range_properties = {
-            min: 10,
-            max: 100,
-            step: 10,
-            size: 300
-        };
-        page.add_range(
-            'Width (% of screen):',
-            PrefsKeys.WIDTH_PERCENTS_KEY,
-            range_properties
-        )
-        page.add_range(
-            'Height (% of screen):',
-            PrefsKeys.HEIGHT_PERCENTS_KEY,
-            range_properties
-        )
 
         let spin_properties = {
             lower: 100,
@@ -411,6 +396,32 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
         );
 
+        return {
+            page: page,
+            name: name
+        };
+    },
+
+    _get_size_page: function() {
+        let name = 'Size';
+        let page = new PrefsGrid(this._settings);
+
+        let range_properties = {
+            min: 10,
+            max: 100,
+            step: 10,
+            size: 300
+        };
+        page.add_range(
+            'Width (% of screen):',
+            PrefsKeys.WIDTH_PERCENTS_KEY,
+            range_properties
+        )
+        page.add_range(
+            'Height (% of screen):',
+            PrefsKeys.HEIGHT_PERCENTS_KEY,
+            range_properties
+        )
         return {
             page: page,
             name: name
