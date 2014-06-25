@@ -30,6 +30,10 @@ const GPasteIface =
                <arg type="u" direction="in" /> \
                <arg type="s" direction="out" /> \
            </method> \
+           <method name="GetRawElement"> \
+               <arg type="u" direction="in" /> \
+               <arg type="s" direction="out" /> \
+           </method> \
            <method name="Select"> \
                <arg type="u" direction="in" /> \
            </method> \
@@ -103,6 +107,14 @@ const GPasteClient = new Lang.Class({
         this._provider.GetElementRemote(index,
             Lang.bind(this, function(result, error) {
                 this._return(result, error, 'get_element', callback);
+            })
+        );
+    },
+
+    get_raw_element: function(index, callback) {
+        this._provider.GetRawElementRemote(index,
+            Lang.bind(this, function(result, error) {
+                this._return(result, error, 'get_raw_element', callback);
             })
         );
     },

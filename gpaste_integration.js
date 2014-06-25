@@ -641,7 +641,7 @@ const GPasteIntegration = new Lang.Class({
 
     show_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
-        GPasteClient.get_client().get_element(0,
+        GPasteClient.get_client().get_raw_element(0,
             Lang.bind(this, function(contents) {
                 this._contents_preview_dialog.preview(contents);
             })
