@@ -9,11 +9,13 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 const PopupDialog = Me.imports.popup_dialog;
+const ItemInfoView = Me.imports.item_info_view;
 
 const ContentsPreviewView = new Lang.Class({
     Name: 'ContentsPreviewView',
 
     _init: function(contents) {
+        this._contents = contents;
         let style_string =
             'min-width: %spx; max-width: %spx; min-height: 80px; max-height: %spx;'
             .format(
@@ -24,9 +26,13 @@ const ContentsPreviewView = new Lang.Class({
 
         this.actor = new St.BoxLayout({
             style_class: 'gpaste-dialog-contents-view-box',
-            style: style_string
+            style: style_string,
+            vertical: true
         });
         this.actor.connect('destroy', Lang.bind(this, this.destroy));
+
+        this._image_box = new St.BoxLayout();
+        this.actor.add_child(this._image_box);
 
         this._entry = new St.Entry({
             style_class: 'gpaste-contents-preview-entry'
@@ -52,11 +58,28 @@ const ContentsPreviewView = new Lang.Class({
         this._scroll_view.add_actor(this._label_box);
         this.actor.add_child(this._scroll_view);
 
+        this.info_view = new ItemInfoView.ItemInfoView({
+            label_style_class: 'gpaste-item-box-info-label'
+        });
+        this.info_view.show();
+        this.actor.add(this.info_view.actor, {
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.END,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.MIDDLE
+        });
+
         this.set_contents(contents);
     },
 
     set_contents: function(contents) {
         this._entry.set_text(contents);
+    },
+
+    add_image: function(actor) {
+        this._image_box.add_child(actor);
     },
 
     clear: function() {
@@ -187,13 +210,38 @@ const ContentsPreviewDialog = new Lang.Class({
         this._contents_view = null;
     },
 
-    preview: function(contents) {
+    preview: function(item_id, contents) {
         this.clear();
 
         this._contents_view = new ContentsPreviewView(contents);
         this._box.add_child(this._contents_view.actor);
 
+        Utils.get_info_for_item(item_id,
+            Lang.bind(this, function(result, uri) {
+                if(!result) {
+                    this._contents_view.info_view.hide();
+                }
+                else {
+                    this._contents_view.info_view.set_text(result);
+                    if(uri !== null) this.show_image(uri);
+                }
+            })
+        );
+
         this.show();
         this._reposition();
-    }
+    },
+
+    show_image: function(uri) {
+        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        let texture_cache = St.TextureCache.get_default();
+        let image = texture_cache.load_uri_async(
+            uri,
+            Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_IMAGE_MAX_WIDTH_KEY),
+            Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_IMAGE_MAX_HEIGHT_KEY),
+            scale_factor
+        );
+
+        this._contents_view.add_image(image);
+    },
 });

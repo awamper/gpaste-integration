@@ -249,6 +249,7 @@
 
 .gpaste-dialog-contents-view-box {
     padding: 5px;
+    spacing: 10px;
     color: #C4C4C4;
     background-color: #545353;
     border: 1px solid #9C9C9C;

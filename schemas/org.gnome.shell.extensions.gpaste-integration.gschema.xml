@@ -23,6 +23,14 @@
         <default>300</default>
     </key>
 
+    <key type="i" name="preview-image-max-width">
+        <default>500</default>
+    </key>
+
+    <key type="i" name="preview-image-max-height">
+        <default>300</default>
+    </key>
+
     <key type="as" name="show-clipboard-contents">
       <default><![CDATA[['<Super>Z']]]></default>
     </key>

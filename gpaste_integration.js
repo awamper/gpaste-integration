@@ -2,6 +2,8 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Tweener = imports.ui.tweener;
 const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
@@ -641,9 +643,11 @@ const GPasteIntegration = new Lang.Class({
 
     show_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
+
         GPasteClient.get_client().get_raw_element(0,
             Lang.bind(this, function(contents) {
-                this._contents_preview_dialog.preview(contents);
+                if(!contents) return;
+                this._contents_preview_dialog.preview(0, contents);
             })
         );
     },
