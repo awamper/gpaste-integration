@@ -53,7 +53,7 @@ const GPasteListViewRenderer = new Lang.Class({
             TIMEOUT_IDS.INFO = Mainloop.timeout_add(
                 Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
                 Lang.bind(this, function() {
-                    this._show_info(this._data.text);
+                    this._show_info();
                     TIMEOUT_IDS.INFO = 0;
                 })
             );
@@ -93,77 +93,6 @@ const GPasteListViewRenderer = new Lang.Class({
         this.title_label.clutter_text.set_markup(markup);
     },
 
-    _show_info_for_file: function(text) {
-        function on_query_complete(object, res, uri) {
-            let info;
-
-            try {
-                info = object.query_info_finish(res);
-            }
-            catch(e) {
-                log('GPasteListViewRenderer:_show_info_for_file(): %s'.format(e));
-
-                if(e.code === 1) this._info_view.set_text('No such file or directory');
-                else this._info_view.set_text(e.message);
-
-                return;
-            }
-
-            let content_type = info.get_content_type();
-            let thumbnail_path = info.get_attribute_byte_string('thumbnail::path');
-            let result ='Type: %s'.format(content_type);
-
-            if(content_type !== 'inode/directory') {
-                let size = info.get_size();
-                result = '%s, '.format(GLib.format_size(size)) + result;
-            }
-
-            this._info_view.set_text(result);
-
-            if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) return;
-
-            if(Utils.starts_with(content_type, 'image') || thumbnail_path) {
-                if(thumbnail_path) {
-                    uri = 'file://%s'.format(thumbnail_path);
-                }
-
-                this._show_image_preview(uri);
-            }
-        }
-
-        GPasteClient.get_client().get_raw_element(this._data.id,
-            Lang.bind(this, function(result) {
-                if(!result) return;
-
-                let uris = result.split('\n');
-
-                if(uris.length > 1) {
-                    this._info_view.set_text('%s items'.format(uris.length));
-                    return;
-                }
-
-                let uri = 'file://%s'.format(uris[0]);
-                let file = Gio.file_new_for_uri(uri);
-                file.query_info_async(
-                    'standard::content-type,standard::size,thumbnail::path',
-                    Gio.FileQueryInfoFlags.NONE,
-                    GLib.PRIORITY_DEFAULT,
-                    null,
-                    Lang.bind(this, on_query_complete, uri)
-                );
-            })
-        );
-    },
-
-    _show_info_for_text: function(text) {
-        let info = '%s symbol(s), %s line(s)'.format(
-            text.length,
-            text.split('\n').length
-        );
-
-        this._info_view.set_text(info);
-    },
-
     _show_image_preview: function(uri) {
         let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let texture_cache = St.TextureCache.get_default();
@@ -187,7 +116,7 @@ const GPasteListViewRenderer = new Lang.Class({
         });
     },
 
-    _show_info: function(text) {
+    _show_info: function() {
         if(this._info_view.shown) return;
 
         this.actor.add(this._info_view.actor, {
@@ -212,12 +141,20 @@ const GPasteListViewRenderer = new Lang.Class({
             height: height
         });
 
-        if(Utils.starts_with(text, '[Files]') || Utils.starts_with(text, '[Image')) {
-            this._show_info_for_file(text);
-        }
-        else {
-            this._show_info_for_text(text);
-        }
+        Utils.get_info_for_item(this._data.id,
+            Lang.bind(this, function(text, uri) {
+                if(!text) {
+                    this._hide_info();
+                    return;
+                }
+
+                this._info_view.set_text(text);
+
+                if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
+                    if(uri !== null) this._show_image_preview(uri);
+                }
+            })
+        );
     },
 
     _hide_info: function() {
