@@ -673,7 +673,7 @@ const GPasteIntegration = new Lang.Class({
     set history(arr) {
         this._history = [];
 
-        for(let i = 0; i < arr.length; i++) {
+        for(let i = 1; i < arr.length; i++) {
             let item_data = {
                 id: i,
                 text: arr[i],
