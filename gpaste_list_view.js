@@ -35,7 +35,7 @@ const GPasteListView = new Lang.Class({
     },
 
     fade_out_display: function(display) {
-        [x, y] = display.get_transformed_position();
+        let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
             source: display,
             width: display.width,
