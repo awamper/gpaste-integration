@@ -10,6 +10,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const ListView = Me.imports.list_view;
+const ItemInfoView = Me.imports.item_info_view;
 const GPasteClient = Me.imports.gpaste_client;
 const PrefsKeys = Me.imports.prefs_keys;
 
@@ -38,10 +39,9 @@ const GPasteListViewRenderer = new Lang.Class({
         });
         this.actor.connect('style-changed', Lang.bind(this, this._on_style_changed));
 
-        this.info_label = new St.Label({
-            style_class: 'gpaste-item-box-info-label'
+        this._info_view = new ItemInfoView.ItemInfoView({
+            label_style_class: 'gpaste-item-box-info-label'
         });
-
         this._data = null;
         this._image_preview = null;
     },
@@ -103,8 +103,8 @@ const GPasteListViewRenderer = new Lang.Class({
             catch(e) {
                 log('GPasteListViewRenderer:_show_info_for_file(): %s'.format(e));
 
-                if(e.code === 1) this.info_label.set_text('No such file or directory');
-                else this.info_label.set_text(e.message);
+                if(e.code === 1) this._info_view.set_text('No such file or directory');
+                else this._info_view.set_text(e.message);
 
                 return;
             }
@@ -118,7 +118,7 @@ const GPasteListViewRenderer = new Lang.Class({
                 result = '%s, '.format(GLib.format_size(size)) + result;
             }
 
-            this.info_label.set_text(result);
+            this._info_view.set_text(result);
 
             if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) return;
 
@@ -138,7 +138,7 @@ const GPasteListViewRenderer = new Lang.Class({
                 let uris = result.split('\n');
 
                 if(uris.length > 1) {
-                    this.info_label.set_text('%s items'.format(uris.length));
+                    this._info_view.set_text('%s items'.format(uris.length));
                     return;
                 }
 
@@ -161,7 +161,7 @@ const GPasteListViewRenderer = new Lang.Class({
             text.split('\n').length
         );
 
-        this.info_label.set_text(info);
+        this._info_view.set_text(info);
     },
 
     _show_image_preview: function(uri) {
@@ -188,10 +188,9 @@ const GPasteListViewRenderer = new Lang.Class({
     },
 
     _show_info: function(text) {
-        if(this.actor.contains(this.info_label)) return;
+        if(this._info_view.shown) return;
 
-        this.info_label.set_text('...');
-        this.actor.add(this.info_label, {
+        this.actor.add(this._info_view.actor, {
             row: 1,
             col: 1,
             x_expand: false,
@@ -201,12 +200,13 @@ const GPasteListViewRenderer = new Lang.Class({
             y_fill: false,
             y_align: St.Align.START
         });
+        this._info_view.set_text('...');
+        let height = this._info_view.actor.get_preferred_height(-1)[1];
+        this._info_view.actor.set_height(0);
+        this._info_view.show();
 
-        let height = this.info_label.get_height();
-        this.info_label.set_height(0);
-
-        Tweener.removeTweens(this.info_label);
-        Tweener.addTween(this.info_label, {
+        Tweener.removeTweens(this._info_view.actor);
+        Tweener.addTween(this._info_view.actor, {
             time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
             transition: 'easeOutQuad',
             height: height
@@ -221,20 +221,21 @@ const GPasteListViewRenderer = new Lang.Class({
     },
 
     _hide_info: function() {
-        if(this.actor.contains(this.info_label)) {
-            let height = this.info_label.get_height();
-            Tweener.removeTweens(this.info_label);
-            Tweener.addTween(this.info_label, {
-                time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
-                transition: 'easeOutQuad',
-                height: 0,
-                onComplete: Lang.bind(this, function() {
-                    this.actor.remove_child(this.info_label);
-                    this.info_label.set_text('');
-                    this.info_label.set_height(height);
-                })
-            });
-        }
+        if(!this._info_view.shown) return;
+
+        let height = this._info_view.actor.get_height();
+        Tweener.removeTweens(this._info_view.actor);
+        Tweener.addTween(this._info_view.actor, {
+            time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
+            transition: 'easeOutQuad',
+            height: 0,
+            onComplete: Lang.bind(this, function() {
+                this.actor.remove_child(this._info_view.actor);
+                this._info_view.hide();
+                this._info_view.set_text('');
+                this._info_view.actor.set_height(height);
+            })
+        });
 
         if(this._image_preview && this.actor.contains(this._image_preview)) {
             this.actor.remove_child(this._image_preview);
