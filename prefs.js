@@ -386,7 +386,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             step_increment: 100
         };
         page.add_spin(
-            'Item info timeout(ms):',
+            'Item details timeout(ms):',
             PrefsKeys.ITEM_INFO_TIMEOUT_KEY,
             spin_properties,
             'int'
