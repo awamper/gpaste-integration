@@ -538,22 +538,25 @@ const GPasteIntegration = new Lang.Class({
             );
         }
 
-        let matches = this._fuzzy_search.filter(term, this.history);
-        let items = [];
+        this._fuzzy_search.filter(term, this.history,
+            Lang.bind(this, function(matches) {
+                let items = [];
 
-        for(let i = 0; i < matches.length; i++) {
-            let item = Object.create(matches[i].original);
+                for(let i = 0; i < matches.length; i++) {
+                    let item = Object.create(matches[i].original);
 
-            if(flag === SEARCH_FLAGS.ONLY_FILES) if(!is_file_item(item)) continue;
-            if(flag === SEARCH_FLAGS.ONLY_TEXT) if(is_file_item(item)) continue;
+                    if(flag === SEARCH_FLAGS.ONLY_FILES) if(!is_file_item(item)) continue;
+                    if(flag === SEARCH_FLAGS.ONLY_TEXT) if(is_file_item(item)) continue;
 
-            item.markup = matches[i].string;
-            items.push(item);
-        }
+                    item.markup = matches[i].string;
+                    items.push(item);
+                }
 
-        this._show_items(items);
-        this._list_view.reset_scroll();
-        this._list_view.select_first();
+                this._show_items(items);
+                this._list_view.reset_scroll();
+                this._list_view.select_first();
+            })
+        );
     },
 
     _show_all: function() {
