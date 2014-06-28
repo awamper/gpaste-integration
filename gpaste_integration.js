@@ -35,6 +35,11 @@ const TIMEOUT_IDS = {
     FILTER: 0
 };
 
+const SEARCH_FLAGS = {
+    ONLY_TEXT: '-t',
+    ONLY_FILES: '-f'
+};
+
 const GPasteIntegration = new Lang.Class({
     Name: "GPasteIntegration",
 
@@ -432,9 +437,10 @@ const GPasteIntegration = new Lang.Class({
         }
 
         if(!this._is_empty_entry(this._search_entry)) {
+            let parsed_search = this._parse_search_entry();
             this._search_entry.set_secondary_icon(this._active_icon);
             TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
-                Lang.bind(this, this._filter, this._search_entry.text)
+                Lang.bind(this, this._filter, parsed_search.term, parsed_search.flag)
             );
         }
         else {
@@ -444,6 +450,30 @@ const GPasteIntegration = new Lang.Class({
             this._search_entry.set_secondary_icon(this._inactive_icon);
             this._show_all();
         }
+    },
+
+    _parse_search_entry: function() {
+        let text = this._search_entry.text;
+        let result = {
+            term: '',
+            flag: ''
+        };
+        if(this._is_empty_entry(this._search_entry)) return result;
+
+        if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_FILES)) {
+            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_FILES.length);
+            result.flag = SEARCH_FLAGS.ONLY_FILES;
+        }
+        else if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_TEXT)) {
+            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_TEXT.length);
+            result.flag = SEARCH_FLAGS.ONLY_TEXT;
+        }
+        else {
+            result.term = text;
+            result.flag = '';
+        }
+
+        return result;
     },
 
     _resize: function() {
@@ -500,14 +530,23 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.select_first_visible();
     },
 
-    _filter: function(term) {
-        if(Utils.is_blank(term)) return;
+    _filter: function(term, flag) {
+        function is_file_item(item) {
+            return (
+                Utils.starts_with(item.text, '[Files]')
+                || Utils.starts_with(item.text, '[Image')
+            );
+        }
 
         let matches = this._fuzzy_search.filter(term, this.history);
         let items = [];
 
         for(let i = 0; i < matches.length; i++) {
             let item = Object.create(matches[i].original);
+
+            if(flag === SEARCH_FLAGS.ONLY_FILES) if(!is_file_item(item)) continue;
+            if(flag === SEARCH_FLAGS.ONLY_TEXT) if(is_file_item(item)) continue;
+
             item.markup = matches[i].string;
             items.push(item);
         }
