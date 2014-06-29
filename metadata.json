@@ -2,7 +2,6 @@
   "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Delete> - delete element.\n<Up>/<Down> - select.\n<Ctrl>+1-9 - activate one of the first nine visible.\n<Super>z - clipboard contents preview.", 
   "name": "GPaste Integration",
   "shell-version": [
-    "3.11.90",
     "3.12"
   ],
   "url": "https://github.com/awamper/gpaste-integration",
