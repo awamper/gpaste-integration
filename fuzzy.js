@@ -120,7 +120,7 @@ const Fuzzy = new Lang.Class({
     //       , original: 'blah'   // The original element in `arr`
     //     }]
     //
-    filter: function(pattern, arr) {
+    filter: function(pattern, arr, callback) {
         let results = [];
 
         for(let i = 0; i < arr.length; i++) {
@@ -155,6 +155,6 @@ const Fuzzy = new Lang.Class({
             results = results.slice(0, this.opts.max_results);
         }
 
-        return results;
+        callback(results);
     }
 });

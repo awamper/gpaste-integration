@@ -1,14 +1,11 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
-const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
-const Clutter = imports.gi.Clutter;
-const Tweener = imports.ui.tweener;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const GPasteClient = Me.imports.gpaste_client;
+const PopupDialog = Me.imports.popup_dialog;
 
 const GpasteHistorySwitcherItem = new Lang.Class({
     Name: 'GpasteHistorySwitcherItem',
@@ -36,10 +33,10 @@ const GpasteHistorySwitcherItem = new Lang.Class({
             row: 0,
             col: 0,
             x_expand: true,
-            x_fill: false,
+            x_fill: true,
             x_align: St.Align.START,
-            y_expand: false,
-            y_fill: false,
+            y_expand: true,
+            y_fill: true,
             y_align: St.Align.MIDDLE
         });
 
@@ -55,53 +52,24 @@ const GpasteHistorySwitcherItem = new Lang.Class({
 
 const GpasteHistorySwitcher = new Lang.Class({
     Name: 'GpasteHistorySwitcher',
+    Extends: PopupDialog.PopupDialog,
 
     _init: function(gpaste_integration) {
-        this.actor = new St.BoxLayout({
-            style_class: "gpaste-histories-box",
-            visible: false,
-            reactive: true,
+        this.parent({
+            modal: true
+        });
+        this._box = new St.BoxLayout({
+            style_class: 'gpaste-history-switcher-dialog',
+            width: 200,
             vertical: true
         });
-        this.actor.connect(
-            'key-release-event',
-            Lang.bind(this, this._on_key_release)
-        );
-        Main.uiGroup.add_child(this.actor);
+        this.actor.add_child(this._box);
 
         this._gpaste_integration = gpaste_integration;
     },
 
-    _on_key_release: function(o, e) {
-        let symbol = e.get_key_symbol()
-
-        if(symbol === Clutter.Escape) {
-            this.hide();
-            return true;
-        }
-
-        return false;
-    },
-
-    _reposition: function() {
-        let [gpaste_x, gpaste_y] =
-            this._gpaste_integration.actor.get_transformed_position();
-        this.actor.x =
-            gpaste_x + this._gpaste_integration.actor.width - this.actor.width;
-        this.actor.y = gpaste_y + this.actor.height;
-    },
-
-    _resize: function() {
-        this.actor.width = Math.round(
-            this._gpaste_integration.actor.width * 0.4
-        );
-        this.actor.height = Math.round(
-            this._gpaste_integration.actor.height * 0.5
-        );
-    },
-
     _load_histories: function() {
-        this.actor.destroy_all_children();
+        this._box.destroy_all_children();
         GPasteClient.get_client().list_histories(
             Lang.bind(this, function(histories) {
                 for(let i = 0; i < histories.length; i++) {
@@ -112,47 +80,14 @@ const GpasteHistorySwitcher = new Lang.Class({
                         );
                         this.hide();
                     });
-                    this.actor.add_child(history.actor);
+                    this._box.add(history.actor, {
+                        x_expand: true,
+                        x_fill: true
+                    });
                 }
+                this._reposition();
             })
         );
-    },
-
-    show: function() {
-        if(this.actor.visible) return;
-
-        this._resize();
-        this._reposition();
-        this._load_histories();
-        Main.pushModal(this.actor, {
-            keybindingMode: Shell.KeyBindingMode.NORMAL
-        });
-        this.actor.opacity = 0;
-        this.actor.show();
-
-        Tweener.removeTweens(this.actor);
-        Tweener.addTween(this.actor, {
-            opacity: 255,
-            time: 0.3,
-            transition: 'easeOutQuad',
-        });
-    },
-
-    hide: function() {
-        if(!this.actor.visible) return;
-
-        Main.popModal(this.actor);
-
-        Tweener.removeTweens(this.actor);
-        Tweener.addTween(this.actor, {
-            opacity: 0,
-            time: 0.3,
-            transition: 'easeOutQuad',
-            onComplete: Lang.bind(this, function() {
-                this.actor.hide();
-                this.actor.opacity = 255;
-            })
-        });
     },
 
     toggle: function() {
@@ -160,7 +95,8 @@ const GpasteHistorySwitcher = new Lang.Class({
         else this.show();
     },
 
-    destroy: function() {
-        this.actor.destroy();
-    }
+    show: function() {
+        this.parent();
+        this._load_histories();
+    },
 });

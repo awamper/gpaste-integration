@@ -1,11 +1,18 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Pango = imports.gi.Pango;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const Mainloop = imports.mainloop;
+const Tweener = imports.ui.tweener;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const ListView = Me.imports.list_view;
+const ItemInfoView = Me.imports.item_info_view;
+const GPasteClient = Me.imports.gpaste_client;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const MAX_DISPLAYED_STRING_LENGTH = 300;
 
@@ -14,14 +21,51 @@ const HIGHLIGHT_MARKUP = {
     STOP: '</span>'
 };
 
+const TIMEOUT_IDS = {
+    INFO: 0
+};
+
+const INFO_ANIMATION_TIME_S = 0.3;
+const IMAGE_PREVIEW_WIDTH = 100;
+const IMAGE_PREVIEW_HEIGHT = 100;
+
 const GPasteListViewRenderer = new Lang.Class({
     Name: 'GPasteListViewRenderer',
     Extends: ListView.RendererBase,
 
     _init: function(params) {
         this.parent({
-            style_class: 'gpaste-item-box'
+            style_class: 'gpaste-item-box',
         });
+        this.actor.connect('style-changed', Lang.bind(this, this._on_style_changed));
+
+        this._info_view = new ItemInfoView.ItemInfoView({
+            label_style_class: 'gpaste-item-box-info-label'
+        });
+        this._data = null;
+        this._image_preview = null;
+    },
+
+    _on_style_changed: function(actor) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
+
+        if(actor.has_style_pseudo_class('hover')) {
+            TIMEOUT_IDS.INFO = Mainloop.timeout_add(
+                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
+                Lang.bind(this, function() {
+                    this._show_info();
+                    TIMEOUT_IDS.INFO = 0;
+                })
+            );
+        }
+        else {
+            if(TIMEOUT_IDS.INFO !== 0) {
+                Mainloop.source_remove(TIMEOUT_IDS.INFO);
+                TIMEOUT_IDS.INFO = 0;
+            }
+
+            this._hide_info();
+        }
     },
 
     _prepare_string: function(str) {
@@ -49,20 +93,106 @@ const GPasteListViewRenderer = new Lang.Class({
         this.title_label.clutter_text.set_markup(markup);
     },
 
+    _show_image_preview: function(uri) {
+        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        let texture_cache = St.TextureCache.get_default();
+
+        this._image_preview = texture_cache.load_uri_async(
+            uri,
+            IMAGE_PREVIEW_WIDTH,
+            IMAGE_PREVIEW_HEIGHT,
+            scale_factor
+        );
+        this.actor.add(this._image_preview, {
+            row: 0,
+            row_span: 2,
+            col: 0,
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.MIDDLE,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.MIDDLE
+        });
+    },
+
+    _show_info: function() {
+        if(this._info_view.shown) return;
+
+        this.actor.add(this._info_view.actor, {
+            row: 1,
+            col: 1,
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.START,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.START
+        });
+        this._info_view.set_text('...');
+        let height = this._info_view.actor.get_preferred_height(-1)[1];
+        this._info_view.actor.set_height(0);
+        this._info_view.show();
+
+        Tweener.removeTweens(this._info_view.actor);
+        Tweener.addTween(this._info_view.actor, {
+            time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
+            transition: 'easeOutQuad',
+            height: height
+        });
+
+        Utils.get_info_for_item(this._data.id,
+            Lang.bind(this, function(text, uri) {
+                if(!text) {
+                    this._hide_info();
+                    return;
+                }
+
+                this._info_view.set_text(text);
+
+                if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
+                    if(uri !== null) this._show_image_preview(uri);
+                }
+            })
+        );
+    },
+
+    _hide_info: function() {
+        if(!this._info_view.shown) return;
+
+        let height = this._info_view.actor.get_height();
+        Tweener.removeTweens(this._info_view.actor);
+        Tweener.addTween(this._info_view.actor, {
+            time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
+            transition: 'easeOutQuad',
+            height: 0,
+            onComplete: Lang.bind(this, function() {
+                this.actor.remove_child(this._info_view.actor);
+                this._info_view.hide();
+                this._info_view.set_text('');
+                this._info_view.actor.set_height(height);
+            })
+        });
+
+        if(this._image_preview && this.actor.contains(this._image_preview)) {
+            this.actor.remove_child(this._image_preview);
+        }
+    },
+
     get_display: function(model, index) {
         this.title_label = this.get_title();
-        let data = model.get(index);
+        this._data = model.get(index);
 
-        if(!Utils.is_blank(data.markup)) {
-            this._show_markup(data.markup);
+        if(!Utils.is_blank(this._data.markup)) {
+            this._show_markup(this._data.markup);
         }
         else {
-            this._show_text(data.text);
+            this._show_text(this._data.text);
         }
 
         this.actor.add(this.title_label, {
             row: 0,
-            col: 0,
+            col: 1,
             x_expand: true,
             x_fill: true,
             x_align: St.Align.START,

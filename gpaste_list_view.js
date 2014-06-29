@@ -35,7 +35,7 @@ const GPasteListView = new Lang.Class({
     },
 
     fade_out_display: function(display) {
-        [x, y] = display.get_transformed_position();
+        let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
             source: display,
             width: display.width,
@@ -43,12 +43,15 @@ const GPasteListView = new Lang.Class({
             x: x,
             y: y
         });
+        clone.set_pivot_point(0.5, 0.5);
         Main.uiGroup.add_child(clone);
 
         Tweener.addTween(clone, {
-            time: 0.7,
+            time: 0.3,
+            scale_x: 1.5,
+            scale_y: 1.5,
             opacity: 0,
-            transition: 'easeInOutBounce',
+            transition: 'easeInOutCirc',
             onComplete: Lang.bind(this, function() {
                 clone.destroy();
             })

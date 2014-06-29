@@ -2,6 +2,8 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Tweener = imports.ui.tweener;
 const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
@@ -21,7 +23,6 @@ const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 
-const ANIMATION_TIME = 0.5;
 const FILTER_TIMEOUT_MS = 200;
 
 const CONNECTION_IDS = {
@@ -32,6 +33,11 @@ const CONNECTION_IDS = {
 
 const TIMEOUT_IDS = {
     FILTER: 0
+};
+
+const SEARCH_FLAGS = {
+    ONLY_TEXT: '-t',
+    ONLY_FILES: '-f'
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -431,9 +437,10 @@ const GPasteIntegration = new Lang.Class({
         }
 
         if(!this._is_empty_entry(this._search_entry)) {
+            let parsed_search = this._parse_search_entry();
             this._search_entry.set_secondary_icon(this._active_icon);
             TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
-                Lang.bind(this, this._filter, this._search_entry.text)
+                Lang.bind(this, this._filter, parsed_search.term, parsed_search.flag)
             );
         }
         else {
@@ -443,6 +450,30 @@ const GPasteIntegration = new Lang.Class({
             this._search_entry.set_secondary_icon(this._inactive_icon);
             this._show_all();
         }
+    },
+
+    _parse_search_entry: function() {
+        let text = this._search_entry.text;
+        let result = {
+            term: '',
+            flag: ''
+        };
+        if(this._is_empty_entry(this._search_entry)) return result;
+
+        if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_FILES)) {
+            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_FILES.length);
+            result.flag = SEARCH_FLAGS.ONLY_FILES;
+        }
+        else if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_TEXT)) {
+            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_TEXT.length);
+            result.flag = SEARCH_FLAGS.ONLY_TEXT;
+        }
+        else {
+            result.term = text;
+            result.flag = '';
+        }
+
+        return result;
     },
 
     _resize: function() {
@@ -499,21 +530,33 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.select_first_visible();
     },
 
-    _filter: function(term) {
-        if(Utils.is_blank(term)) return;
-
-        let matches = this._fuzzy_search.filter(term, this.history);
-        let items = [];
-
-        for(let i = 0; i < matches.length; i++) {
-            let item = Object.create(matches[i].original);
-            item.markup = matches[i].string;
-            items.push(item);
+    _filter: function(term, flag) {
+        function is_file_item(item) {
+            return (
+                Utils.starts_with(item.text, '[Files]')
+                || Utils.starts_with(item.text, '[Image')
+            );
         }
 
-        this._show_items(items);
-        this._list_view.reset_scroll();
-        this._list_view.select_first();
+        this._fuzzy_search.filter(term, this.history,
+            Lang.bind(this, function(matches) {
+                let items = [];
+
+                for(let i = 0; i < matches.length; i++) {
+                    let item = Object.create(matches[i].original);
+
+                    if(flag === SEARCH_FLAGS.ONLY_FILES) if(!is_file_item(item)) continue;
+                    if(flag === SEARCH_FLAGS.ONLY_TEXT) if(is_file_item(item)) continue;
+
+                    item.markup = matches[i].string;
+                    items.push(item);
+                }
+
+                this._show_items(items);
+                this._list_view.reset_scroll();
+                this._list_view.select_first();
+            })
+        );
     },
 
     _show_all: function() {
@@ -556,7 +599,10 @@ const GPasteIntegration = new Lang.Class({
     show: function(animation, target) {
         if(this._open) return;
 
-        animation = animation === undefined ? true : animation;
+        animation =
+            animation === undefined
+            ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            : animation;
         let push_result = Main.pushModal(this.actor, {
             keybindingMode: Shell.KeyBindingMode.NORMAL
         });
@@ -570,10 +616,11 @@ const GPasteIntegration = new Lang.Class({
         target = target === undefined ? this._target_y : target;
 
         if(animation) {
+            let time = Utils.SETTINGS.get_double(PrefsKeys.OPEN_ANIMATION_TIME_KEY);
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
-                time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeOutBack',
+                time: time / St.get_slow_down_factor(),
+                transition: Utils.SETTINGS.get_string(PrefsKeys.OPEN_TRANSITION_TYPE_KEY),
                 y: target
             });
         }
@@ -604,13 +651,17 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.unselect_all();
         this._list_view.hide_shortcuts();
         this._history_switcher.hide();
-        animation = animation === undefined ? true : animation;
+        animation =
+            animation === undefined
+            ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            : animation;
 
         if(animation) {
+            let time = Utils.SETTINGS.get_double(PrefsKeys.CLOSE_ANIMATION_TIME_KEY);
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
-                time: ANIMATION_TIME / St.get_slow_down_factor(),
-                transition: 'easeInBack',
+                time: time / St.get_slow_down_factor(),
+                transition: Utils.SETTINGS.get_string(PrefsKeys.CLOSE_TRANSITION_TYPE_KEY),
                 y: this._hidden_y,
                 onComplete: Lang.bind(this, function() {
                     this.actor.hide();
@@ -634,9 +685,11 @@ const GPasteIntegration = new Lang.Class({
 
     show_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
-        GPasteClient.get_client().get_element(0,
+
+        GPasteClient.get_client().get_raw_element(0,
             Lang.bind(this, function(contents) {
-                this._contents_preview_dialog.preview(contents);
+                if(!contents) return;
+                this._contents_preview_dialog.preview(0, contents);
             })
         );
     },
@@ -662,7 +715,7 @@ const GPasteIntegration = new Lang.Class({
     set history(arr) {
         this._history = [];
 
-        for(let i = 0; i < arr.length; i++) {
+        for(let i = 1; i < arr.length; i++) {
             let item_data = {
                 id: i,
                 text: arr[i],
