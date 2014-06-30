@@ -18,14 +18,21 @@ const GPasteButtons = new Lang.Class({
                 this.track_changes_btn.set_checked(state);
             })
         );
+        GPasteClient.get_client().connect('changed',
+            Lang.bind(this, function() {
+                if(this._histories_btn) {
+                    this._histories_btn.label = "\u25B4 " + GPasteClient.get_client().history_name;
+                }
+            })
+        );
 
         this._buttons_bar = new ButtonsBar.ButtonsBar();
         this._init_track_changes_button();
         this._init_switch_history_button();
         this._init_clear_button();
         this._init_prefs_button();
-        this._buttons_bar.add_button(this._track_changes_btn);
         this._buttons_bar.add_button(this._histories_btn);
+        this._buttons_bar.add_button(this._track_changes_btn);
         this._buttons_bar.add_button(this._clear_btn);
         this._buttons_bar.add_button(this._prefs_btn);
     },
@@ -49,8 +56,8 @@ const GPasteButtons = new Lang.Class({
 
     _init_switch_history_button: function() {
         let button_params = {
-            icon_name: Utils.ICONS.switch_history,
-            label_text: '',
+            // icon_name: Utils.ICONS.switch_history,
+            label_text: "\u25B4 " + GPasteClient.get_client().history_name,
             tip_text: 'Switch history',
             button_style_class: 'gpaste-button',
             statusbar: this._statusbar,
