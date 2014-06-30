@@ -1,6 +1,10 @@
 const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 const Signals = imports.signals;
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
 
 const GPasteIface =
    '<node> \
@@ -64,6 +68,9 @@ const GPasteProxy =
 const DBUS_NAME = "org.gnome.GPaste";
 const DBUS_PATH = "/org/gnome/GPaste";
 
+const GPASTE_SETTINGS_SCHEMA = 'org.gnome.GPaste';
+const HISTORY_NAME_KEY = 'history-name';
+
 const GPasteClient = new Lang.Class({
     Name: "GPasteClient",
 
@@ -91,6 +98,8 @@ const GPasteClient = new Lang.Class({
                 this.emit('tracking', state);
             })
         );
+
+        this._settings = Utils.getSettings(GPASTE_SETTINGS_SCHEMA);
     },
 
     _return: function([result], error, method, callback) {
@@ -186,6 +195,10 @@ const GPasteClient = new Lang.Class({
 
     get active() {
         return this._provider.Active;
+    },
+
+    get history_name() {
+        return this._settings.get_string(HISTORY_NAME_KEY);
     }
 });
 Signals.addSignalMethods(GPasteClient.prototype);

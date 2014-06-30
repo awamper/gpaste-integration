@@ -10,24 +10,28 @@ const PopupDialog = Me.imports.popup_dialog;
 const GpasteHistorySwitcherItem = new Lang.Class({
     Name: 'GpasteHistorySwitcherItem',
 
-    _init: function(name) {
+    _init: function(name, reactive) {
         this.name = name;
 
         this.actor = new St.Table({
             style_class: 'gpaste-histories-item-box',
             homogeneous: false,
-            reactive: true,
-            track_hover: true
+            reactive: reactive,
+            track_hover: reactive
         });
+        if(!reactive) this.actor.add_style_pseudo_class('selected');
 
         this._history_button = new St.Button({
             style_class: 'gpaste-histories-item-button',
             label: this.name
         });
-        this._history_button.connect(
-            'clicked',
-            Lang.bind(this, this._on_clicked)
-        );
+
+        if(reactive) {
+            this._history_button.connect(
+                'clicked',
+                Lang.bind(this, this._on_clicked)
+            );
+        }
 
         this.actor.add(this._history_button, {
             row: 0,
@@ -70,10 +74,12 @@ const GpasteHistorySwitcher = new Lang.Class({
 
     _load_histories: function() {
         this._box.destroy_all_children();
+        let current_history = GPasteClient.get_client().history_name;
         GPasteClient.get_client().list_histories(
             Lang.bind(this, function(histories) {
                 for(let i = 0; i < histories.length; i++) {
-                    let history = new GpasteHistorySwitcherItem(histories[i]);
+                    let reactive = current_history === histories[i] ? false : true;
+                    let history = new GpasteHistorySwitcherItem(histories[i], reactive);
                     history.on_clicked = Lang.bind(this, function(history_item) {
                         GPasteClient.get_client().switch_history(
                             history_item.name

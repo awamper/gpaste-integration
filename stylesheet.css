@@ -221,13 +221,13 @@
 .gpaste-histories-item-box:hover {
     background-color: #3465a4;
     color: white;
-    transition-duration: 20ms;
+    transition-duration: 300ms;
 }
 
-.gpaste-histories-item-box:active {
+.gpaste-histories-item-box:selected {
     background-color: #0D4CA3;
     color: white;
-    transition-duration: 50ms;
+    transition-duration: 300ms;
 }
 
 .gpaste-histories-item-button {
