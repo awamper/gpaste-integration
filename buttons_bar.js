@@ -9,6 +9,8 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
+const CONFIRMATION_DIALOG_MIN_SCALE = 0.8;
+
 const ConfirmationDialog = new Lang.Class({
     Name: "ConfirmationDialog",
 
@@ -19,6 +21,7 @@ const ConfirmationDialog = new Lang.Class({
             homogeneous: false,
             reactive: true
         });
+        this.actor.set_pivot_point(1, 1);
 
         this._label = new St.Label({
             text: label_text,
@@ -99,11 +102,14 @@ const ConfirmationDialog = new Lang.Class({
         });
 
         this.actor.opacity = 0;
+        this.actor.set_scale(CONFIRMATION_DIALOG_MIN_SCALE, CONFIRMATION_DIALOG_MIN_SCALE);
         this.actor.show();
 
         Tweener.removeTweens(this.actor);
         Tweener.addTween(this.actor, {
             opacity: 255,
+            scale_x: 1,
+            scale_y: 1,
             time: 0.3,
             transition: 'easeOutQuad',
         });
@@ -118,10 +124,13 @@ const ConfirmationDialog = new Lang.Class({
         Tweener.addTween(this.actor, {
             opacity: 0,
             time: 0.3,
+            scale_y: CONFIRMATION_DIALOG_MIN_SCALE,
+            scale_x: CONFIRMATION_DIALOG_MIN_SCALE,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
                 this.actor.hide();
                 this.actor.opacity = 255;
+                this.actor.set_scale(1, 1);
             })
         });
     },
