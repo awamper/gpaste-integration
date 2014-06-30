@@ -15,6 +15,8 @@ const CONNECTION_IDS = {
     CAPTURED_EVENT: 0
 };
 
+const MIN_SCALE = 0.8;
+
 const PopupDialog = new Lang.Class({
     Name: 'PopupDialog',
 
@@ -27,6 +29,7 @@ const PopupDialog = new Lang.Class({
             style_class: this.params.style_class,
             visible: false
         });
+        this.actor.set_pivot_point(1, 1);
 
         Main.uiGroup.add_child(this.actor);
     },
@@ -75,11 +78,14 @@ const PopupDialog = new Lang.Class({
         }
 
         this.actor.opacity = 0;
+        this.actor.set_scale(MIN_SCALE, MIN_SCALE);
         this.actor.show();
 
         Tweener.removeTweens(this.actor);
         Tweener.addTween(this.actor, {
             opacity: 255,
+            scale_x: 1,
+            scale_y: 1,
             time: 0.3,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
@@ -99,10 +105,13 @@ const PopupDialog = new Lang.Class({
         Tweener.removeTweens(this.actor);
         Tweener.addTween(this.actor, {
             opacity: 0,
+            scale_x: MIN_SCALE,
+            scale_y: MIN_SCALE,
             time: 0.3,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
                 this.actor.hide();
+                this.actor.set_scale(1, 1);
                 this.actor.opacity = 255;
                 this.emit('hided');
             })
