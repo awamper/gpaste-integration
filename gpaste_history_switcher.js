@@ -62,6 +62,8 @@ const GpasteHistorySwitcher = new Lang.Class({
         this.parent({
             modal: true
         });
+        this.actor.set_pivot_point(1, 1);
+
         this._box = new St.BoxLayout({
             style_class: 'gpaste-history-switcher-dialog',
             width: 200,
