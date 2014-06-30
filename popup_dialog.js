@@ -29,7 +29,7 @@ const PopupDialog = new Lang.Class({
             style_class: this.params.style_class,
             visible: false
         });
-        this.actor.set_pivot_point(1, 1);
+        this.actor.set_pivot_point(0.5, 0.5);
 
         Main.uiGroup.add_child(this.actor);
     },
