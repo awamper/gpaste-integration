@@ -313,7 +313,7 @@ const ButtonsBarButton = new Lang.Class({
     },
 
     set label(text) {
-        this._label.clutter_text.set_markup(text);
+        if(this._label.clutter_text) this._label.clutter_text.set_markup(text);
     },
 
     get icon_actor() {
