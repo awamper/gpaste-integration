@@ -20,11 +20,11 @@
     </key>
 
     <key type="i" name="preview-min-width-px">
-        <default>300</default>
+        <default>350</default>
     </key>
 
     <key type="i" name="preview-image-max-width">
-        <default>500</default>
+        <default>350</default>
     </key>
 
     <key type="i" name="preview-image-max-height">

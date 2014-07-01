@@ -82,9 +82,9 @@ const GpasteHistorySwitcher = new Lang.Class({
                 for(let i = 0; i < histories.length; i++) {
                     let reactive = current_history === histories[i] ? false : true;
                     let history = new GpasteHistorySwitcherItem(histories[i], reactive);
-                    history.on_clicked = Lang.bind(this, function(history_item) {
-                        GPasteClient.get_client().switch_history(
-                            history_item.name
+                    history.on_clicked = Lang.bind(this, function(history_switcher_item) {
+                        this._gpaste_integration.history.switch_history(
+                            history_switcher_item.name
                         );
                         this.hide();
                     });
@@ -93,6 +93,7 @@ const GpasteHistorySwitcher = new Lang.Class({
                         x_fill: true
                     });
                 }
+
                 this._reposition();
             })
         );

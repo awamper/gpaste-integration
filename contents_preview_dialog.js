@@ -210,26 +210,32 @@ const ContentsPreviewDialog = new Lang.Class({
         this._contents_view = null;
     },
 
-    preview: function(item_id, contents) {
+    preview: function(history_item) {
         this.clear();
 
-        this._contents_view = new ContentsPreviewView(contents);
-        this._box.add_child(this._contents_view.actor);
+        history_item.get_raw(
+            Lang.bind(this, function(raw_item) {
+                if(!raw_item) return;
 
-        Utils.get_info_for_item(item_id,
-            Lang.bind(this, function(result, uri) {
-                if(!result) {
-                    this._contents_view.info_view.hide();
-                }
-                else {
-                    this._contents_view.info_view.set_text(result);
-                    if(uri !== null) this.show_image(uri);
-                }
+                this._contents_view = new ContentsPreviewView(raw_item);
+                this._box.add_child(this._contents_view.actor);
+
+                this.show();
+                this._reposition();
+
+                history_item.get_info(
+                    Lang.bind(this, function(result, uri) {
+                        if(!result) {
+                            this._contents_view.info_view.hide();
+                        }
+                        else {
+                            this._contents_view.info_view.set_text(result);
+                            if(uri !== null) this.show_image(uri);
+                        }
+                    })
+                );
             })
         );
-
-        this.show();
-        this._reposition();
     },
 
     show_image: function(uri) {

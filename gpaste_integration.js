@@ -22,11 +22,13 @@ const PrefsKeys = Me.imports.prefs_keys;
 const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
+const GPasteHistory = Me.imports.gpaste_history;
 
 const FILTER_TIMEOUT_MS = 200;
 
 const CONNECTION_IDS = {
-    client_changed: 0,
+    history_changed: 0,
+    history_name_changed: 0,
     client_show_history: 0,
     captured_event: 0
 };
@@ -74,15 +76,31 @@ const GPasteIntegration = new Lang.Class({
         });
         this.actor.add_actor(this._table);
 
+        this._history = new GPasteHistory.GPasteHistory();
+        CONNECTION_IDS.history_changed =
+            this._history.connect(
+                'changed',
+                Lang.bind(this, this._on_history_changed)
+            );
+        CONNECTION_IDS.history_name_changed =
+            this._history.connect(
+                'history-name-changed',
+                Lang.bind(this, function() {
+                    this._history_name_changed_trigger = true;
+                })
+            );
+
         this._history_switcher =
             new GpasteHistorySwitcher.GpasteHistorySwitcher(this);
         this._statusbar = new StatusBar.StatusBar();
         this._init_search_entry();
-        
+
         this._list_model = new ListView.Model();
-        this._list_model.set_validator(Lang.bind(this, function(item) {
-            return !Utils.is_blank(item.text);
-        }));
+        this._list_model.set_validator(
+            Lang.bind(this, function(history_item) {
+                return !Utils.is_blank(history_item.text);
+            })
+        );
         this._list_model.connect(
             "changed::items",
             Lang.bind(this, this._on_items_changed)
@@ -110,7 +128,7 @@ const GPasteIntegration = new Lang.Class({
         let fuzzy_options = {
             pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
             post: GPasteListViewRenderer.HIGHLIGHT_MARKUP.STOP,
-            extract: function(arg) { return arg.text; },
+            extract: function(history_item) { return history_item.text; },
             escape: true,
             max_distance: 30
         }
@@ -179,43 +197,44 @@ const GPasteIntegration = new Lang.Class({
         });
 
         this._open = false;
-        this._last_selected_item_id = null;
+        this._history_changed_trigger = true;
+        this._history_name_changed_trigger = false;
+        this._last_selected_item_index = null;
         this._resize();
-        this._update_history();
 
-        CONNECTION_IDS.client_show_history = GPasteClient.get_client().connect(
-            'show-history',
-            Lang.bind(this, this.toggle)
-        );
-        CONNECTION_IDS.client_changed = GPasteClient.get_client().connect(
-            'changed',
-            Lang.bind(this, function() {
-                this._update_history(
-                    Lang.bind(this, function() {
-                        if(this.is_open) {
-                            this._show_all();
+        CONNECTION_IDS.client_show_history =
+            GPasteClient.get_client().connect(
+                'show-history',
+                Lang.bind(this, this.toggle)
+            );
+    },
 
-                            if(this._last_selected_item_id !== null) {
-                                let display = this._list_view.get_display_for_index(
-                                    this._last_selected_item_id
-                                );
+    _on_history_changed: function() {
+        if(this.is_open) {
+            if(this._history_name_changed_trigger) {
+                this._history_name_changed_trigger = false;
+                this.show_all();
+            }
 
-                                if(display) {
-                                    this._list_view.select(display);
-                                    this._last_selected_item_id = null;
-                                }
-                                else {
-                                    this._list_view.select_first_visible();
-                                }
-                            }
-                            else {
-                                this._list_view.select_first_visible();
-                            }
-                        }
-                    })
-                );
-            })
-        );
+            if(this._last_selected_item_index === null) {
+                this._list_view.select_first_visible();
+                return;
+            }
+
+            let display = this._list_view.get_display_for_index(
+                this._last_selected_item_index
+            );
+
+            if(display) {
+                this._list_view.select(display);
+                this._last_selected_item_index = null;
+            }
+            else {
+                this._list_view.select_first_visible();
+            }
+        }
+
+        this._history_changed_trigger = true;
     },
 
     _on_captured_event: function(object, event) {
@@ -238,6 +257,7 @@ const GPasteIntegration = new Lang.Class({
     _disconnect_captured_event: function() {
         if(CONNECTION_IDS.captured_event > 0) {
             global.stage.disconnect(CONNECTION_IDS.captured_event);
+            CONNECTION_IDS.captured_event = 0;
         }
     },
 
@@ -255,12 +275,8 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_items_changed: function() {
-        if(this._list_model.length > 0) {
-            this._status_label.hide();
-        }
-        else {
-            this._status_label.show();
-        }
+        if(this._list_model.length > 0) this._status_label.hide();
+        else this._status_label.show();
     },
 
     _init_search_entry: function() {
@@ -290,27 +306,6 @@ const GPasteIntegration = new Lang.Class({
         this._search_entry.connect('secondary-icon-clicked',
             Lang.bind(this, function() {
                 this._search_entry.set_text('');
-            })
-        );
-    },
-
-    _update_history: function(on_complete) {
-        GPasteClient.get_client().get_history(
-            Lang.bind(this, function(history) {
-                if(!history) {
-                    Main.notify(
-                        "GpasteIntegration: Couldn't connect to GPaste daemon"
-                    );
-                    this.history = [];
-                }
-                else if(history.length < 1) {
-                    this.history = [];
-                }
-                else {
-                    this.history = history;
-                }
-
-                if(typeof on_complete === 'function') on_complete();
             })
         );
     },
@@ -445,10 +440,9 @@ const GPasteIntegration = new Lang.Class({
         }
         else {
             if(this._search_entry.text === this._search_entry.hint_text) return;
-
             // this.actor.grab_key_focus();
             this._search_entry.set_secondary_icon(this._inactive_icon);
-            this._show_all();
+            this.show_all();
         }
     },
 
@@ -514,9 +508,14 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _disconnect_all: function() {
-        GPasteClient.get_client().disconnect(CONNECTION_IDS.client_changed);
         GPasteClient.get_client().disconnect(CONNECTION_IDS.client_show_history);
+        this._history.disconnect(CONNECTION_IDS.history_changed);
+        this._history.disconnect(CONNECTION_IDS.history_name_changed);
         this._disconnect_captured_event();
+
+        CONNECTION_IDS.client_show_history = 0;
+        CONNECTION_IDS.history_changed = 0;
+        CONNECTION_IDS.history_name_changed = 0;
     },
 
     _activate_by_shortcut: function(number) {
@@ -525,75 +524,76 @@ const GPasteIntegration = new Lang.Class({
         this.activate_item(this._list_model, index);
     },
 
-    _show_items: function(items) {
-        this._list_model.set_items(items);
+    _show_items: function(history_items) {
+        this._list_model.set_items(history_items);
         this._list_view.select_first_visible();
     },
 
     _filter: function(term, flag) {
-        function is_file_item(item) {
-            return (
-                Utils.starts_with(item.text, '[Files]')
-                || Utils.starts_with(item.text, '[Image')
-            );
-        }
+        function on_filter_result(matches) {
+            let items = [];
 
-        this._fuzzy_search.filter(term, this.history,
-            Lang.bind(this, function(matches) {
-                let items = [];
+            for(let i = 0; i < matches.length; i++) {
+                let item = Object.create(matches[i].original);
 
-                for(let i = 0; i < matches.length; i++) {
-                    let item = Object.create(matches[i].original);
-
-                    if(flag === SEARCH_FLAGS.ONLY_FILES) if(!is_file_item(item)) continue;
-                    if(flag === SEARCH_FLAGS.ONLY_TEXT) if(is_file_item(item)) continue;
-
-                    item.markup = matches[i].string;
-                    items.push(item);
+                if(flag === SEARCH_FLAGS.ONLY_FILES) {
+                    if(!item.is_file_item() && !item.is_image_item()) continue;
+                }
+                if(flag === SEARCH_FLAGS.ONLY_TEXT) {
+                    if(item.is_file_item() || item.is_image_item()) continue;
                 }
 
-                this._show_items(items);
-                this._list_view.reset_scroll();
-                this._list_view.select_first();
-            })
+                item.markup = matches[i].string;
+                items.push(item);
+            }
+
+            this._show_items(items);
+            this._list_view.reset_scroll();
+            this._list_view.select_first_visible();
+        }
+
+        this._fuzzy_search.filter(
+            term,this._history.get_items(),
+            Lang.bind(this, on_filter_result)
         );
     },
 
-    _show_all: function() {
-        this._show_items(this.history);
+    show_all: function() {
+        this._show_items(this._history.get_items());
         this._list_view.reset_scroll();
-        this._list_view.select_first();
+        this._list_view.select_first_visible();
     },
 
     activate_item: function(model, index) {
-        GPasteClient.get_client().select(model.get(index).id);
-        let display = this._list_view.get_display_for_index(index);
         this.hide(false);
 
-        if(display) this._list_view.fade_out_display(display);
+        let history_item = model.get(index);
+        GPasteClient.get_client().select(history_item.index);
 
+        let display = this._list_view.get_display_for_index(history_item.index);
+        if(display) this._list_view.fade_out_display(display);
         this._search_entry.set_text('');
     },
 
     delete_item: function(model, index) {
-        if(model.length <= 1) {
+        if(model.length <= 1 && this._is_empty_entry(this._search_entry)) {
             GPasteClient.get_client().empty();
-            this._last_selected_item_id = null;
+            this._last_selected_item_index = null;
             this.hide();
             return;
         }
 
-        let deleted_id = model.get(index).id;
+        let history_item = model.get(index);
         model.delete(index);
 
-        if(model.length === deleted_id) {
-            this._last_selected_item_id = deleted_id - 1;
+        if(model.length === index) {
+            this._last_selected_item_index = index - 1;
         }
         else {
-            this._last_selected_item_id = deleted_id;
+            this._last_selected_item_index = index;
         }
 
-        GPasteClient.get_client().delete_sync(deleted_id);
+        GPasteClient.get_client().delete_sync(history_item.index);
     },
 
     show: function(animation, target) {
@@ -612,15 +612,24 @@ const GPasteIntegration = new Lang.Class({
         this._open = true;
         this.actor.show();
         this._resize();
-        this._show_all();
         target = target === undefined ? this._target_y : target;
 
+        if(this._history_changed_trigger) {
+            this.show_all();
+            this._history_changed_trigger = false;
+        }
+
         if(animation) {
-            let time = Utils.SETTINGS.get_double(PrefsKeys.OPEN_ANIMATION_TIME_KEY);
+            let time = Utils.SETTINGS.get_double(
+                PrefsKeys.OPEN_ANIMATION_TIME_KEY
+            );
+            let transition = Utils.SETTINGS.get_string(
+                PrefsKeys.OPEN_TRANSITION_TYPE_KEY
+            );
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
                 time: time / St.get_slow_down_factor(),
-                transition: Utils.SETTINGS.get_string(PrefsKeys.OPEN_TRANSITION_TYPE_KEY),
+                transition: transition,
                 y: target
             });
         }
@@ -639,7 +648,7 @@ const GPasteIntegration = new Lang.Class({
 
         this._connect_captured_event();
         this._list_view.reset_scroll();
-        this._list_view.select_first();
+        this._list_view.select_first_visible();
     },
 
     hide: function(animation, target) {
@@ -657,11 +666,16 @@ const GPasteIntegration = new Lang.Class({
             : animation;
 
         if(animation) {
-            let time = Utils.SETTINGS.get_double(PrefsKeys.CLOSE_ANIMATION_TIME_KEY);
+            let time = Utils.SETTINGS.get_double(
+                PrefsKeys.CLOSE_ANIMATION_TIME_KEY
+            );
+            let transition = Utils.SETTINGS.get_string(
+                PrefsKeys.CLOSE_TRANSITION_TYPE_KEY
+            );
             Tweener.removeTweens(this.actor);
             Tweener.addTween(this.actor, {
                 time: time / St.get_slow_down_factor(),
-                transition: Utils.SETTINGS.get_string(PrefsKeys.CLOSE_TRANSITION_TYPE_KEY),
+                transition: transition,
                 y: this._hidden_y,
                 onComplete: Lang.bind(this, function() {
                     this.actor.hide();
@@ -675,23 +689,13 @@ const GPasteIntegration = new Lang.Class({
     },
 
     toggle: function() {
-        if(this._open) {
-            this.hide();
-        }
-        else {
-            this.show();
-        }
+        if(this._open) this.hide();
+        else this.show();
     },
 
     show_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
-
-        GPasteClient.get_client().get_raw_element(0,
-            Lang.bind(this, function(contents) {
-                if(!contents) return;
-                this._contents_preview_dialog.preview(0, contents);
-            })
-        );
+        this._contents_preview_dialog.preview(this._history.items[0]);
     },
 
     destroy: function() {
@@ -701,6 +705,7 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.destroy();
         this._items_counter.destroy();
         this._history_switcher.destroy();
+        this._history.destroy();
         this.actor.destroy();
     },
 
@@ -710,19 +715,6 @@ const GPasteIntegration = new Lang.Class({
 
     get history() {
         return this._history;
-    },
-
-    set history(arr) {
-        this._history = [];
-
-        for(let i = 1; i < arr.length; i++) {
-            let item_data = {
-                id: i,
-                text: arr[i],
-                markup: false
-            };
-            this._history.push(item_data);
-        }
     },
 
     get history_switcher() {

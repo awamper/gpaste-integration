@@ -15,16 +15,6 @@ const GPasteListView = new Lang.Class({
         this.parent(params);
     },
 
-    _remove_display: function(display) {
-        let index = this._displays.indexOf(display);
-
-        if(index !== -1) {
-            this._displays.splice(index, 1);
-        }
-
-        display.destroy();
-    },
-
     get_display_for_index: function(index) {
         if(this._displays[index]) {
             return this._displays[index];

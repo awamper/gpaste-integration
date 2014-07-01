@@ -1,11 +1,6 @@
-const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Clutter = imports.gi.Clutter;
-const GLib = imports.gi.GLib;
-
-const Me = ExtensionUtils.getCurrentExtension();
-const GPasteClient = Me.imports.gpaste_client;
 
 const ICONS = {
     preferences: 'preferences-system-symbolic',
@@ -85,81 +80,19 @@ function is_pointer_inside_actor(actor, x, y) {
     return result;
 }
 
-function get_info_for_item(item_id, callback) {
-    function on_query_complete(object, res, uri) {
-        let info;
+// 32 bit FNV-1a hash
+// Found here: https://gist.github.com/vaiorabbit/5657561
+// Ref.: http://isthe.com/chongo/tech/comp/fnv/
+function fnv32a(str) {
+    let FNV1_32A_INIT = 0x811c9dc5;
+    let hval = FNV1_32A_INIT;
 
-        try {
-            info = object.query_info_finish(res);
-        }
-        catch(e) {
-            log('get_info_for_item(): %s'.format(e));
-
-            if(e.code === 1) callback('No such file or directory', null);
-            else callback(e.message, null);
-
-            return;
-        }
-
-        let content_type = info.get_content_type();
-        let thumbnail_path = info.get_attribute_byte_string('thumbnail::path');
-        let result ='Type: %s'.format(content_type);
-
-        if(content_type !== 'inode/directory') {
-            let size = info.get_size();
-            result = '%s, '.format(GLib.format_size(size)) + result;
-        }
-
-        if(starts_with(content_type, 'image') || thumbnail_path) {
-            if(thumbnail_path) {
-                uri = 'file://%s'.format(thumbnail_path);
-            }
-        }
-        else {
-            uri = null;
-        }
-
-        callback(result, uri);
+    for(let i = 0; i < str.length; ++i) {
+        hval ^= str.charCodeAt(i);
+        hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
     }
 
-    GPasteClient.get_client().get_element(item_id, Lang.bind(this, function(item) {
-        if(!item) {
-            callback(false, null);
-            return;
-        }
-
-        if(starts_with(item, '[Files]') || starts_with(item, '[Image')) {
-            GPasteClient.get_client().get_raw_element(item_id,
-                Lang.bind(this, function(result) {
-                    if(!result) return;
-
-                    let uris = result.split('\n');
-
-                    if(uris.length > 1) {
-                        callback('%s items'.format(uris.length), null);
-                        return;
-                    }
-
-                    let uri = 'file://%s'.format(uris[0]);
-                    let file = Gio.file_new_for_uri(uri);
-                    file.query_info_async(
-                        'standard::content-type,standard::size,thumbnail::path',
-                        Gio.FileQueryInfoFlags.NONE,
-                        GLib.PRIORITY_DEFAULT,
-                        null,
-                        Lang.bind(this, on_query_complete, uri)
-                    );
-                })
-            );
-        }
-        else {
-            let info = '%s symbol(s), %s line(s)'.format(
-                item.length,
-                item.split('\n').length
-            );
-            callback(info, null);
-        }
-    }));
+    return hval >>> 0;
 }
 
 /**

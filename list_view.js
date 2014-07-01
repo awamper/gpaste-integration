@@ -59,6 +59,12 @@ const Model = new Lang.Class({
         }
     },
 
+    _delete_item: function(index, item) {
+        this._items.splice(index, 1);
+        this.emit('item-deleted', item, index);
+        this.emit('changed::items');
+    },
+
     set_items: function(items) {
         this._items = [];
         let result_items = [];
@@ -80,11 +86,18 @@ const Model = new Lang.Class({
         return this._items[index];
     },
 
-    delete: function(index) {
-        let item = this.get(index);
-        this._items.splice(index, 1);
-        this.emit('item-deleted', item, index);
-        this.emit('changed::items');
+    delete: function(index_or_function) {
+        if(typeof index_or_function === 'function') {
+            for(let i in this._items) {
+                if(index_or_function(this._items[i])) {
+                    this._delete_item(i, this._items[i]);
+                }
+            }
+        }
+        else {
+            let item = this.get(index_or_function);
+            this._delete_item(index_or_function, item);
+        }
     },
 
     set_validator: function(func) {
@@ -288,8 +301,9 @@ const ListView = new Lang.Class({
 
     _on_item_deleted: function(model, item, index) {
         let display = this._displays[index];
-
         if(display) this._remove_display(this._displays[index]);
+
+        if(this._is_need_preload()) this._preload_items();
     },
 
     _on_items_setted: function() {
@@ -298,23 +312,9 @@ const ListView = new Lang.Class({
     },
 
     _remove_display: function(display) {
-        display.set_pivot_point(0.5, 0.5);
-        Tweener.removeTweens(display);
-        Tweener.addTween(display, {
-            time: 0.3,
-            transition: 'easeOutQuad',
-            opacity: 0,
-            scale_y: 0,
-            onComplete: Lang.bind(this, function() {
-                let index = this._displays.indexOf(display);
-
-                if(index !== -1) {
-                    this._displays.splice(index, 1);
-                }
-
-                display.destroy();
-            })
-        });
+        let index = this._displays.indexOf(display);
+        if(index !== -1) this._displays.splice(index, 1);
+        display.destroy();
     },
 
     _connect_display_signals: function(display) {
@@ -395,12 +395,13 @@ const ListView = new Lang.Class({
         let v_adjustment = scroll.vscroll.adjustment;
 
         return (
-            actor.y >= v_adjustment.value
+            actor.visible
+            && actor.y >= v_adjustment.value
             && actor.y + actor.height < (v_adjustment.value + v_adjustment.page_size)
         );
     },
 
-    _chek_model: function(model) {
+    _check_model: function(model) {
         if(!model instanceof Model) {
             let msg =
                 'ListView:_check_model(): "%s" '.format(typeof model) +
@@ -420,7 +421,7 @@ const ListView = new Lang.Class({
     set_model: function(model) {
         if(this._model) this._model.destroy();
 
-        this._chek_model();
+        this._check_model();
         this.clear();
         this._model = model;
         this._model.connect(
@@ -434,7 +435,7 @@ const ListView = new Lang.Class({
     },
 
     get_model: function() {
-        this._chek_model();
+        this._check_model();
         return this._model;
     },
 

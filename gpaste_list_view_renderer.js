@@ -42,7 +42,8 @@ const GPasteListViewRenderer = new Lang.Class({
         this._info_view = new ItemInfoView.ItemInfoView({
             label_style_class: 'gpaste-item-box-info-label'
         });
-        this._data = null;
+        this._info_view.actor.set_pivot_point(0.5, 0.5);
+        this._history_item = null;
         this._image_preview = null;
     },
 
@@ -72,7 +73,6 @@ const GPasteListViewRenderer = new Lang.Class({
         str = str.replace(/\n/g, ' ');
         str = str.replace(/\s{2,}/g, ' ');
         str = str.trim();
-
         return str;
     },
 
@@ -119,42 +119,41 @@ const GPasteListViewRenderer = new Lang.Class({
     _show_info: function() {
         if(this._info_view.shown) return;
 
-        this.actor.add(this._info_view.actor, {
-            row: 1,
-            col: 1,
-            x_expand: false,
-            x_fill: false,
-            x_align: St.Align.START,
-            y_expand: false,
-            y_fill: false,
-            y_align: St.Align.START
-        });
-        this._info_view.set_text('...');
-        let height = this._info_view.actor.get_preferred_height(-1)[1];
-        this._info_view.actor.set_height(0);
-        this._info_view.show();
+        function on_info_result(text, uri) {
+            if(!text) return;
 
-        Tweener.removeTweens(this._info_view.actor);
-        Tweener.addTween(this._info_view.actor, {
-            time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
-            transition: 'easeOutQuad',
-            height: height
-        });
+            this.actor.add(this._info_view.actor, {
+                row: 1,
+                col: 1,
+                x_expand: false,
+                x_fill: false,
+                x_align: St.Align.START,
+                y_expand: false,
+                y_fill: false,
+                y_align: St.Align.START
+            });
+            this._info_view.set_text(text);
+            let height = this._info_view.actor.get_preferred_height(-1)[1];
+            this._info_view.actor.set_height(0);
+            this._info_view.actor.set_opacity(0);
+            this._info_view.actor.set_scale(1, 0)
+            this._info_view.show();
 
-        Utils.get_info_for_item(this._data.id,
-            Lang.bind(this, function(text, uri) {
-                if(!text) {
-                    this._hide_info();
-                    return;
-                }
+            Tweener.removeTweens(this._info_view.actor);
+            Tweener.addTween(this._info_view.actor, {
+                time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
+                transition: 'easeOutQuad',
+                height: height,
+                scale_y: 1,
+                opacity: 255
+            });
 
-                this._info_view.set_text(text);
+            if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
+                if(uri !== null) this._show_image_preview(uri);
+            }
+        }
 
-                if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
-                    if(uri !== null) this._show_image_preview(uri);
-                }
-            })
-        );
+        this._history_item.get_info(Lang.bind(this, on_info_result));
     },
 
     _hide_info: function() {
@@ -166,11 +165,15 @@ const GPasteListViewRenderer = new Lang.Class({
             time: INFO_ANIMATION_TIME_S / St.get_slow_down_factor(),
             transition: 'easeOutQuad',
             height: 0,
+            scale_y: 1,
+            opacity: 0,
             onComplete: Lang.bind(this, function() {
                 this.actor.remove_child(this._info_view.actor);
                 this._info_view.hide();
                 this._info_view.set_text('');
                 this._info_view.actor.set_height(height);
+                this._info_view.actor.set_scale(1, 1);
+                this._info_view.actor.set_opacity(255);
             })
         });
 
@@ -181,13 +184,23 @@ const GPasteListViewRenderer = new Lang.Class({
 
     get_display: function(model, index) {
         this.title_label = this.get_title();
-        this._data = model.get(index);
+        this._history_item = model.get(index);
+        this._history_item.connect('destroy',
+            Lang.bind(this, function() {
+                let hash = this._history_item.hash;
+                model.delete(
+                    Lang.bind(this, function(item) {
+                        return item.hash === hash;
+                    })
+                );
+            })
+        );
 
-        if(!Utils.is_blank(this._data.markup)) {
-            this._show_markup(this._data.markup);
+        if(!Utils.is_blank(this._history_item.markup)) {
+            this._show_markup(this._history_item.markup);
         }
         else {
-            this._show_text(this._data.text);
+            this._show_text(this._history_item.text);
         }
 
         this.actor.add(this.title_label, {
@@ -201,6 +214,8 @@ const GPasteListViewRenderer = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
+        if(this._history_item.hidden) this.actor.hide();
+
         return this.actor;
     },
 
@@ -209,7 +224,6 @@ const GPasteListViewRenderer = new Lang.Class({
         title_label.clutter_text.set_single_line_mode(true);
         title_label.clutter_text.set_ellipsize(Pango.EllipsizeMode.END);
         title_label.clutter_text.set_max_length(MAX_DISPLAYED_STRING_LENGTH);
-
         return title_label;
     }
 });
