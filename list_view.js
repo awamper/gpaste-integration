@@ -291,6 +291,7 @@ const ListView = new Lang.Class({
     _on_scroll_changed: function() {
         if(TIMEOUT_IDS.SCROLL !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.SCROLL);
+            TIMEOUT_IDS.SCROLL = 0;
         }
         if(this._loading_items || !this._is_need_preload()) return;
 
