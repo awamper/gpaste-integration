@@ -108,13 +108,15 @@ function get_info_for_item(item_id, callback) {
         if(content_type !== 'inode/directory') {
             let size = info.get_size();
             result = '%s, '.format(GLib.format_size(size)) + result;
-            uri = null
         }
 
         if(starts_with(content_type, 'image') || thumbnail_path) {
             if(thumbnail_path) {
                 uri = 'file://%s'.format(thumbnail_path);
             }
+        }
+        else {
+            uri = null;
         }
 
         callback(result, uri);
