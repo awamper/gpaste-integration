@@ -364,6 +364,7 @@ const ListView = new Lang.Class({
     },
 
     _preload_items: function() {
+        TIMEOUT_IDS.SCROLL = 0;
         this._loading_items = true;
         let loaded = this._box.get_n_children();
 
