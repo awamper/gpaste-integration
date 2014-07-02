@@ -679,9 +679,25 @@ const GPasteIntegration = new Lang.Class({
         else this.show();
     },
 
-    show_current_contents: function() {
+    show_selected_or_current_contents: function() {
         if(this._contents_preview_dialog.shown) return;
-        this._contents_preview_dialog.preview(this._history.items[0]);
+
+        let history_item = this._history.items[0];
+        let selected_index = this._list_view.get_selected_index();
+        let display = this._list_view.get_display(selected_index);
+
+        if(display) {
+            history_item = display._delegate._history_item;
+            display.opacity = 20;
+            Tweener.removeTweens(display);
+            Tweener.addTween(display, {
+                time: 0.3,
+                transition: 'easeInBounce',
+                opacity: 255
+            })
+        }
+
+        this._contents_preview_dialog.preview(history_item);
     },
 
     destroy: function() {
