@@ -295,3 +295,16 @@
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(0, 0, 0, 1);
 }
+
+.gpaste-tooltip-label {
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+}
+
+.gpaste-tooltip-box {
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(0, 0, 0, 1);
+    border-radius: 6px;
+}
