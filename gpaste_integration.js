@@ -23,7 +23,7 @@ const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
-const Tooltips = Me.imports.tooltips;
+const GPasteSearchEntry = Me.imports.gpaste_search_entry;
 
 const FILTER_TIMEOUT_MS = 200;
 
@@ -36,11 +36,6 @@ const CONNECTION_IDS = {
 
 const TIMEOUT_IDS = {
     FILTER: 0
-};
-
-const SEARCH_FLAGS = {
-    ONLY_TEXT: '-t',
-    ONLY_FILES: '-f'
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -93,8 +88,16 @@ const GPasteIntegration = new Lang.Class({
 
         this._history_switcher =
             new GpasteHistorySwitcher.GpasteHistorySwitcher(this);
+
+        this._search_entry = new GPasteSearchEntry.GPasteSearchEntry();
+        this._search_entry.connect('key-press-event',
+            Lang.bind(this, this._on_search_key_press_event)
+        );
+        this._search_entry.clutter_text.connect('text-changed',
+            Lang.bind(this, this._on_search_text_changed)
+        );
+
         this._statusbar = new StatusBar.StatusBar();
-        this._init_search_entry();
 
         this._list_model = new ListView.Model();
         this._list_model.set_validator(
@@ -280,40 +283,6 @@ const GPasteIntegration = new Lang.Class({
         else this._status_label.show();
     },
 
-    _init_search_entry: function() {
-        this._search_entry = new St.Entry({
-            style_class: "gpaste-search-entry",
-            hint_text: "Type to search",
-            track_hover: true,
-            can_focus: true
-        });
-        Tooltips.get_manager().add_tooltip(this._search_entry, {
-            text: 'Append "-f" to search only files or "-t" to search only text.'
-        });
-        this._search_entry.connect('key-press-event',
-            Lang.bind(this, this._on_search_key_press_event)
-        );
-        this._search_entry.clutter_text.connect('text-changed',
-            Lang.bind(this, this._on_search_text_changed)
-        );
-        this._inactive_icon = new St.Icon({
-            style_class: 'gpaste-search-entry-icon',
-            icon_name: 'edit-find-symbolic',
-            reactive: false
-        });
-        this._active_icon = new St.Icon({
-            style_class: 'gpaste-search-entry-icon',
-            icon_name: 'edit-clear-symbolic',
-            reactive: true
-        });
-        this._search_entry.set_secondary_icon(this._inactive_icon);
-        this._search_entry.connect('secondary-icon-clicked',
-            Lang.bind(this, function() {
-                this._search_entry.set_text('');
-            })
-        );
-    },
-
     _on_key_press_event: function(o, e) {
         let symbol = e.get_key_symbol()
         let ch = Utils.get_unichar(symbol);
@@ -401,15 +370,6 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
-    _is_empty_entry: function(entry) {
-        if(Utils.is_blank(entry.text) || entry.text === entry.hint_text) {
-            return true
-        }
-        else {
-            return false;
-        }
-    },
-
     _on_search_key_press_event: function(o, e) {
         let symbol = e.get_key_symbol();
         let ctrl = (e.get_state() & Clutter.ModifierType.CONTROL_MASK)
@@ -419,7 +379,7 @@ const GPasteIntegration = new Lang.Class({
                 this.hide();
             }
             else {
-                this._search_entry.set_text('');
+                this._search_entry.clear();
                 this.actor.grab_key_focus();
             }
 
@@ -435,43 +395,21 @@ const GPasteIntegration = new Lang.Class({
             TIMEOUT_IDS.FILTER = 0;
         }
 
-        if(!this._is_empty_entry(this._search_entry)) {
-            let parsed_search = this._parse_search_entry();
-            this._search_entry.set_secondary_icon(this._active_icon);
+        if(!this._search_entry.is_empty()) {
             TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
-                Lang.bind(this, this._filter, parsed_search.term, parsed_search.flag)
+                Lang.bind(
+                    this,
+                    this._filter,
+                    this._search_entry.term,
+                    this._search_entry.flag
+                )
             );
         }
         else {
             if(this._search_entry.text === this._search_entry.hint_text) return;
             // this.actor.grab_key_focus();
-            this._search_entry.set_secondary_icon(this._inactive_icon);
             this.show_all();
         }
-    },
-
-    _parse_search_entry: function() {
-        let text = this._search_entry.text;
-        let result = {
-            term: '',
-            flag: ''
-        };
-        if(this._is_empty_entry(this._search_entry)) return result;
-
-        if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_FILES)) {
-            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_FILES.length);
-            result.flag = SEARCH_FLAGS.ONLY_FILES;
-        }
-        else if(Utils.ends_with(text, SEARCH_FLAGS.ONLY_TEXT)) {
-            result.term = text.slice(0, -SEARCH_FLAGS.ONLY_TEXT.length);
-            result.flag = SEARCH_FLAGS.ONLY_TEXT;
-        }
-        else {
-            result.term = text;
-            result.flag = '';
-        }
-
-        return result;
     },
 
     _resize: function() {
@@ -540,10 +478,10 @@ const GPasteIntegration = new Lang.Class({
             for(let i = 0; i < matches.length; i++) {
                 let item = Object.create(matches[i].original);
 
-                if(flag === SEARCH_FLAGS.ONLY_FILES) {
+                if(flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_FILES) {
                     if(!item.is_file_item() && !item.is_image_item()) continue;
                 }
-                if(flag === SEARCH_FLAGS.ONLY_TEXT) {
+                if(flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_TEXT) {
                     if(item.is_file_item() || item.is_image_item()) continue;
                 }
 
@@ -576,11 +514,11 @@ const GPasteIntegration = new Lang.Class({
 
         let display = this._list_view.get_display_for_index(history_item.index);
         if(display) this._list_view.fade_out_display(display);
-        this._search_entry.set_text('');
+        this._search_entry.clear();
     },
 
     delete_item: function(model, index) {
-        if(model.length <= 1 && this._is_empty_entry(this._search_entry)) {
+        if(model.length <= 1 && this._search_entry.is_empty()) {
             GPasteClient.get_client().empty();
             this._last_selected_item_index = null;
             this.hide();
@@ -641,7 +579,7 @@ const GPasteIntegration = new Lang.Class({
             this.actor.y = target;
         }
 
-        if(!this._is_empty_entry(this._search_entry)) {
+        if(!this._search_entry.is_empty()) {
             this._search_entry.clutter_text.set_selection(
                 0,
                 this._search_entry.text.length
