@@ -648,6 +648,7 @@ const GPasteIntegration = new Lang.Class({
         this._items_counter.destroy();
         this._history_switcher.destroy();
         this._history.destroy();
+        this._search_entry.destroy();
         this.actor.destroy();
     },
 
