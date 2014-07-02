@@ -380,6 +380,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Item details:',
             PrefsKeys.ENABLE_ITEM_INFO_KEY
         );
+        page.add_boolean(
+            'Show details with <Alt> instead of hover:',
+            PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY
+        );
         spin_properties = {
             lower: 100,
             upper: 2000,

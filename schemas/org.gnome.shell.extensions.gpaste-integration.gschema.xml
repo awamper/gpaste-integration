@@ -71,5 +71,9 @@
         <default>700</default>
     </key>
 
+    <key type="b" name="show-item-info-with-alt">
+        <default>false</default>
+    </key>
+
   </schema>
 </schemalist>

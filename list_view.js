@@ -588,6 +588,10 @@ const ListView = new Lang.Class({
         if(this._v_adjustment.value > 0) this.scroll_to_value(0);
     },
 
+    get_display: function(index) {
+        return this._displays[index] || null;
+    },
+
     clear: function() {
         this._displays = [];
         this._box.destroy_all_children();

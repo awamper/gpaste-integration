@@ -15,3 +15,4 @@ const CLOSE_TRANSITION_TYPE_KEY = 'close-transition-type';
 const ENABLE_ITEM_INFO_KEY = 'enable-item-info';
 const ENABLE_IMAGE_PREVIEW_KEY = 'enable-image-preview';
 const ITEM_INFO_TIMEOUT_KEY = 'item-info-timeout';
+const SHOW_ITEM_INFO_WITH_ALT_KEY = 'show-item-info-with-alt';

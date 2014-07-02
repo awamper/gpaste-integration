@@ -199,5 +199,9 @@ const GPasteListViewRenderer = new Lang.Class({
         title_label.clutter_text.set_ellipsize(Pango.EllipsizeMode.END);
         title_label.clutter_text.set_max_length(MAX_DISPLAYED_STRING_LENGTH);
         return title_label;
+    },
+
+    get info_shown() {
+        return this._info_view.shown;
     }
 });

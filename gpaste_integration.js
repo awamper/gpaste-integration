@@ -275,7 +275,11 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_selected: function(object, display) {
-        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
+        let proceed =
+            Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
+            && !Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+        if(!proceed) return false;
+
         TIMEOUT_IDS.INFO = Mainloop.timeout_add(
             Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
             Lang.bind(this, function() {
@@ -283,16 +287,20 @@ const GPasteIntegration = new Lang.Class({
                 TIMEOUT_IDS.INFO = 0;
             })
         );
+
+        return true;
     },
 
     _on_item_unselected: function(object, display) {
-        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return false;
         if(TIMEOUT_IDS.INFO !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.INFO);
             TIMEOUT_IDS.INFO = 0;
         }
 
         display._delegate.hide_info();
+
+        return true;
     },
 
     _on_items_changed: function() {
@@ -346,6 +354,19 @@ const GPasteIntegration = new Lang.Class({
 
             return true;
         }
+        else if(symbol === Clutter.KEY_Alt_L || symbol === Clutter.KEY_Alt_R) {
+            let selected_index = this._list_view.get_selected_index();
+            let display = this._list_view.get_display(selected_index);
+            if(display && display._delegate.info_shown) return false;
+
+            let proceed =
+                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
+                && Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+            if(!proceed) return false;
+
+            if(display) display._delegate.show_info();
+            return true;
+        }
         else if(ch) {
             this._search_entry.set_text(ch);
             this._search_entry.grab_key_focus();
@@ -380,6 +401,19 @@ const GPasteIntegration = new Lang.Class({
                 this.delete_item(this._list_model, selected_index);
             }
 
+            return true;
+        }
+        else if(symbol === Clutter.KEY_Alt_L || symbol === Clutter.KEY_Alt_R) {
+            let selected_index = this._list_view.get_selected_index();
+            let display = this._list_view.get_display(selected_index);
+            if(display && !display._delegate.info_shown) return false;
+
+            let proceed =
+                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
+                && Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+            if(!proceed) return false;
+
+            if(display) display._delegate.hide_info();
             return true;
         }
         else {
