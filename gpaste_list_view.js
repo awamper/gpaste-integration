@@ -15,15 +15,6 @@ const GPasteListView = new Lang.Class({
         this.parent(params);
     },
 
-    get_display_for_index: function(index) {
-        if(this._displays[index]) {
-            return this._displays[index];
-        }
-        else {
-            return false;
-        }
-    },
-
     fade_out_display: function(display) {
         let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
