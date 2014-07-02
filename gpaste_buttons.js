@@ -12,7 +12,6 @@ const GPasteButtons = new Lang.Class({
 
     _init: function(gpaste_integration) {
         this._gpaste_integration = gpaste_integration;
-        this._statusbar = this._gpaste_integration._statusbar;
         GPasteClient.get_client().connect('tracking',
             Lang.bind(this, function(c, state) {
                 this.track_changes_btn.set_checked(state);
@@ -21,7 +20,8 @@ const GPasteButtons = new Lang.Class({
         GPasteClient.get_client().connect('changed',
             Lang.bind(this, function() {
                 if(this._histories_btn) {
-                    this._histories_btn.label = "\u25B4 " + GPasteClient.get_client().history_name;
+                    this._histories_btn.label =
+                        "\u25B4 " + GPasteClient.get_client().history_name;
                 }
             })
         );
@@ -44,7 +44,6 @@ const GPasteButtons = new Lang.Class({
             tip_text: 'Track changes',
             button_style_class: 'gpaste-toggle-button',
             toggle_mode: true,
-            statusbar: this._statusbar,
             action: Lang.bind(this, function() {
                 let checked = this.track_changes_btn.get_checked();
                 GPasteClient.get_client().track(checked);
@@ -60,7 +59,6 @@ const GPasteButtons = new Lang.Class({
             label_text: "\u25B4 " + GPasteClient.get_client().history_name,
             tip_text: 'Switch history',
             button_style_class: 'gpaste-button',
-            statusbar: this._statusbar,
             action: Lang.bind(this, function() {
                 this._gpaste_integration.history_switcher.toggle();
             })
@@ -74,7 +72,6 @@ const GPasteButtons = new Lang.Class({
             label_text: '',
             tip_text: 'Clear history',
             button_style_class: 'gpaste-button',
-            statusbar: this._statusbar,
             confirmation_dialog: true,
             action: Lang.bind(this, Lang.bind(this, function() {
                 this._gpaste_integration.hide(true);
@@ -91,7 +88,6 @@ const GPasteButtons = new Lang.Class({
             label_text: '',
             tip_text: 'Preferences',
             button_style_class: 'gpaste-button',
-            statusbar: this._statusbar,
             action: Lang.bind(this, function() {
                 Utils.launch_extension_prefs(Me.uuid);
                 this._gpaste_integration.hide(false);

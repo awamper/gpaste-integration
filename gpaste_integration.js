@@ -17,7 +17,6 @@ const GPasteListView = Me.imports.gpaste_list_view;
 const GPasteListViewRenderer = Me.imports.gpaste_list_view_renderer;
 const GPasteButtons = Me.imports.gpaste_buttons;
 const GpasteHistorySwitcher = Me.imports.gpaste_history_switcher;
-const StatusBar = Me.imports.status_bar;
 const PrefsKeys = Me.imports.prefs_keys;
 const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
@@ -97,8 +96,6 @@ const GPasteIntegration = new Lang.Class({
             Lang.bind(this, this._on_search_text_changed)
         );
 
-        this._statusbar = new StatusBar.StatusBar();
-
         this._list_model = new ListView.Model();
         this._list_model.set_validator(
             Lang.bind(this, function(history_item) {
@@ -141,7 +138,7 @@ const GPasteIntegration = new Lang.Class({
         this._table.add(this._search_entry, {
             row: 0,
             col: 0,
-            col_span: 3,
+            col_span: 2,
             x_fill: true,
             x_expand: true,
             y_fill: false,
@@ -152,7 +149,7 @@ const GPasteIntegration = new Lang.Class({
         this._table.add(this._list_view.actor, {
             row: 1,
             col: 0,
-            col_span: 3,
+            col_span: 2,
             x_fill: true,
             y_fill: true,
             x_align: St.Align.MIDDLE,
@@ -161,7 +158,7 @@ const GPasteIntegration = new Lang.Class({
         this._table.add(this._status_label, {
             row: 1,
             col: 0,
-            col_span: 3,
+            col_span: 2,
             x_expand: true,
             y_expand: true,
             x_fill: false,
@@ -171,7 +168,7 @@ const GPasteIntegration = new Lang.Class({
         });
         this._table.add(this._buttons.actor, {
             row: 2,
-            col: 2,
+            col: 1,
             x_fill: false,
             x_expand: false,
             y_fill: false,
@@ -188,16 +185,6 @@ const GPasteIntegration = new Lang.Class({
             y_expand: false,
             y_align: St.Align.MIDDLE,
             x_align: St.Align.START
-        });
-        this._table.add(this._statusbar.actor, {
-            row: 2,
-            col: 1,
-            x_fill: false,
-            x_expand: false,
-            y_fill: false,
-            y_expand: false,
-            y_align: St.Align.MIDDLE,
-            x_align: St.Align.END
         });
 
         this._open = false;
@@ -413,12 +400,6 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _resize: function() {
-        let message_id = this._statusbar.add_message(
-            'Test1234!',
-            0,
-            StatusBar.MESSAGE_TYPES.info,
-            true
-        );
         let width_percents = Utils.SETTINGS.get_int(
             PrefsKeys.WIDTH_PERCENTS_KEY
         );
@@ -446,7 +427,6 @@ const GPasteIntegration = new Lang.Class({
 
         this._table.width = my_width;
         this._table.height = my_height;
-        this._statusbar.remove_message(message_id);
     },
 
     _disconnect_all: function() {
@@ -643,7 +623,6 @@ const GPasteIntegration = new Lang.Class({
     destroy: function() {
         this._disconnect_all();
         this._buttons.destroy();
-        this._statusbar.destroy();
         this._list_view.destroy();
         this._items_counter.destroy();
         this._history_switcher.destroy();

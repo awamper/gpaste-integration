@@ -9,6 +9,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const PopupDialog = Me.imports.popup_dialog;
+const Tooltips = Me.imports.tooltips;
 
 const CONFIRMATION_DIALOG_MIN_SCALE = 0.8;
 
@@ -106,7 +107,6 @@ const ButtonsBarButton = new Lang.Class({
             reactive: true,
             toggle_mode: false,
             icon_style: 'gpaste-buttons-bar-icon',
-            statusbar: false,
             action: false,
             confirmation_dialog: false,
             confirmation_dialog_label: "Are you sure?"
@@ -172,6 +172,12 @@ const ButtonsBarButton = new Lang.Class({
             }
         }
 
+        if(!Utils.is_blank(this._tip_text)) {
+            Tooltips.get_manager().add_tooltip(this._button, {
+                text: this._tip_text
+            });
+        }
+
         this._button.connect(
             'enter-event',
             Lang.bind(this, this._on_enter_event)
@@ -187,12 +193,6 @@ const ButtonsBarButton = new Lang.Class({
     },
 
     _on_enter_event: function(object, event) {
-        if(this.params.statusbar && !Utils.is_blank(this._tip_text)) {
-            this._statusbar_message_id = this.params.statusbar.add_message(
-                this._tip_text
-            );
-        }
-
         if(this._icon && this._label) {
             this._label.opacity = 0;
             this._label.show();
@@ -206,10 +206,6 @@ const ButtonsBarButton = new Lang.Class({
     },
 
     _on_leave_event: function(object, event) {
-        if(this.params.statusbar && !Utils.is_blank(this._tip_text)) {
-            this.params.statusbar.remove_message(this._statusbar_message_id);
-        }
-
         if(this._icon && this._label) {
             Tweener.addTween(this._label, {
                 time: 0.3,
@@ -307,32 +303,6 @@ const ButtonsBarButton = new Lang.Class({
 
     get actor() {
         return this._button_box;
-    },
-});
-
-const ButtonsBarLabel = new Lang.Class({
-    Name: 'ButtonsBarLabel',
-
-    _init: function(text, style_class) {
-        this._label = new St.Label({
-            style_class: style_class
-        });
-        this._label.clutter_text.set_markup(text);
-
-        this.actor = new St.BoxLayout();
-        this.actor.add(this._label);
-    },
-
-    get label_actor() {
-        return this._label;
-    },
-
-    get label() {
-        return this._label.clutter_text.get_text();
-    },
-
-    set label(text) {
-        this._label.clutter_text.set_markup(text);
     },
 });
 

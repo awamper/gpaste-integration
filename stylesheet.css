@@ -172,12 +172,6 @@
     icon-size: 16px;
 }
 
-.gpaste-statusbar-box {
-    padding: 3px;
-    font-size: 18px;
-    color: rgba(150, 150, 150, 1);
-}
-
 .gpaste-shortcut-label {
     background-color: rgba(52, 101, 164, 0.8);
     border: 1px solid rgba(255, 255, 255, 1);
