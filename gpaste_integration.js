@@ -23,6 +23,7 @@ const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
+const Tooltips = Me.imports.tooltips;
 
 const FILTER_TIMEOUT_MS = 200;
 
@@ -285,6 +286,9 @@ const GPasteIntegration = new Lang.Class({
             hint_text: "Type to search",
             track_hover: true,
             can_focus: true
+        });
+        Tooltips.get_manager().add_tooltip(this._search_entry, {
+            text: 'Append "-f" to search only files or "-t" to search only text.'
         });
         this._search_entry.connect('key-press-event',
             Lang.bind(this, this._on_search_key_press_event)
