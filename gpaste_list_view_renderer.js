@@ -25,7 +25,7 @@ const TIMEOUT_IDS = {
     INFO: 0
 };
 
-const INFO_ANIMATION_TIME_S = 0.3;
+const INFO_ANIMATION_TIME_S = 0.2;
 const IMAGE_PREVIEW_WIDTH = 100;
 const IMAGE_PREVIEW_HEIGHT = 100;
 
@@ -37,7 +37,6 @@ const GPasteListViewRenderer = new Lang.Class({
         this.parent({
             style_class: 'gpaste-item-box',
         });
-        this.actor.connect('style-changed', Lang.bind(this, this._on_style_changed));
 
         this._info_view = new ItemInfoView.ItemInfoView({
             label_style_class: 'gpaste-item-box-info-label'
@@ -45,28 +44,6 @@ const GPasteListViewRenderer = new Lang.Class({
         this._info_view.actor.set_pivot_point(0.5, 0.5);
         this._history_item = null;
         this._image_preview = null;
-    },
-
-    _on_style_changed: function(actor) {
-        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
-
-        if(actor.has_style_pseudo_class('hover')) {
-            TIMEOUT_IDS.INFO = Mainloop.timeout_add(
-                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
-                Lang.bind(this, function() {
-                    this._show_info();
-                    TIMEOUT_IDS.INFO = 0;
-                })
-            );
-        }
-        else {
-            if(TIMEOUT_IDS.INFO !== 0) {
-                Mainloop.source_remove(TIMEOUT_IDS.INFO);
-                TIMEOUT_IDS.INFO = 0;
-            }
-
-            this._hide_info();
-        }
     },
 
     _prepare_string: function(str) {
@@ -116,7 +93,7 @@ const GPasteListViewRenderer = new Lang.Class({
         });
     },
 
-    _show_info: function() {
+    show_info: function() {
         if(!this._history_item.hash || this._info_view.shown) return;
 
         function on_info_result(text, uri) {
@@ -156,7 +133,7 @@ const GPasteListViewRenderer = new Lang.Class({
         this._history_item.get_info(Lang.bind(this, on_info_result));
     },
 
-    _hide_info: function() {
+    hide_info: function() {
         if(!this._info_view.shown) return;
 
         let height = this._info_view.actor.get_height();
@@ -216,6 +193,7 @@ const GPasteListViewRenderer = new Lang.Class({
 
         if(this._history_item.hidden) this.actor.hide();
 
+        this.actor._delegate = this;
         return this.actor;
     },
 

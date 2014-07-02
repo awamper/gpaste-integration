@@ -34,7 +34,8 @@ const CONNECTION_IDS = {
 };
 
 const TIMEOUT_IDS = {
-    FILTER: 0
+    FILTER: 0,
+    INFO: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -119,6 +120,14 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.connect(
             "clicked",
             Lang.bind(this, this._on_item_clicked)
+        );
+        this._list_view.connect(
+            'selected',
+            Lang.bind(this, this._on_item_selected)
+        );
+        this._list_view.connect(
+            'unselected',
+            Lang.bind(this, this._on_item_unselected)
         );
 
         this._items_counter = new ListView.ItemsCounter(this._list_model);
@@ -263,6 +272,27 @@ const GPasteIntegration = new Lang.Class({
                 this.activate_item(model, index);
                 break;
         }
+    },
+
+    _on_item_selected: function(object, display) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
+        TIMEOUT_IDS.INFO = Mainloop.timeout_add(
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
+            Lang.bind(this, function() {
+                display._delegate.show_info();
+                TIMEOUT_IDS.INFO = 0;
+            })
+        );
+    },
+
+    _on_item_unselected: function(object, display) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return;
+        if(TIMEOUT_IDS.INFO !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.INFO);
+            TIMEOUT_IDS.INFO = 0;
+        }
+
+        display._delegate.hide_info();
     },
 
     _on_items_changed: function() {

@@ -442,8 +442,10 @@ const ListView = new Lang.Class({
     },
 
     select: function(actor) {
+        if(actor.has_style_pseudo_class('hover')) return;
         this.unselect_all();
         actor.add_style_pseudo_class("hover");
+        this.emit('selected', actor);
     },
 
     set_active: function(actor) {
@@ -455,7 +457,9 @@ const ListView = new Lang.Class({
     },
 
     unselect: function(actor) {
+        if(!actor.has_style_pseudo_class('hover')) return;
         actor.remove_style_pseudo_class("hover");
+        this.emit('unselected', actor)
     },
 
     unselect_all: function() {
