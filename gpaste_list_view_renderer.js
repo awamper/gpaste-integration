@@ -21,10 +21,6 @@ const HIGHLIGHT_MARKUP = {
     STOP: '</span>'
 };
 
-const TIMEOUT_IDS = {
-    INFO: 0
-};
-
 const INFO_ANIMATION_TIME_S = 0.2;
 const IMAGE_PREVIEW_WIDTH = 100;
 const IMAGE_PREVIEW_HEIGHT = 100;
