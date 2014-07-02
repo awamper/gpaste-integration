@@ -117,10 +117,10 @@ const GPasteListViewRenderer = new Lang.Class({
     },
 
     _show_info: function() {
-        if(this._info_view.shown) return;
+        if(!this._history_item.hash || this._info_view.shown) return;
 
         function on_info_result(text, uri) {
-            if(!text) return;
+            if(!text || !this.actor.has_style_pseudo_class('hover')) return;
 
             this.actor.add(this._info_view.actor, {
                 row: 1,
