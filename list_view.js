@@ -288,11 +288,15 @@ const ListView = new Lang.Class({
         }
     },
 
-    _on_scroll_changed: function() {
+    _remove_timeout: function() {
         if(TIMEOUT_IDS.SCROLL !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.SCROLL);
             TIMEOUT_IDS.SCROLL = 0;
         }
+    },
+
+    _on_scroll_changed: function() {
+        this._remove_timeout();
         if(this._loading_items || !this._is_need_preload()) return;
 
         TIMEOUT_IDS.SCROLL = Mainloop.timeout_add(200,
@@ -364,7 +368,7 @@ const ListView = new Lang.Class({
     },
 
     _preload_items: function() {
-        TIMEOUT_IDS.SCROLL = 0;
+        this._remove_timeout();
         this._loading_items = true;
         let loaded = this._box.get_n_children();
 
@@ -593,11 +597,13 @@ const ListView = new Lang.Class({
     },
 
     clear: function() {
+        this._remove_timeout();
         this._displays = [];
         this._box.destroy_all_children();
     },
 
     destroy: function() {
+        this._remove_timeout();
         if(this.model) this.model.destroy();
         this.actor.destroy();
         delete this._displays;
