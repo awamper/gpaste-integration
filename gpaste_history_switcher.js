@@ -6,6 +6,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const GPasteClient = Me.imports.gpaste_client;
 const PopupDialog = Me.imports.popup_dialog;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const GpasteHistorySwitcherItem = new Lang.Class({
     Name: 'GpasteHistorySwitcherItem',
@@ -105,7 +106,11 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     show: function() {
-        this.parent();
+        this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
         this._load_histories();
     },
+
+    hide: function() {
+        this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
+    }
 });

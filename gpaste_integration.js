@@ -693,16 +693,20 @@ const GPasteIntegration = new Lang.Class({
         let history_item = this._history.items[0];
         let selected_index = this._list_view.get_selected_index();
         let display = this._list_view.get_display(selected_index);
+        let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
 
         if(display) {
             history_item = display._delegate._history_item;
-            display.opacity = 20;
-            Tweener.removeTweens(display);
-            Tweener.addTween(display, {
-                time: 0.3,
-                transition: 'easeInBounce',
-                opacity: 255
-            })
+
+            if(animation) {
+                display.opacity = 20;
+                Tweener.removeTweens(display);
+                Tweener.addTween(display, {
+                    time: 0.3,
+                    transition: 'easeInBounce',
+                    opacity: 255
+                });
+            }
         }
 
         this._contents_preview_dialog.preview(history_item);

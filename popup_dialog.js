@@ -32,6 +32,8 @@ const PopupDialog = new Lang.Class({
         this.actor.set_pivot_point(0.5, 0.5);
 
         Main.uiGroup.add_child(this.actor);
+
+        this._shown = false;
     },
 
     _reposition: function() {
@@ -66,8 +68,8 @@ const PopupDialog = new Lang.Class({
         }
     },
 
-    show: function() {
-        if(this.actor.visible) return;
+    show: function(animation) {
+        if(this.shown) return;
 
         this._reposition();
 
@@ -77,9 +79,22 @@ const PopupDialog = new Lang.Class({
             });
         }
 
-        this.actor.opacity = 0;
+        this.actor.set_opacity(0);
         this.actor.set_scale(MIN_SCALE, MIN_SCALE);
         this.actor.show();
+
+        animation =
+            animation === undefined
+            ? true
+            : animation;
+
+        if(!animation) {
+            this.actor.set_opacity(255);
+            this.actor.set_scale(1, 1);
+            this._connect_captured_event();
+            this.shown = true;
+            return;
+        }
 
         Tweener.removeTweens(this.actor);
         Tweener.addTween(this.actor, {
@@ -89,18 +104,30 @@ const PopupDialog = new Lang.Class({
             time: 0.3,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
-                this.emit('showed');
+                this._connect_captured_event();
+                this.shown = true;
             })
         });
-
-        this._connect_captured_event();
     },
 
-    hide: function() {
-        if(!this.actor.visible) return;
+    hide: function(animation) {
+        if(!this.shown) return;
 
         if(this.params.modal) Main.popModal(this.actor);
         this._disconnect_captured_event();
+
+        animation =
+            animation === undefined
+            ? true
+            : animation;
+
+        if(!animation) {
+            this.actor.hide();
+            this.actor.set_scale(1, 1);
+            this.actor.set_opacity(255);
+            this.shown = false;
+            return;
+        }
 
         Tweener.removeTweens(this.actor);
         Tweener.addTween(this.actor, {
@@ -112,8 +139,8 @@ const PopupDialog = new Lang.Class({
             onComplete: Lang.bind(this, function() {
                 this.actor.hide();
                 this.actor.set_scale(1, 1);
-                this.actor.opacity = 255;
-                this.emit('hided');
+                this.actor.set_opacity(255);
+                this.shown = false;
             })
         });
     },
@@ -121,6 +148,17 @@ const PopupDialog = new Lang.Class({
     destroy: function() {
         this._disconnect_captured_event();
         this.actor.destroy();
+    },
+
+    get shown() {
+        return this._shown;
+    },
+
+    set shown(shown) {
+        this._shown = shown;
+
+        if(this._shown) this.emit('shown');
+        else this.emit('hidden');
     }
 });
 Signals.addSignalMethods(PopupDialog.prototype);

@@ -125,6 +125,9 @@ const GPasteListView = new Lang.Class({
     },
 
     fade_out_display: function(display) {
+        let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
+        if(!animation) return;
+
         let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
             source: display,

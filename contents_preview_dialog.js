@@ -113,10 +113,9 @@ const ContentsPreviewDialog = new Lang.Class({
         });
         this.actor.add_child(this._box);
 
-        this.connect('hided', Lang.bind(this, this.clear));
+        this.connect('hidden', Lang.bind(this, this.clear));
 
         this._contents_view = null;
-        this.shown = false;
     },
 
     _on_captured_event: function(o, e) {
@@ -124,7 +123,9 @@ const ContentsPreviewDialog = new Lang.Class({
             let symbol = e.get_key_symbol();
 
             if(symbol === Clutter.Super_R || symbol == Clutter.Super_L) {
-                this.hide();
+                this.hide(
+                    Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+                );
             }
 
             return true;
@@ -195,16 +196,6 @@ const ContentsPreviewDialog = new Lang.Class({
         this.actor.y = Main.panel.actor.y + margin  * 2;
     },
 
-    show: function() {
-        this.shown = true;
-        this.parent();
-    },
-
-    hide: function() {
-        this.shown = false;
-        this.parent();
-    },
-
     clear: function() {
         if(this._contents_view !== null) this._contents_view.destroy();
         this._contents_view = null;
@@ -220,7 +211,9 @@ const ContentsPreviewDialog = new Lang.Class({
                 this._contents_view = new ContentsPreviewView(raw_item);
                 this._box.add_child(this._contents_view.actor);
 
-                this.show();
+                this.show(
+                    Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+                );
                 this._reposition();
 
                 history_item.get_info(
