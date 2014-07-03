@@ -25,6 +25,11 @@ const INFO_ANIMATION_TIME_S = 0.2;
 const IMAGE_PREVIEW_WIDTH = 100;
 const IMAGE_PREVIEW_HEIGHT = 100;
 
+const CONNECTION_IDS = {
+    ITEM_DESTROY: 0,
+    ITEM_INACTIVE_CHANGED: 0
+};
+
 const GPasteListViewRenderer = new Lang.Class({
     Name: 'GPasteListViewRenderer',
     Extends: ListView.RendererBase,
@@ -87,6 +92,15 @@ const GPasteListViewRenderer = new Lang.Class({
             y_fill: false,
             y_align: St.Align.MIDDLE
         });
+    },
+
+    _highlight: function(history_item) {
+        if(history_item.inactive) {
+            this.actor.add_style_pseudo_class('inactive');
+        }
+        else {
+            this.actor.remove_style_pseudo_class('inactive');
+        }
     },
 
     show_info: function() {
@@ -158,7 +172,12 @@ const GPasteListViewRenderer = new Lang.Class({
     get_display: function(model, index) {
         this.title_label = this.get_title();
         this._history_item = model.get(index);
-        this._history_item.connect('destroy',
+        CONNECTION_IDS.ITEM_INACTIVE_CHANGED = this._history_item.connect(
+            'inactive-changed',
+            Lang.bind(this, this._highlight)
+        );
+        CONNECTION_IDS.ITEM_DESTROY = this._history_item.connect(
+            'destroy',
             Lang.bind(this, function() {
                 let hash = this._history_item.hash;
                 model.delete(
@@ -187,10 +206,7 @@ const GPasteListViewRenderer = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
-        if(this._history_item.inactive) {
-            this.actor.add_style_pseudo_class('inactive');
-        }
-
+        this._highlight(this._history_item);
         this.actor._delegate = this;
         return this.actor;
     },
