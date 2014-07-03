@@ -187,7 +187,9 @@ const GPasteListViewRenderer = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
-        if(this._history_item.hidden) this.actor.hide();
+        if(this._history_item.inactive) {
+            this.actor.add_style_pseudo_class('inactive');
+        }
 
         this.actor._delegate = this;
         return this.actor;

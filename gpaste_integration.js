@@ -262,6 +262,9 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_clicked: function(object, button, display, model, index) {
+        let history_item = this._list_model.get(index);
+        if(history_item.inactive) return;
+
         switch(button) {
             case Clutter.BUTTON_SECONDARY:
                 this.delete_item(model, index);

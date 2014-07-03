@@ -126,6 +126,13 @@
     transition-duration: 50ms;
 }
 
+.gpaste-item-box:inactive {
+    background-color: rgba(52, 101, 164, 0.7);
+    border: 1px solid #0D4CA3;
+    color: white;
+    font-weight: bold;
+}
+
 .gpaste-item-box-info-label {
     padding: 2px;
     background-color: rgba(0, 0, 0, 0.5);

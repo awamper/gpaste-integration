@@ -54,7 +54,7 @@ const GPasteHistory = new Lang.Class({
                     this._items.splice(this._items.indexOf(history_item), 1);
                 }
 
-                history_item.hidden = false;
+                history_item.inactive = false;
                 new_items.push(history_item);
             }
 
@@ -77,7 +77,7 @@ const GPasteHistory = new Lang.Class({
             };
             let history_item =
                 new GPasteHistoryItem.GPasteHistoryItem(item_data, this);
-            history_item.hidden = false;
+            history_item.inactive = false;
             new_items.push(history_item);
         }
 
@@ -108,7 +108,7 @@ const GPasteHistory = new Lang.Class({
 
     set_items: function(history_items) {
         this._items = history_items;
-        // this._items[0].hidden = true;
+        this._items[0].inactive = true;
     },
 
     get_index_for_item: function(history_item) {
