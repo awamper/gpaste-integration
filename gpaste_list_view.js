@@ -6,6 +6,8 @@ const Clutter = imports.gi.Clutter;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const ListView = Me.imports.list_view;
+const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const GPasteListView = new Lang.Class({
     Name: 'GPasteListView',
@@ -134,12 +136,18 @@ const GPasteListView = new Lang.Class({
         clone.set_pivot_point(0.5, 0.5);
         Main.uiGroup.add_child(clone);
 
+        let transition = Utils.SETTINGS.get_string(
+            PrefsKeys.ACTIVATE_TRANSITION_TYPE_KEY
+        );
+        let time = Utils.SETTINGS.get_double(
+            PrefsKeys.ACTIVATE_ANIMATION_TIME_KEY
+        );
         Tweener.addTween(clone, {
-            time: 0.3,
+            time: time,
             scale_x: 1.5,
             scale_y: 1.5,
             opacity: 0,
-            transition: 'easeInOutCirc',
+            transition: transition,
             onComplete: Lang.bind(this, function() {
                 clone.destroy();
             })

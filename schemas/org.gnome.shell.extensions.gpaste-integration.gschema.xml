@@ -51,12 +51,20 @@
         <default>0.5</default>
     </key>
 
+    <key type="d" name="activate-animation-time">
+        <default>0.3</default>
+    </key>
+
     <key type="s" name="open-transition-type">
         <default>'easeOutBack'</default>
     </key>
 
     <key type="s" name="close-transition-type">
         <default>'easeInBack'</default>
+    </key>
+
+    <key type="s" name="activate-transition-type">
+        <default>'easeInExpo'</default>
     </key>
 
     <key type="b" name="enable-item-info">

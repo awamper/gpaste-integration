@@ -16,3 +16,5 @@ const ENABLE_ITEM_INFO_KEY = 'enable-item-info';
 const ENABLE_IMAGE_PREVIEW_KEY = 'enable-image-preview';
 const ITEM_INFO_TIMEOUT_KEY = 'item-info-timeout';
 const SHOW_ITEM_INFO_WITH_ALT_KEY = 'show-item-info-with-alt';
+const ACTIVATE_TRANSITION_TYPE_KEY = 'activate-transition-type';
+const ACTIVATE_ANIMATION_TIME_KEY = 'activate-animation-time';

@@ -473,10 +473,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             upper: 5.0,
             step_increment: 0.1
         };
-        let renderers = [];
+        let transitions = [];
 
         for each(let transition in TweenerTransitionTypes.TWEENER_TRANSITION_TYPES) {
-            renderers.push({
+            transitions.push({
                 title: transition,
                 value: transition
             });
@@ -490,7 +490,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         page.add_combo(
             'Open transition:',
             PrefsKeys.OPEN_TRANSITION_TYPE_KEY,
-            renderers,
+            transitions,
             'string'
         );
         page.add_spin(
@@ -503,12 +503,25 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         page.add_combo(
             'Close transition:',
             PrefsKeys.CLOSE_TRANSITION_TYPE_KEY,
-            renderers,
+            transitions,
             'string'
         );
         page.add_spin(
             'Close animation time:',
             PrefsKeys.CLOSE_ANIMATION_TIME_KEY,
+            adjustment_properties,
+            'double'
+        );
+
+        page.add_combo(
+            'Activate item transition:',
+            PrefsKeys.ACTIVATE_TRANSITION_TYPE_KEY,
+            transitions,
+            'string'
+        );
+        page.add_spin(
+            'Activate item animation time:',
+            PrefsKeys.ACTIVATE_ANIMATION_TIME_KEY,
             adjustment_properties,
             'double'
         );
