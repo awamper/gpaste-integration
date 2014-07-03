@@ -519,6 +519,11 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _filter: function(term, flag) {
+        if(TIMEOUT_IDS.FILTER !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.FILTER);
+            TIMEOUT_IDS.FILTER = 0;
+        }
+
         function on_filter_result(matches) {
             let items = [];
 
