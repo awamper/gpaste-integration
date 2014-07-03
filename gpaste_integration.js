@@ -559,7 +559,7 @@ const GPasteIntegration = new Lang.Class({
         let history_item = model.get(index);
         GPasteClient.get_client().select(history_item.index);
 
-        let display = this._list_view.get_display(history_item.index);
+        let display = this._list_view.get_display_for_item(history_item);
         if(display) this._list_view.fade_out_display(display);
         this._search_entry.clear();
     },

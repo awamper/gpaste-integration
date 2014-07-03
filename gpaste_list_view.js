@@ -109,6 +109,19 @@ const GPasteListView = new Lang.Class({
         }
     },
 
+    get_display_for_item: function(history_item) {
+        let result = null;
+
+        for each(let display in this._displays) {
+            if(display._delegate._history_item === history_item) {
+                result = display;
+                break;
+            }
+        }
+
+        return result;
+    },
+
     fade_out_display: function(display) {
         let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
