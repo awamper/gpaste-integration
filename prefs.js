@@ -315,7 +315,15 @@ const PrefsGrid = new GObject.Class({
         }));
 
         return this.add_row(label, range, true);
-    }
+    },
+
+    add_separator: function() {
+        let separator = new Gtk.Separator({
+            orientation: Gtk.Orientation.HORIZONTAL
+        });
+
+        this.add_item(separator, 0, 2, 1);
+    },
 });
 
 const GpasteIntegrationPrefsWidget = new GObject.Class({
@@ -361,23 +369,12 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         let name = 'Main';
         let page = new PrefsGrid(this._settings);
 
-        let spin_properties = {
-            lower: 100,
-            upper: 2000,
-            step_increment: 50
-        };
-        page.add_spin(
-            'Preview max width(px):',
-            PrefsKeys.PREVIEW_MAX_WIDTH_PX_KEY,
-            spin_properties,
-            'int'
+        page.add_boolean(
+            'Tooltips:',
+            PrefsKeys.ENABLE_TOOLTIPS_KEY
         );
-        page.add_spin(
-            'Preview max height(px):',
-            PrefsKeys.PREVIEW_MAX_HEIGHT_PX_KEY,
-            spin_properties,
-            'int'
-        );
+
+        page.add_separator();
 
         page.add_boolean(
             'Item details:',
@@ -387,7 +384,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Show details with <Alt> instead of hover:',
             PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY
         );
-        spin_properties = {
+        let spin_properties = {
             lower: 100,
             upper: 2000,
             step_increment: 100
@@ -401,11 +398,6 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         page.add_boolean(
             'Image preview:',
             PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
-        );
-
-        page.add_boolean(
-            'Tooltips:',
-            PrefsKeys.ENABLE_TOOLTIPS_KEY
         );
 
         return {
@@ -425,15 +417,35 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             size: 300
         };
         page.add_range(
-            'Width (% of screen):',
+            'Dialog width (% of screen):',
             PrefsKeys.WIDTH_PERCENTS_KEY,
             range_properties
         )
         page.add_range(
-            'Height (% of screen):',
+            'Dialog height (% of screen):',
             PrefsKeys.HEIGHT_PERCENTS_KEY,
             range_properties
         )
+
+        page.add_separator();
+
+        range_properties = {
+            min: 100,
+            max: 2000,
+            step: 10,
+            size: 300
+        };
+        page.add_range(
+            'Preview max width(px):',
+            PrefsKeys.PREVIEW_MAX_WIDTH_PX_KEY,
+            range_properties
+        );
+        page.add_range(
+            'Preview max height(px):',
+            PrefsKeys.PREVIEW_MAX_HEIGHT_PX_KEY,
+            range_properties
+        );
+
         return {
             page: page,
             name: name
@@ -495,6 +507,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.ENABLE_ANIMATIONS_KEY
         );
 
+        page.add_separator();
+
         page.add_combo(
             'Open transition:',
             PrefsKeys.OPEN_TRANSITION_TYPE_KEY,
@@ -508,6 +522,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'double'
         );
 
+        page.add_separator();
+
         page.add_combo(
             'Close transition:',
             PrefsKeys.CLOSE_TRANSITION_TYPE_KEY,
@@ -520,6 +536,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             adjustment_properties,
             'double'
         );
+
+        page.add_separator();
 
         page.add_combo(
             'Activate item transition:',
