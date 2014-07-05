@@ -15,7 +15,6 @@ const GPasteHistoryItem = new Lang.Class({
         this.text = data.text;
         this.markup = data.markup;
         this.hash = Utils.fnv32a(data.text);
-        this.hidden = false;
         this._inactive = false;
 
         this._gpaste_history = gpaste_history;
@@ -105,11 +104,12 @@ const GPasteHistoryItem = new Lang.Class({
 
     destroy: function() {
         this.emit('destroy');
-        this.text = null;
-        this.markup = null;
-        this.hash = null;
-        this._inactive = null;
-        this._gpaste_history = null;
+
+        delete this.text;
+        delete this.markup;
+        delete this.hash;
+        delete this._inactive;
+        delete this._gpaste_history;
     },
 
     get index() {

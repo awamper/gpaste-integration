@@ -105,6 +105,10 @@
     color: rgb(150, 150, 150);
 }
 
+.gpaste-list-view-progress {
+    background-color: #007BFF;
+}
+
 .gpaste-item-box {
     padding: 5px;
     font-size: 17px;

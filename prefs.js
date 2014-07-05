@@ -400,6 +400,18 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
         );
 
+        spin_properties = {
+            lower: 1,
+            upper: 100,
+            step_increment: 1
+        };
+        page.add_spin(
+            'Items load at once:',
+            PrefsKeys.LIST_VIEW_N_LOAD_AT_ONCE_KEY,
+            spin_properties,
+            'int'
+        );
+
         return {
             page: page,
             name: name

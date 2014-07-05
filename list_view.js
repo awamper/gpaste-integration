@@ -2,6 +2,7 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Signals = imports.signals;
 const Mainloop = imports.mainloop;
+const GLib = imports.gi.GLib;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Main = imports.ui.main;
@@ -10,34 +11,200 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
-const TIMEOUT_IDS = {
-    SCROLL: 0
-};
-
 const ANIMATION_TIMES = {
     SHORTCUT_EMBLEM: 0.3
 };
 
-const ItemsCounter = new Lang.Class({
-    Name: "ListView.ItemsCounter",
+const LOAD_STATES = {
+    NONE: 0,
+    STARTED: 1,
+    LOADING: 2,
+    FINISHED: 3
+};
 
-    _init: function(list_model) {
-        this.actor = new St.Label();
-        this._list_model = list_model;
-        this._list_model.connect(
-            "changed::items",
+const LoadingProgress = new Lang.Class({
+    Name: 'ListView.LoadingProgress',
+
+    _init: function(list_view, params) {
+        this.params = Params.parse(params, {
+            hide_on_finish: false,
+            max_width: 100,
+            height: 5,
+            animation: true,
+            animation_time: 0.3,
+            style_class: ''
+        });
+
+        this.actor = new St.Bin({
+            height: this.params.height,
+            width: 0,
+            style_class: this.params.style_class,
+            visible: false
+        });
+
+        this._list_view = list_view;
+        this._start_id = this._list_view.connect(
+            'loading-start',
+            Lang.bind(this, this._on_start)
+        );
+        this._continue_id = this._list_view.connect(
+            'loading-continue',
             Lang.bind(this, this._on_changed)
         );
-        this._count_text = "Total: %s";
+        this._finish_id = this._list_view.connect(
+            'loading-finish',
+            Lang.bind(this, this._on_finish)
+        );
+
+        this.max_width = this.params.max_width;
+    },
+
+    _on_start: function() {
+        this._reset();
+        this.actor.show();
+    },
+
+    _on_finish: function() {
+        this._set_progress(100);
     },
 
     _on_changed: function() {
-        let count = this._list_model.length;
-        this.actor.set_text(this._count_text.format(count));
+        let progress = Math.ceil(
+            100 / this._list_view.model.length * this._list_view.n_loaded_items
+        );
+        this._set_progress(progress);
+    },
+
+    _set_progress: function(progress) {
+        let width = Math.floor(this.max_width / 100 * progress);
+
+        if(!this.params.animation) {
+            this.actor.width = width;
+            return;
+        }
+
+        Tweener.removeTweens(this.actor);
+        Tweener.addTween(this.actor, {
+            transition: 'easeOutQuad',
+            time: this.params.animation_time,
+            width: width,
+            onComplete: Lang.bind(this, function() {
+                if(this.params.hide_on_finish && progress >= 100) {
+                    this.hide();
+                }
+            })
+        });
+    },
+
+    _reset: function() {
+        this.actor.width = 0;
+    },
+
+    show: function() {
+        if(this.actor.visible) return;
+
+        if(!this.params.animation) {
+            this.actor.show();
+            return;
+        }
+
+        this.actor.set_opacity(0);
+        this.actor.show();
+
+        Tweener.removeTweens(this.actor);
+        Tweener.addTween(this.actor, {
+            transition: 'easeOutQuad',
+            time: this.params.animation_time,
+            opacity: 255
+        });
+    },
+
+    hide: function() {
+        if(!this.actor.visible) return;
+
+        if(!this.params.animation) {
+            this.actor.hide();
+            return;
+        }
+
+        Tweener.removeTweens(this.actor);
+        Tweener.addTween(this.actor, {
+            transition: 'easeOutQuad',
+            time: this.params.animation_time,
+            opacity: 0,
+            onComplete: Lang.bind(this, function() {
+                this.actor.hide();
+                this.actor.set_opacity(255);
+            })
+        });
     },
 
     destroy: function() {
-        delete this._list_model;
+        if(this._continue_id > 0) {
+            this._list_view.disconnect(this._continue_id);
+            this._continue_id = 0;
+        }
+        if(this._finish_id > 0) {
+            this._list_view.disconnect(this._finish_id);
+            this._finish_id = 0;
+        }
+
+        this.actor.destroy();
+    },
+
+    set max_width(max_width) {
+        this._max_width = max_width;
+    },
+
+    get max_width() {
+        return this._max_width;
+    }
+});
+
+const ItemsCounter = new Lang.Class({
+    Name: "ListView.ItemsCounter",
+
+    _init: function(list_view) {
+        this.actor = new St.Label();
+
+        this._list_view = list_view;
+        this._list_view_connection_id = this._list_view.connect(
+            'loading-continue',
+            Lang.bind(this, this._on_changed)
+        );
+        this._list_view_finish_connection_id = this._list_view.connect(
+            'loading-finish',
+            Lang.bind(this, this._on_changed, true)
+        );
+        this._model_connection_id = this._list_view.model.connect(
+            "changed::items",
+            Lang.bind(this, this._on_changed)
+        );
+    },
+
+    _on_changed: function(object, loading_finish) {
+        let text = 'Total: ';
+        if(!loading_finish) text += this._list_view.n_loaded_items + '/';
+        text += this._list_view.model.length;
+
+        this.actor.set_text(text);
+    },
+
+    destroy: function() {
+        if(this._model_connection_id > 0) {
+            this._list_view.model.disconnect(this._model_connection_id);
+            this._model_connection_id = 0;
+        }
+        if(this._list_view_connection_id > 0) {
+            this._list_view.disconnect(this._list_view_connection_id);
+            this._list_view_connection_id = 0;
+        }
+        if(this._list_view_finish_connection_id > 0) {
+            this._list_view.disconnect(this._list_view_finish_connection_id);
+            this._list_view_finish_connection_id = 0;
+        }
+
+        delete this._list_view;
         this.actor.destroy();
     }
 });
@@ -157,8 +324,8 @@ const RendererBase = new Lang.Class({
     }
 });
 
-const ListViewShortcutEmblem = new Lang.Class({
-    Name: 'ListViewShortcutEmblem',
+const ShortcutEmblem = new Lang.Class({
+    Name: 'ShortcutEmblem',
 
     _init: function(params) {
         this.params = Params.parse(params, {
@@ -182,7 +349,7 @@ const ListViewShortcutEmblem = new Lang.Class({
     _reposition: function() {
         if(this._display === null) {
             throw new Error(
-                'ListViewShortcutEmblem:_reposition(): this._display is null'
+                'ListView.ShortcutEmblem:_reposition(): this._display is null'
             );
         }
 
@@ -250,7 +417,8 @@ const ListView = new Lang.Class({
             shortcut_style: '',
             overlay_scrollbars: true,
             renderer: null,
-            model: null
+            model: null,
+            n_load_at_once: 10
         });
 
         this.actor = new St.ScrollView({
@@ -259,26 +427,23 @@ const ListView = new Lang.Class({
         });
         this.actor.set_pivot_point(0.5, 0.5);
 
+        this._v_adjustment = this.actor.get_vscroll_bar().get_adjustment();
+        this._h_adjustment = this.actor.get_hscroll_bar().get_adjustment();
+
         this._box = new St.BoxLayout({
             vertical: true,
             style_class: this.params.box_style
         });
         this.actor.add_actor(this._box);
 
-        this._v_adjustment = this.actor.get_vscroll_bar().get_adjustment();
-        this._v_adjustment.connect(
-            'notify::value',
-            Lang.bind(this, this._on_scroll_changed)
-        );
-        this._h_adjustment = this.actor.get_hscroll_bar().get_adjustment();
-
-        this._displays = [];
-        this._loading_items = false;
-        this._preload_pages = 1.1;
-        this._preload_point = 85; // %
         this._displays = [];
         this._renderer = null;
         this._model = null;
+
+        this._load_id = 0;
+        this._load_state = LOAD_STATES.NONE;
+        this._n_loaded = 0;
+        this._n_load_at_once = this.params.n_load_at_once;
 
         if(this.params.renderer !== null) {
             this.set_renderer(this.params.renderer);
@@ -288,32 +453,14 @@ const ListView = new Lang.Class({
         }
     },
 
-    _remove_timeout: function() {
-        if(TIMEOUT_IDS.SCROLL !== 0) {
-            Mainloop.source_remove(TIMEOUT_IDS.SCROLL);
-            TIMEOUT_IDS.SCROLL = 0;
-        }
-    },
-
-    _on_scroll_changed: function() {
-        this._remove_timeout();
-        if(this._loading_items || !this._is_need_preload()) return;
-
-        TIMEOUT_IDS.SCROLL = Mainloop.timeout_add(200,
-            Lang.bind(this, this._preload_items)
-        );
-    },
-
     _on_item_deleted: function(model, item, index) {
         let display = this._displays[index];
         if(display) this._remove_display(this._displays[index]);
-
-        if(this._is_need_preload()) this._preload_items();
     },
 
     _on_items_setted: function() {
         this.clear();
-        this._preload_items();
+        this._lazy_load_items();
     },
 
     _remove_display: function(display) {
@@ -351,50 +498,83 @@ const ListView = new Lang.Class({
     },
 
     _add_shortcut_emblem_to_display: function(display) {
-        let emblem = new ListViewShortcutEmblem({
+        let emblem = new ShortcutEmblem({
             style_class: this.params.shortcut_style,
             display: display
         });
         display.shortcut = emblem;
     },
 
-    _is_need_preload: function() {
-        let load_position =
-            this._v_adjustment.upper / 100 * this._preload_point;
-        let current_position =
-            this._v_adjustment.value + this._v_adjustment.page_size;
+    _stop_lazy_load: function() {
+        if(this._load_id !== 0) {
+            GLib.source_remove(this._load_id);
+            this._load_id = 0;
+            this.emit('loading-stop');
+        }
 
-        return (current_position >= load_position)
+        this._load_state = LOAD_STATES.FINISHED;
+        this._n_loaded = 0;
     },
 
-    _preload_items: function() {
-        this._remove_timeout();
-        this._loading_items = true;
-        let loaded = this._box.get_n_children();
+    _lazy_load_items: function() {
+        this._stop_lazy_load();
 
-        if(loaded >= this.model.length) {
-            this._loading_items = false;
-            return;
+        this._load_state = LOAD_STATES.STARTED;
+        this._load_id = GLib.idle_add(
+            GLib.PRIORITY_LOW,
+            Lang.bind(this, this._load_items)
+        );
+    },
+
+    _load_items: function() {
+        if(
+            this._load_state !== LOAD_STATES.STARTED
+            && this._load_state !== LOAD_STATES.LOADING
+        ) {
+            this._load_id = 0;
+            return false;
         }
 
-        let added_height = 0;
-        let max_added_height = this._v_adjustment.page_size * this._preload_pages;
-
-        for(let i = loaded; i < this.model.length; i++) {
-            if(added_height >= max_added_height) break;
-
-            let index = i;
-            let renderer = new this.renderer();
-            let display = renderer.get_display(this.model, i);
-            if(!display) continue;
-            this._box.add_child(display);
-            this._connect_display_signals(display);
-            this._displays.push(display);
-            this._add_shortcut_emblem_to_display(display);
-            added_height += display.height;
+        if(this._n_loaded >= this._model.length) {
+            LOAD_STATES.FINISHED;
+            this.emit('loading-finish');
+            this._load_id = 0;
+            return false;
         }
 
-        this._loading_items = false;
+        if(this._n_loaded === 0) {
+            this._load_state = LOAD_STATES.LOADING;
+            this.emit('loading-start');
+        }
+
+        for(let i = 0; i < this._n_load_at_once; i++) {
+            if(this._n_loaded >= this._model.length) break;
+            this._add_item(this._n_loaded);
+            this._n_loaded++;
+        }
+
+        if(this._n_loaded === this._model.length) {
+            this._load_state = LOAD_STATES.FINISHED;
+            this._n_loaded = 0;
+            this._load_id = 0;
+            this.emit('loading-finish');
+            return false;
+        }
+        else {
+            this.emit('loading-continue');
+            return true;
+        }
+    },
+
+    _add_item: function(item_id) {
+        let renderer = new this.renderer();
+        let display = renderer.get_display(this.model, item_id);
+        if(!display) return;
+
+        this._box.insert_child_at_index(display, item_id);
+        this._connect_display_signals(display);
+        this._displays.push(display);
+        this._add_shortcut_emblem_to_display(display);
     },
 
     _is_actor_visible_on_scroll: function(actor, scroll) {
@@ -597,13 +777,13 @@ const ListView = new Lang.Class({
     },
 
     clear: function() {
-        this._remove_timeout();
+        this._stop_lazy_load();
         this._displays = [];
         this._box.destroy_all_children();
     },
 
     destroy: function() {
-        this._remove_timeout();
+        this._stop_lazy_load();
         if(this.model) this.model.destroy();
         this.actor.destroy();
         delete this._displays;
@@ -623,6 +803,10 @@ const ListView = new Lang.Class({
 
     get model() {
         return this.get_model();
+    },
+
+    get n_loaded_items() {
+        return this._displays.length;
     }
 });
 Signals.addSignalMethods(ListView.prototype);

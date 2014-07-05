@@ -42,6 +42,7 @@ const ItemInfoView = new Lang.Class({
     },
 
     destroy: function() {
+        delete this._params;
         this.actor.destroy();
     },
 

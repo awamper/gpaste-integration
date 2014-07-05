@@ -17,6 +17,13 @@ const GPasteListView = new Lang.Class({
         this.parent(params);
     },
 
+    _lazy_load_items: function() {
+        this._n_load_at_once = Utils.SETTINGS.get_int(
+            PrefsKeys.LIST_VIEW_N_LOAD_AT_ONCE_KEY
+        );
+        this.parent();
+    },
+
     select: function(actor) {
         if(actor._delegate._history_item.inactive) return;
         this.parent(actor);

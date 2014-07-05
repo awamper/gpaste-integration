@@ -83,5 +83,9 @@
         <default>false</default>
     </key>
 
+    <key type="i" name="list-view-n-load-at-once">
+        <default>10</default>
+    </key>
+
   </schema>
 </schemalist>

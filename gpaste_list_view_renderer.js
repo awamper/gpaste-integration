@@ -5,6 +5,8 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Mainloop = imports.mainloop;
 const Tweener = imports.ui.tweener;
+const Clutter = imports.gi.Clutter;
+const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -25,10 +27,10 @@ const INFO_ANIMATION_TIME_S = 0.2;
 const IMAGE_PREVIEW_WIDTH = 100;
 const IMAGE_PREVIEW_HEIGHT = 100;
 
-const CONNECTION_IDS = {
-    ITEM_DESTROY: 0,
-    ITEM_INACTIVE_CHANGED: 0
-};
+// const CONNECTION_IDS = {
+    // ITEM_DESTROY: 0,
+    // ITEM_INACTIVE_CHANGED: 0
+// };
 
 const GPasteListViewRenderer = new Lang.Class({
     Name: 'GPasteListViewRenderer',
@@ -94,14 +96,18 @@ const GPasteListViewRenderer = new Lang.Class({
         });
     },
 
-    _highlight: function(history_item) {
-        if(history_item.inactive) {
-            this.actor.add_style_pseudo_class('inactive');
-        }
-        else {
-            this.actor.remove_style_pseudo_class('inactive');
-        }
-    },
+    // _highlight: function(history_item) {
+    //     if(CONNECTION_IDS.ITEM_INACTIVE_CHANGED > 0) {
+    //         CONNECTION_IDS.ITEM_INACTIVE_CHANGED = 0;
+    //     }
+
+    //     if(history_item.inactive) {
+    //         this.actor.add_style_pseudo_class('inactive');
+    //     }
+    //     else {
+    //         this.actor.remove_style_pseudo_class('inactive');
+    //     }
+    // },
 
     show_info: function() {
         if(!this._history_item.hash || this._info_view.shown) return;
@@ -172,21 +178,21 @@ const GPasteListViewRenderer = new Lang.Class({
     get_display: function(model, index) {
         this.title_label = this.get_title();
         this._history_item = model.get(index);
-        CONNECTION_IDS.ITEM_INACTIVE_CHANGED = this._history_item.connect(
-            'inactive-changed',
-            Lang.bind(this, this._highlight)
-        );
-        CONNECTION_IDS.ITEM_DESTROY = this._history_item.connect(
-            'destroy',
-            Lang.bind(this, function() {
-                let hash = this._history_item.hash;
-                model.delete(
-                    Lang.bind(this, function(item) {
-                        return item.hash === hash;
-                    })
-                );
-            })
-        );
+        // CONNECTION_IDS.ITEM_INACTIVE_CHANGED = this._history_item.connect(
+        //     'inactive-changed',
+        //     Lang.bind(this, this._highlight)
+        // );
+        // CONNECTION_IDS.ITEM_DESTROY = this._history_item.connect(
+        //     'destroy',
+        //     Lang.bind(this, function() {
+        //         let hash = this._history_item.hash;
+        //         model.delete(
+        //             Lang.bind(this, function(item) {
+        //                 return item.hash === hash;
+        //             })
+        //         );
+        //     })
+        // );
 
         if(!Utils.is_blank(this._history_item.markup)) {
             this._show_markup(this._history_item.markup);
@@ -206,7 +212,7 @@ const GPasteListViewRenderer = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
-        this._highlight(this._history_item);
+        // this._highlight(this._history_item);
         this.actor._delegate = this;
         return this.actor;
     },
@@ -221,5 +227,29 @@ const GPasteListViewRenderer = new Lang.Class({
 
     get info_shown() {
         return this._info_view.shown;
-    }
+    },
+
+    _clean_up: function() {
+        // if(CONNECTION_IDS.ITEM_INACTIVE_CHANGED > 0 ) {
+        //     this._history_item.disconnect(CONNECTION_IDS.ITEM_INACTIVE_CHANGED);
+        //     CONNECTION_IDS.ITEM_INACTIVE_CHANGED = 0;
+        // }
+        // if(CONNECTION_IDS.ITEM_DESTROY > 0) {
+        //     this._history_item.disconnect(CONNECTION_IDS.ITEM_DESTROY);
+        //     CONNECTION_IDS.ITEM_DESTROY = 0;
+        // }
+
+        if(this._info_view) this._info_view.destroy();
+        if(this._image_preview) this._image_preview.destroy();
+
+        delete this._history_item;
+        delete this._image_preview;
+        delete this._history_item;
+        delete this.actor._delegate;
+    },
+
+    destroy: function() {
+        this._clean_up();
+        this.parent();
+    },
 });

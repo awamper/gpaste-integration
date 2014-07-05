@@ -24,17 +24,17 @@ const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
 const GPasteSearchEntry = Me.imports.gpaste_search_entry;
 
-const FILTER_TIMEOUT_MS = 200;
+// const FILTER_TIMEOUT_MS = 200;
 
 const CONNECTION_IDS = {
     history_changed: 0,
-    history_name_changed: 0,
+    // history_name_changed: 0,
     client_show_history: 0,
     captured_event: 0
 };
 
 const TIMEOUT_IDS = {
-    FILTER: 0,
+    // FILTER: 0,
     INFO: 0
 };
 
@@ -78,13 +78,13 @@ const GPasteIntegration = new Lang.Class({
                 'changed',
                 Lang.bind(this, this._on_history_changed)
             );
-        CONNECTION_IDS.history_name_changed =
-            this._history.connect(
-                'history-name-changed',
-                Lang.bind(this, function() {
-                    this._history_name_changed_trigger = true;
-                })
-            );
+        // CONNECTION_IDS.history_name_changed =
+        //     this._history.connect(
+        //         'history-name-changed',
+        //         Lang.bind(this, function() {
+        //             this._history_name_changed_trigger = true;
+        //         })
+        //     );
 
         this._history_switcher =
             new GpasteHistorySwitcher.GpasteHistorySwitcher(this);
@@ -130,7 +130,14 @@ const GPasteIntegration = new Lang.Class({
             Lang.bind(this, this._on_item_unselected)
         );
 
-        this._items_counter = new ListView.ItemsCounter(this._list_model);
+        this._items_counter = new ListView.ItemsCounter(this._list_view);
+        this._loading_progress =
+            new ListView.LoadingProgress(this._list_view, {
+                style_class: 'gpaste-list-view-progress',
+                hide_on_finish: true,
+                animation: true,
+                height: 4
+            });
         this._buttons = new GPasteButtons.GPasteButtons(this);
         this._contents_preview_dialog =
             new ContentsPreviewDialog.ContentsPreviewDialog()
@@ -163,6 +170,17 @@ const GPasteIntegration = new Lang.Class({
             y_fill: true,
             x_align: St.Align.MIDDLE,
             y_align: St.Align.MIDDLE
+        });
+        this._table.add(this._loading_progress.actor, {
+            row: 1,
+            col: 0,
+            col_span: 2,
+            x_fill: false,
+            x_expand: false,
+            y_fill: false,
+            y_expand: false,
+            y_align: St.Align.END,
+            x_align: St.Align.START
         });
         this._table.add(this._status_label, {
             row: 1,
@@ -197,8 +215,8 @@ const GPasteIntegration = new Lang.Class({
         });
 
         this._open = false;
-        this._history_changed_trigger = true;
-        this._history_name_changed_trigger = false;
+        // this._history_changed_trigger = true;
+        // this._history_name_changed_trigger = false;
         this._last_selected_item_index = null;
         this._resize();
 
@@ -210,11 +228,13 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_history_changed: function() {
+        this.show_all();
+
         if(this.is_open) {
-            if(this._history_name_changed_trigger) {
-                this._history_name_changed_trigger = false;
-                this.show_all();
-            }
+            // if(this._history_name_changed_trigger) {
+                // this._history_name_changed_trigger = false;
+                // this.show_all();
+            // }
 
             if(this._last_selected_item_index === null) {
                 this._list_view.select_first_visible();
@@ -234,7 +254,7 @@ const GPasteIntegration = new Lang.Class({
             }
         }
 
-        this._history_changed_trigger = true;
+        // this._history_changed_trigger = true;
     },
 
     _on_captured_event: function(object, event) {
@@ -444,20 +464,21 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_search_text_changed: function() {
-        if(TIMEOUT_IDS.FILTER !== 0) {
-            Mainloop.source_remove(TIMEOUT_IDS.FILTER);
-            TIMEOUT_IDS.FILTER = 0;
-        }
+        // if(TIMEOUT_IDS.FILTER !== 0) {
+        //     Mainloop.source_remove(TIMEOUT_IDS.FILTER);
+        //     TIMEOUT_IDS.FILTER = 0;
+        // }
 
         if(!this._search_entry.is_empty()) {
-            TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
-                Lang.bind(
-                    this,
-                    this._filter,
-                    this._search_entry.term,
-                    this._search_entry.flag
-                )
-            );
+            // TIMEOUT_IDS.FILTER = Mainloop.timeout_add(FILTER_TIMEOUT_MS,
+                // Lang.bind(
+                    // this,
+                    // this._filter,
+                    // this._search_entry.term,
+                    // this._search_entry.flag
+                // )
+            // );
+            this._filter(this._search_entry.term, this._search_entry.flag);
         }
         else {
             if(this._search_entry.text === this._search_entry.hint_text) return;
@@ -494,17 +515,19 @@ const GPasteIntegration = new Lang.Class({
 
         this._table.width = my_width;
         this._table.height = my_height;
+
+        this._loading_progress.max_width = my_width;
     },
 
     _disconnect_all: function() {
         GPasteClient.get_client().disconnect(CONNECTION_IDS.client_show_history);
         this._history.disconnect(CONNECTION_IDS.history_changed);
-        this._history.disconnect(CONNECTION_IDS.history_name_changed);
+        // this._history.disconnect(CONNECTION_IDS.history_name_changed);
         this._disconnect_captured_event();
 
         CONNECTION_IDS.client_show_history = 0;
         CONNECTION_IDS.history_changed = 0;
-        CONNECTION_IDS.history_name_changed = 0;
+        // CONNECTION_IDS.history_name_changed = 0;
     },
 
     _activate_by_shortcut: function(number) {
@@ -519,10 +542,10 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _filter: function(term, flag) {
-        if(TIMEOUT_IDS.FILTER !== 0) {
-            Mainloop.source_remove(TIMEOUT_IDS.FILTER);
-            TIMEOUT_IDS.FILTER = 0;
-        }
+        // if(TIMEOUT_IDS.FILTER !== 0) {
+        //     Mainloop.source_remove(TIMEOUT_IDS.FILTER);
+        //     TIMEOUT_IDS.FILTER = 0;
+        // }
 
         function on_filter_result(matches) {
             let items = [];
@@ -537,7 +560,7 @@ const GPasteIntegration = new Lang.Class({
                     if(item.is_file_item() || item.is_image_item()) continue;
                 }
 
-                item.markup = matches[i].string;
+                item.markup = i + '-' + matches[i].string;
                 items.push(item);
             }
 
@@ -566,6 +589,7 @@ const GPasteIntegration = new Lang.Class({
 
         let display = this._list_view.get_display_for_item(history_item);
         if(display) this._list_view.fade_out_display(display);
+
         this._search_entry.clear();
     },
 
@@ -578,6 +602,7 @@ const GPasteIntegration = new Lang.Class({
         }
 
         let history_item = model.get(index);
+        GPasteClient.get_client().delete_sync(history_item.index);
         model.delete(index);
 
         if(model.length === index) {
@@ -586,8 +611,6 @@ const GPasteIntegration = new Lang.Class({
         else {
             this._last_selected_item_index = index;
         }
-
-        GPasteClient.get_client().delete_sync(history_item.index);
     },
 
     show: function(animation, target) {
@@ -608,10 +631,10 @@ const GPasteIntegration = new Lang.Class({
         this._resize();
         target = target === undefined ? this._target_y : target;
 
-        if(this._history_changed_trigger) {
-            this.show_all();
-            this._history_changed_trigger = false;
-        }
+        // if(this._history_changed_trigger) {
+            // this.show_all();
+            // this._history_changed_trigger = false;
+        // }
 
         if(animation) {
             let time = Utils.SETTINGS.get_double(
