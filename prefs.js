@@ -403,6 +403,11 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
         );
 
+        page.add_boolean(
+            'Tooltips:',
+            PrefsKeys.ENABLE_TOOLTIPS_KEY
+        );
+
         return {
             page: page,
             name: name

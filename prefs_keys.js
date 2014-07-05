@@ -18,3 +18,4 @@ const ITEM_INFO_TIMEOUT_KEY = 'item-info-timeout';
 const SHOW_ITEM_INFO_WITH_ALT_KEY = 'show-item-info-with-alt';
 const ACTIVATE_TRANSITION_TYPE_KEY = 'activate-transition-type';
 const ACTIVATE_ANIMATION_TIME_KEY = 'activate-animation-time';
+const ENABLE_TOOLTIPS_KEY = 'enable-tooltips';

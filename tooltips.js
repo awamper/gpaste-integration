@@ -7,6 +7,11 @@ const Params = imports.misc.params;
 const Signals = imports.signals;
 const Tweener = imports.ui.tweener;
 const Main = imports.ui.main;
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const Tooltip = new Lang.Class({
     Name: 'Tooltip',
@@ -157,6 +162,7 @@ const TooltipsManager = new Lang.Class({
     },
 
     _on_actor_enter: function(actor) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_TOOLTIPS_KEY)) return;
         this._add_timeout(actor, Lang.bind(this, this._show_tooltip, actor));
     },
 
