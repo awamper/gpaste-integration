@@ -13,6 +13,7 @@ const ListView = Me.imports.list_view;
 const ItemInfoView = Me.imports.item_info_view;
 const GPasteClient = Me.imports.gpaste_client;
 const PrefsKeys = Me.imports.prefs_keys;
+const Constants = Me.imports.constants;
 
 const MAX_DISPLAYED_STRING_LENGTH = 300;
 
@@ -103,11 +104,11 @@ const GPasteListViewRenderer = new Lang.Class({
         }
     },
 
-    show_info: function() {
+    show_info: function(animation) {
         if(!this._history_item.hash || this._info_view.shown) return;
 
         function on_info_result(text, uri) {
-            if(!text || !this.actor.has_style_pseudo_class('hover')) return;
+            if(!text) return;
 
             this.actor.add(this._info_view.actor, {
                 row: 1,
@@ -120,7 +121,17 @@ const GPasteListViewRenderer = new Lang.Class({
                 y_align: St.Align.START
             });
             this._info_view.set_text(text);
-            let height = this._info_view.actor.get_preferred_height(-1)[1];
+
+            if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
+                if(uri !== null) this._show_image_preview(uri);
+            }
+
+            if(!animation) {
+                this._info_view.show();
+                return;
+            }
+
+            let height = this._info_view.actor.get_height();
             this._info_view.actor.set_height(0);
             this._info_view.actor.set_opacity(0);
             this._info_view.actor.set_scale(1, 0)
@@ -134,17 +145,27 @@ const GPasteListViewRenderer = new Lang.Class({
                 scale_y: 1,
                 opacity: 255
             });
-
-            if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY)) {
-                if(uri !== null) this._show_image_preview(uri);
-            }
         }
 
         this._history_item.get_info(Lang.bind(this, on_info_result));
     },
 
-    hide_info: function() {
+    hide_info: function(animation) {
         if(!this._info_view.shown) return;
+
+        if(this._image_preview && this.actor.contains(this._image_preview)) {
+            this.actor.remove_child(this._image_preview);
+        }
+
+        if(!animation) {
+            this.actor.remove_child(this._info_view.actor);
+            this._info_view.hide();
+            this._info_view.set_text('');
+            this._info_view.actor.set_height(height);
+            this._info_view.actor.set_scale(1, 1);
+            this._info_view.actor.set_opacity(255);
+            return;
+        }
 
         let height = this._info_view.actor.get_height();
         Tweener.removeTweens(this._info_view.actor);
@@ -163,10 +184,6 @@ const GPasteListViewRenderer = new Lang.Class({
                 this._info_view.actor.set_opacity(255);
             })
         });
-
-        if(this._image_preview && this.actor.contains(this._image_preview)) {
-            this.actor.remove_child(this._image_preview);
-        }
     },
 
     get_display: function(model, index) {
@@ -208,6 +225,16 @@ const GPasteListViewRenderer = new Lang.Class({
 
         this._highlight(this._history_item);
         this.actor._delegate = this;
+
+        let item_info_mode = Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY);
+        if(item_info_mode === Constants.ITEM_INFO_MODE.ALWAYS) this.show_info();
+        if(item_info_mode === Constants.ITEM_INFO_MODE.ALWAYS_FOR_FILES) {
+            let is_file =
+                this._history_item.is_file_item()
+                || this._history_item.is_image_item();
+            if(is_file) this.show_info();
+        }
+
         return this.actor;
     },
 

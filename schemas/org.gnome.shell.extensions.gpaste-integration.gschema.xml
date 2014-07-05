@@ -67,10 +67,6 @@
         <default>'easeInExpo'</default>
     </key>
 
-    <key type="b" name="enable-item-info">
-      <default>true</default>
-    </key>
-
     <key type="b" name="enable-image-preview">
       <default>true</default>
     </key>
@@ -79,8 +75,8 @@
         <default>700</default>
     </key>
 
-    <key type="b" name="show-item-info-with-alt">
-        <default>false</default>
+    <key type="i" name="item-info-mode">
+        <default>1</default>
     </key>
 
     <key type="b" name="enable-tooltips">

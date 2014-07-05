@@ -10,6 +10,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const PrefsKeys = Me.imports.prefs_keys;
 const Utils = Me.imports.utils;
 const TweenerTransitionTypes = Me.imports.tweener_transition_types;
+const Constants = Me.imports.constants;
 
 const KeybindingsWidget = new GObject.Class({
     Name: 'Keybindings.Widget',
@@ -366,6 +367,21 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
     },
 
     _get_main_page: function() {
+        function set_sensitive_for_mode(mode) {
+            if(mode === Constants.ITEM_INFO_MODE.DISABLED) {
+                item_details_timeout.set_sensitive(false);
+                item_image_preview.set_sensitive(false);
+            }
+            else if(mode !== Constants.ITEM_INFO_MODE.TIMEOUT) {
+                item_details_timeout.set_sensitive(false);
+                item_image_preview.set_sensitive(true);
+            }
+            else {
+                item_details_timeout.set_sensitive(true);
+                item_image_preview.set_sensitive(true);
+            }
+        }
+
         let name = 'Main';
         let page = new PrefsGrid(this._settings);
 
@@ -376,28 +392,42 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         page.add_separator();
 
-        page.add_boolean(
-            'Item details:',
-            PrefsKeys.ENABLE_ITEM_INFO_KEY
+        let modes = [];
+        for each(let mode in Constants.ITEM_INFO_MODE) {
+            modes.push({
+                title: Constants.ITEM_INFO_MODE_NAME[mode],
+                value: mode
+            });
+        }
+        let combo = page.add_combo(
+            'Show item details:',
+            PrefsKeys.ITEM_INFO_MODE_KEY,
+            modes,
+            'int'
         );
-        page.add_boolean(
-            'Show details with <Alt> instead of hover:',
-            PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY
-        );
+        combo.connect('changed', Lang.bind(this, function() {
+            let mode = parseInt(combo.get_active_id(), 10);
+            set_sensitive_for_mode(mode);
+        }));
+
         let spin_properties = {
             lower: 100,
             upper: 2000,
             step_increment: 100
         };
-        page.add_spin(
+        let item_details_timeout = page.add_spin(
             'Item details timeout(ms):',
             PrefsKeys.ITEM_INFO_TIMEOUT_KEY,
             spin_properties,
             'int'
         );
-        page.add_boolean(
+        let item_image_preview = page.add_boolean(
             'Image preview:',
             PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
+        );
+
+        set_sensitive_for_mode(
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
         );
 
         return {

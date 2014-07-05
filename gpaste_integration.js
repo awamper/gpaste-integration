@@ -23,6 +23,7 @@ const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
 const GPasteSearchEntry = Me.imports.gpaste_search_entry;
+const Constants = Me.imports.constants;
 
 const FILTER_TIMEOUT_MS = 200;
 
@@ -279,14 +280,16 @@ const GPasteIntegration = new Lang.Class({
 
     _on_item_selected: function(object, display) {
         let proceed =
-            Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
-            && !Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+            === Constants.ITEM_INFO_MODE.TIMEOUT;
         if(!proceed) return false;
 
         TIMEOUT_IDS.INFO = Mainloop.timeout_add(
             Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_TIMEOUT_KEY),
             Lang.bind(this, function() {
-                display._delegate.show_info();
+                display._delegate.show_info(
+                    Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+                );
                 TIMEOUT_IDS.INFO = 0;
             })
         );
@@ -295,13 +298,26 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_unselected: function(object, display) {
-        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)) return false;
+        let proceed =
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+            !== Constants.ITEM_INFO_MODE.DISABLED;
+        if(!proceed) return false;
+
         if(TIMEOUT_IDS.INFO !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.INFO);
             TIMEOUT_IDS.INFO = 0;
         }
 
-        display._delegate.hide_info();
+        let item_info_mode = Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY);
+
+        if(
+            item_info_mode !== Constants.ITEM_INFO_MODE.ALWAYS
+            && item_info_mode !== Constants.ITEM_INFO_MODE.ALWAYS_FOR_FILES
+        ) {
+            display._delegate.hide_info(
+                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            );
+        }
 
         return true;
     },
@@ -363,11 +379,13 @@ const GPasteIntegration = new Lang.Class({
             if(display && display._delegate.info_shown) return false;
 
             let proceed =
-                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
-                && Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+                === Constants.ITEM_INFO_MODE.ALT_KEY;
             if(!proceed) return false;
 
-            if(display) display._delegate.show_info();
+            if(display) display._delegate.show_info(
+                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            );
             return true;
         }
         else if(ch) {
@@ -412,11 +430,13 @@ const GPasteIntegration = new Lang.Class({
             if(display && !display._delegate.info_shown) return false;
 
             let proceed =
-                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ITEM_INFO_KEY)
-                && Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_ITEM_INFO_WITH_ALT_KEY);
+                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+                === Constants.ITEM_INFO_MODE.ALT_KEY;
             if(!proceed) return false;
 
-            if(display) display._delegate.hide_info();
+            if(display) display._delegate.hide_info(
+                Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+            );
             return true;
         }
         else {
