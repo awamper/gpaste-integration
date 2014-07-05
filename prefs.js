@@ -4,6 +4,7 @@ const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
 const Params = imports.misc.params;
 const ExtensionUtils = imports.misc.extensionUtils;
+const GPaste = imports.gi.GPaste;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const PrefsKeys = Me.imports.prefs_keys;
@@ -332,6 +333,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         let size = this._get_size_page();
         let animations = this._get_animations_page();
         let keybindings = this._get_keybindings_page();
+        let gpaste = this._get_gpaste_page();
 
         let stack = new Gtk.Stack({
             transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
@@ -349,6 +351,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         stack.add_titled(size.page, size.name, size.name);
         stack.add_titled(animations.page, animations.name, animations.name);
         stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
+        stack.add_titled(gpaste.page, gpaste.name, gpaste.name);
 
         this.add(stack_switcher);
         this.add(stack);
@@ -530,7 +533,20 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             page: page,
             name: name
         };
-    }
+    },
+
+    _get_gpaste_page: function() {
+        let name = 'GPaste daemon';
+        let page = new GPaste.SettingsUiWidget({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin: 12
+        });
+
+        return {
+            page: page,
+            name: name
+        }
+    },
 });
 
 function init(){
