@@ -139,7 +139,14 @@ const GPasteIntegration = new Lang.Class({
         let fuzzy_options = {
             pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
             post: GPasteListViewRenderer.HIGHLIGHT_MARKUP.STOP,
-            extract: function(history_item) { return history_item.text; },
+            extract: function(history_item) {
+                let text = history_item.text;
+                if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_MARKS_KEY)) {
+                    text = history_item.text_without_type;
+                }
+
+                return text;
+            },
             escape: true,
             max_distance: 30
         }
