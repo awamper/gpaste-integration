@@ -79,7 +79,7 @@ const GPasteListViewRenderer = new Lang.Class({
         this._image_preview = texture_cache.load_uri_async(
             uri,
             IMAGE_PREVIEW_WIDTH,
-            IMAGE_PREVIEW_HEIGHT,
+            this.actor.get_height(), //IMAGE_PREVIEW_HEIGHT,
             scale_factor
         );
         this.actor.add(this._image_preview, {
