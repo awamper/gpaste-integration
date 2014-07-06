@@ -30,7 +30,7 @@ const ItemInfoView = new Lang.Class({
     },
 
     set_text: function(text) {
-        this._label.set_text(text);
+        this._label.set_text('\u25B6 ' + text);
     },
 
     show: function() {
