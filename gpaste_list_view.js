@@ -24,7 +24,7 @@ const GPasteListView = new Lang.Class({
 
     select_next: function() {
         let selected_index = this.get_selected_index();
-        if(selected_index === -1) return;
+        if(selected_index === -1) return false;
 
         let selected = this._displays[selected_index];
         let next_actor = null;
@@ -46,12 +46,15 @@ const GPasteListView = new Lang.Class({
             }
 
             this.select(next_actor);
+            return true;
         }
+
+        return false;
     },
 
     select_previous: function() {
         let selected_index = this.get_selected_index();
-        if(selected_index === -1) return;
+        if(selected_index === -1) return false;
 
         let selected = this._displays[selected_index];
         let previous_actor = null;
@@ -71,7 +74,10 @@ const GPasteListView = new Lang.Class({
             }
 
             this.select(previous_actor);
+            return true;
         }
+
+        return false;
     },
 
     select_first_visible: function() {

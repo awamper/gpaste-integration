@@ -368,11 +368,15 @@ const GPasteIntegration = new Lang.Class({
 
             return true;
         }
-        else if(symbol === Clutter.Down) {
+        else if(symbol === Clutter.Down || symbol === Clutter.Tab) {
             let selected_index = this._list_view.get_selected_index();
 
             if(selected_index !== -1) {
-                this._list_view.select_next();
+                let result = this._list_view.select_next();
+                if(!result && symbol === Clutter.Tab) {
+                    this._list_view.reset_scroll();
+                    this._list_view.select_first_visible();
+                }
             }
             else {
                 this._list_view.select_first_visible();
