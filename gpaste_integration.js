@@ -389,9 +389,10 @@ const GPasteIntegration = new Lang.Class({
             let display = this._list_view.get_display(selected_index);
             if(display && display._delegate.info_shown) return false;
 
+            let mode = Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY);
             let proceed =
-                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
-                === Constants.ITEM_INFO_MODE.ALT_KEY;
+                mode !== Constants.ITEM_INFO_MODE.DISABLED
+                && mode !== Constants.ITEM_INFO_MODE.ALWAYS;
             if(!proceed) return false;
 
             if(display) display._delegate.show_info(
@@ -440,9 +441,10 @@ const GPasteIntegration = new Lang.Class({
             let display = this._list_view.get_display(selected_index);
             if(display && !display._delegate.info_shown) return false;
 
+            let mode = Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY);
             let proceed =
-                Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
-                === Constants.ITEM_INFO_MODE.ALT_KEY;
+                mode !== Constants.ITEM_INFO_MODE.DISABLED
+                && mode !== Constants.ITEM_INFO_MODE.ALWAYS;
             if(!proceed) return false;
 
             if(display) display._delegate.hide_info(
