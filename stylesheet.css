@@ -135,9 +135,10 @@
 
 .gpaste-item-box-info-label {
     padding: 2px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(0, 0, 0, 0.7);
+    /*background-color: rgba(0, 0, 0, 0.3);*/
+    /*border: 1px solid rgba(0, 0, 0, 0.4);*/
     color: white;
+    font-weight: bold;
     font-size: 12px;
 }
 
