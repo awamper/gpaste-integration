@@ -83,5 +83,9 @@
         <default>true</default>
     </key>
 
+    <key type="b" name="enable-color-marks">
+        <default>true</default>
+    </key>
+
   </schema>
 </schemalist>

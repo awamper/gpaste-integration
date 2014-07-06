@@ -389,6 +389,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Tooltips:',
             PrefsKeys.ENABLE_TOOLTIPS_KEY
         );
+        page.add_boolean(
+            'Color marks:',
+            PrefsKeys.ENABLE_COLOR_MARKS_KEY
+        );
 
         page.add_separator();
 

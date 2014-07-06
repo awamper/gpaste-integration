@@ -3,6 +3,7 @@ const Lang = imports.lang;
 const Pango = imports.gi.Pango;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const Tweener = imports.ui.tweener;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -26,6 +27,10 @@ const INFO_ANIMATION_TIME_S = 0.2;
 const IMAGE_PREVIEW_WIDTH = 100;
 const IMAGE_PREVIEW_HEIGHT = 100;
 
+const FILE_MARK_COLOR = 'rgba(201, 0, 0, 1)';
+const IMAGE_MARK_COLOR = 'rgba(255, 85, 0, 1)';
+const COLOR_MARK_WIDTH = 3;
+
 const CONNECTION_IDS = {
     ITEM_DESTROY: 0,
     ITEM_INACTIVE_CHANGED: 0
@@ -46,6 +51,7 @@ const GPasteListViewRenderer = new Lang.Class({
         this._info_view.actor.set_pivot_point(0.5, 0.5);
         this._history_item = null;
         this._image_preview = null;
+        this._color_mark = null;
     },
 
     _prepare_string: function(str) {
@@ -85,12 +91,33 @@ const GPasteListViewRenderer = new Lang.Class({
         this.actor.add(this._image_preview, {
             row: 0,
             row_span: 2,
-            col: 0,
+            col: 1,
             x_expand: false,
             x_fill: false,
             x_align: St.Align.MIDDLE,
             y_expand: false,
             y_fill: false,
+            y_align: St.Align.MIDDLE
+        });
+    },
+
+    _show_color_mark: function(color_string) {
+        this._color_mark = new St.Bin({
+            width: COLOR_MARK_WIDTH
+        });
+        this._color_mark.set_translation(-2, 0, 0);
+        let [res, color] = Clutter.Color.from_string(color_string);
+        this._color_mark.set_background_color(color);
+
+        this.actor.add(this._color_mark, {
+            row: 0,
+            row_span: 2,
+            col: 0,
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.MIDDLE,
+            y_expand: true,
+            y_fill: true,
             y_align: St.Align.MIDDLE
         });
     },
@@ -112,7 +139,7 @@ const GPasteListViewRenderer = new Lang.Class({
 
             this.actor.add(this._info_view.actor, {
                 row: 1,
-                col: 1,
+                col: 2,
                 x_expand: false,
                 x_fill: false,
                 x_align: St.Align.START,
@@ -209,12 +236,16 @@ const GPasteListViewRenderer = new Lang.Class({
             this._show_markup(this._history_item.markup);
         }
         else {
-            this._show_text(this._history_item.text);
+            let text = this._history_item.text;
+            if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_MARKS_KEY)) {
+                text = this._history_item.text_without_type;
+            }
+            this._show_text(text);
         }
 
         this.actor.add(this.title_label, {
             row: 0,
-            col: 1,
+            col: 2,
             x_expand: true,
             x_fill: true,
             x_align: St.Align.START,
@@ -233,6 +264,15 @@ const GPasteListViewRenderer = new Lang.Class({
                 this._history_item.is_file_item()
                 || this._history_item.is_image_item();
             if(is_file) this.show_info();
+        }
+
+        if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_MARKS_KEY)) {
+            if(this._history_item.is_file_item()) {
+                this._show_color_mark(FILE_MARK_COLOR);
+            }
+            if(this._history_item.is_image_item()) {
+                this._show_color_mark(IMAGE_MARK_COLOR);
+            }
         }
 
         return this.actor;

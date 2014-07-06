@@ -8,6 +8,9 @@ const Me = ExtensionUtils.getCurrentExtension();
 const GPasteClient = Me.imports.gpaste_client;
 const Utils = Me.imports.utils;
 
+const FILE_ITEM_REGEXP = /\[Files\] (.+)/i;
+const IMAGE_ITEM_REGEXP = /\[Image, (.*\(.*\))\]/i;
+
 const GPasteHistoryItem = new Lang.Class({
     Name: 'GPasteHistoryItem',
 
@@ -18,15 +21,18 @@ const GPasteHistoryItem = new Lang.Class({
         this.hidden = false;
         this._inactive = false;
 
+        this._file_regexp = new RegExp(FILE_ITEM_REGEXP);
+        this._image_regexp = new RegExp(IMAGE_ITEM_REGEXP);
+
         this._gpaste_history = gpaste_history;
     },
 
     is_file_item: function() {
-        return Utils.starts_with(this.text, '[Files]');
+        return this._file_regexp.test(this.text);
     },
 
     is_image_item: function() {
-        return Utils.starts_with(this.text, '[Image');
+        return this._image_regexp.test(this.text);
     },
 
     get_raw: function(callback) {
@@ -124,6 +130,24 @@ const GPasteHistoryItem = new Lang.Class({
         if(this._inactive === inactive || typeof inactive !== 'boolean') return;
         this._inactive = inactive;
         this.emit('inactive-changed');
+    },
+
+    get text_without_type() {
+        let result;
+
+        if(this.is_file_item()) {
+            let matches = this._file_regexp.exec(this.text);
+            result = matches[1];
+        }
+        else if(this.is_image_item()) {
+            let matches = this._image_regexp.exec(this.text);
+            result = matches[1];
+        }
+        else {
+            result = this.text;
+        }
+
+        return result;
     }
 });
 Signals.addSignalMethods(GPasteHistoryItem.prototype);
