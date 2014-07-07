@@ -742,7 +742,7 @@ const GPasteIntegration = new Lang.Class({
             }
         }
 
-        this._contents_preview_dialog.preview(history_item);
+        this._contents_preview_dialog.preview(history_item, display);
     },
 
     destroy: function() {

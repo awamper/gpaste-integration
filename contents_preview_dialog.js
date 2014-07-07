@@ -116,6 +116,7 @@ const ContentsPreviewDialog = new Lang.Class({
         this.connect('hidden', Lang.bind(this, this.clear));
 
         this._contents_view = null;
+        this._relative_actor = null;
     },
 
     _on_captured_event: function(o, e) {
@@ -189,11 +190,40 @@ const ContentsPreviewDialog = new Lang.Class({
     },
 
     _reposition: function() {
-        let primary = Main.layoutManager.primaryMonitor;
-        let margin = Main.panel.actor.height;
+        let margin = 20;
+        let monitor = Main.layoutManager.currentMonitor;
 
-        this.actor.x = primary.width - this.actor.width - margin;
-        this.actor.y = Main.panel.actor.y + margin  * 2;
+        if(!this._relative_actor) {
+            margin = Main.panel.actor.height;
+            this.actor.x = monitor.width - this.actor.width - margin;
+            this.actor.y = Main.panel.actor.y + margin * 2;
+            return;
+        }
+
+        let [x, y] = this._relative_actor.get_transformed_position();
+        let available_width =
+            (monitor.width + monitor.x) - x;
+        let available_height =
+            (monitor.height + monitor.y) - y;
+
+        let offset_x = 10;
+        let offset_y = 10;
+
+        this._contents_view.actor.width = this._relative_actor.width - margin;
+
+        if(this.actor.width > available_width) {
+            offset_x =
+                (monitor.width + monitor.x)
+                - (this.actor.width + x + margin);
+        }
+        if(this.actor.height > available_height) {
+            offset_y =
+                (monitor.height + monitor.y)
+                - (this.actor.height + y + margin);
+        }
+
+        this.actor.x = x + offset_x;
+        this.actor.y = y + offset_y;
     },
 
     clear: function() {
@@ -201,8 +231,11 @@ const ContentsPreviewDialog = new Lang.Class({
         this._contents_view = null;
     },
 
-    preview: function(history_item) {
+    preview: function(history_item, relative_actor) {
         this.clear();
+
+        if(relative_actor) this._relative_actor = relative_actor;
+        else this._relative_actor = null;
 
         history_item.get_raw(
             Lang.bind(this, function(raw_item) {
