@@ -31,7 +31,8 @@ const CONNECTION_IDS = {
     history_changed: 0,
     history_name_changed: 0,
     client_show_history: 0,
-    captured_event: 0
+    captured_event: 0,
+    item_info_mode: 0
 };
 
 const TIMEOUT_IDS = {
@@ -215,6 +216,13 @@ const GPasteIntegration = new Lang.Class({
             GPasteClient.get_client().connect(
                 'show-history',
                 Lang.bind(this, this.toggle)
+            );
+        CONNECTION_IDS.item_info_mode =
+            Utils.SETTINGS.connect(
+                'changed::' + PrefsKeys.ITEM_INFO_MODE_KEY,
+                Lang.bind(this, function() {
+                    this._history_changed_trigger = true;
+                })
             );
     },
 
@@ -536,10 +544,12 @@ const GPasteIntegration = new Lang.Class({
         this._history.disconnect(CONNECTION_IDS.history_changed);
         this._history.disconnect(CONNECTION_IDS.history_name_changed);
         this._disconnect_captured_event();
+        Utils.SETTINGS.disconnect(CONNECTION_IDS.item_info_mode);
 
         CONNECTION_IDS.client_show_history = 0;
         CONNECTION_IDS.history_changed = 0;
         CONNECTION_IDS.history_name_changed = 0;
+        CONNECTION_IDS.item_info_mode = 0;
     },
 
     _activate_by_shortcut: function(number) {
