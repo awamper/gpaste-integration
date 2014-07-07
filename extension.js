@@ -99,6 +99,9 @@ const GPasteIntegrationButton = new Lang.Class({
         }));
         this.menu.addMenuItem(clear_history_item);
 
+        let separator = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
+
         let preferences_item = new PopupMenu.PopupMenuItem("Preferences");
         preferences_item.connect("activate", Lang.bind(this, function() {
             Utils.launch_extension_prefs(Me.uuid);
