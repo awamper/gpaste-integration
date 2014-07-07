@@ -103,7 +103,8 @@ const GPasteListViewRenderer = new Lang.Class({
 
     _show_color_mark: function(color_string) {
         this._color_mark = new St.Bin({
-            width: COLOR_MARK_WIDTH
+            width: COLOR_MARK_WIDTH,
+            margin_right: 3
         });
         this._color_mark.set_translation(-2, 0, 0);
         let [res, color] = Clutter.Color.from_string(color_string);
