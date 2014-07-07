@@ -208,6 +208,7 @@ const GPasteIntegration = new Lang.Class({
         this._history_changed_trigger = true;
         this._history_name_changed_trigger = false;
         this._last_selected_item_index = null;
+        this._activate_animation_running = false;
         this._resize();
 
         CONNECTION_IDS.client_show_history =
@@ -320,6 +321,7 @@ const GPasteIntegration = new Lang.Class({
         if(
             item_info_mode !== Constants.ITEM_INFO_MODE.ALWAYS
             && item_info_mode !== Constants.ITEM_INFO_MODE.ALWAYS_FOR_FILES
+            && !this._activate_animation_running
         ) {
             display._delegate.hide_info(
                 Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
@@ -585,6 +587,48 @@ const GPasteIntegration = new Lang.Class({
         );
     },
 
+    _show_activate_animation: function(display) {
+        let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
+
+        if(!animation) {
+            this._search_entry.clear();
+            return;
+        }
+
+        this._activate_animation_running = true;
+        let [x, y] = display.get_transformed_position();
+        let clone = new Clutter.Clone({
+            source: display,
+            width: display.width,
+            height: display.height,
+            x: x,
+            y: y
+        });
+        clone.set_pivot_point(0.5, 0.5);
+        Main.uiGroup.add_child(clone);
+
+        let transition = Utils.SETTINGS.get_string(
+            PrefsKeys.ACTIVATE_TRANSITION_TYPE_KEY
+        );
+        let time = Utils.SETTINGS.get_double(
+            PrefsKeys.ACTIVATE_ANIMATION_TIME_KEY
+        );
+        Tweener.addTween(clone, {
+            delay: 0.2,
+            time: time,
+            scale_x: 1.5,
+            scale_y: 1.5,
+            opacity: 0,
+            transition: transition,
+            onComplete: Lang.bind(this, function() {
+                clone.destroy();
+                display._delegate.hide_info();
+                this._activate_animation_running = false;
+                this._search_entry.clear();
+            })
+        });
+    },
+
     show_all: function() {
         this._show_items(this._history.get_items());
         this._list_view.reset_scroll();
@@ -592,14 +636,15 @@ const GPasteIntegration = new Lang.Class({
     },
 
     activate_item: function(model, index) {
+        let history_item = model.get(index);
+        let display = this._list_view.get_display_for_item(history_item);
+
+        if(display) this._show_activate_animation(display);
+        else this._search_entry.clear();
+
         this.hide(false);
 
-        let history_item = model.get(index);
         GPasteClient.get_client().select(history_item.index);
-
-        let display = this._list_view.get_display_for_item(history_item);
-        if(display) this._list_view.fade_out_display(display);
-        this._search_entry.clear();
     },
 
     delete_item: function(model, index) {
