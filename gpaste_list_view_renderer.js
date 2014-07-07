@@ -94,7 +94,7 @@ const GPasteListViewRenderer = new Lang.Class({
             col: 1,
             x_expand: false,
             x_fill: false,
-            x_align: St.Align.MIDDLE,
+            x_align: St.Align.START,
             y_expand: false,
             y_fill: false,
             y_align: St.Align.MIDDLE
