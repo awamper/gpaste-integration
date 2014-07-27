@@ -76,7 +76,7 @@
     </key>
 
     <key type="i" name="item-info-mode">
-        <default>1</default>
+        <default>4</default>
     </key>
 
     <key type="b" name="enable-tooltips">
