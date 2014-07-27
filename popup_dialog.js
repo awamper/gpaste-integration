@@ -31,15 +31,56 @@ const PopupDialog = new Lang.Class({
         });
         this.actor.set_pivot_point(0.5, 0.5);
 
+        this._event_blocker = null;
+
+        if(this.params.modal) {
+            this._event_blocker = new St.Bin({
+                opacity: 0,
+                x: Main.uiGroup.x,
+                y: Main.uiGroup.y,
+                width: Main.uiGroup.width,
+                height: Main.uiGroup.height,
+                reactive: true
+            });
+            this._event_blocker.hide();
+            Main.uiGroup.add_child(this._event_blocker);
+        }
+
         Main.uiGroup.add_child(this.actor);
 
         this._shown = false;
     },
 
-    _reposition: function() {
-        let [x, y] = global.get_pointer();
-        this.actor.x = x - this.actor.width;
-        this.actor.y = y - this.actor.height;
+    _reposition: function(x, y) {
+        if(!x || !y) [x, y] = global.get_pointer();
+
+        let offset_x = 0;
+        let offset_y = 0;
+
+        let monitor = Main.layoutManager.currentMonitor;
+        let available_width =
+            (monitor.width + monitor.x) - x;
+        let available_height =
+            (monitor.height + monitor.y) - y;
+
+        if(this.actor.width > available_width) {
+            offset_x =
+                (monitor.width + monitor.x) - (this.actor.width + x);
+        }
+        if(this.actor.height > available_height) {
+            offset_y =
+                (monitor.height + monitor.y) - (this.actor.height + y);
+        }
+
+        let dialog_x = x + offset_x;
+        let dialog_y = y + offset_y;
+
+        if(x > dialog_x && y > dialog_y) {
+            dialog_x = x - this.actor.width;
+        }
+
+        this.actor.x = dialog_x;
+        this.actor.y = dialog_y;
     },
 
     _connect_captured_event: function() {
@@ -78,6 +119,7 @@ const PopupDialog = new Lang.Class({
                 keybindingMode: Shell.KeyBindingMode.NORMAL
             });
         }
+        if(this._event_blocker) this._event_blocker.show();
 
         this.actor.set_opacity(0);
         this.actor.set_scale(MIN_SCALE, MIN_SCALE);
@@ -113,6 +155,7 @@ const PopupDialog = new Lang.Class({
     hide: function(animation) {
         if(!this.shown) return;
 
+        if(this._event_blocker) this._event_blocker.hide();
         if(this.params.modal) Main.popModal(this.actor);
         this._disconnect_captured_event();
 
@@ -148,6 +191,7 @@ const PopupDialog = new Lang.Class({
     destroy: function() {
         this._disconnect_captured_event();
         this.actor.destroy();
+        if(this._event_blocker) this._event_blocker.destroy();
     },
 
     get shown() {
