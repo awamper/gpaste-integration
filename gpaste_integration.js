@@ -523,14 +523,14 @@ const GPasteIntegration = new Lang.Class({
         let available_height = monitor.height;
         if(is_primary) available_height -= Main.panel.actor.height;
 
-        let my_width = monitor.width / 100 * width_percents;
-        let my_height = available_height / 100 * height_percents;
+        let my_width = Math.floor(monitor.width / 100 * width_percents);
+        let my_height = Math.floor(available_height / 100 * height_percents);
 
-        this._hidden_y = monitor.y - my_height;
-        this._target_y = this._hidden_y + my_height;
+        this._hidden_y = Math.floor(monitor.y - my_height);
+        this._target_y = Math.floor(this._hidden_y + my_height);
         if(is_primary) this._target_y += Main.panel.actor.height;
 
-        this.actor.x = (monitor.width + monitor.x) - my_width;
+        this.actor.x = Math.floor(monitor.width + monitor.x - my_width);
         this.actor.y = this._hidden_y;
         this.actor.width = my_width;
         this.actor.height = my_height;
