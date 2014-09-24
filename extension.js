@@ -66,7 +66,11 @@ const GPasteIntegrationButton = new Lang.Class({
             );
     },
 
-    _onButtonPress: function(actor, event) {
+    _onEvent: function(actor, event) {
+        if(event.type() !== Clutter.EventType.BUTTON_RELEASE) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
         let button = event.get_button();
 
         switch(button) {
@@ -79,6 +83,8 @@ const GPasteIntegrationButton = new Lang.Class({
                 this._gpaste.toggle();
                 break;
         }
+
+        return Clutter.EVENT_STOP;
     },
 
     _add_menu_items: function() {
