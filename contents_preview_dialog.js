@@ -273,6 +273,11 @@ const ContentsPreviewDialog = new Lang.Class({
             Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_IMAGE_MAX_HEIGHT_KEY),
             scale_factor
         );
+        image.connect('size-change',
+            Lang.bind(this, function() {
+                this._reposition();
+            })
+        );
 
         this._contents_view.add_image(image);
     },
