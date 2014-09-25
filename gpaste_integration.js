@@ -741,6 +741,7 @@ const GPasteIntegration = new Lang.Class({
         }
 
         this._connect_captured_event();
+        this._list_view.overlay_shortcut_emblems = true;
         this._list_view.reset_scroll();
         this._list_view.select_first_visible();
     },
@@ -818,6 +819,7 @@ const GPasteIntegration = new Lang.Class({
 
         this._quick_mode = true;
         this.show(false);
+        this._list_view.overlay_shortcut_emblems = false;
         this._list_view.unselect_all();
     },
 

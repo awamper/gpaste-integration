@@ -92,6 +92,8 @@ const GPasteListView = new Lang.Class({
 
         for(let i = 0; i < this._displays.length; i++) {
             let display = this._displays[i];
+            display.shortcut.overlay = this.overlay_shortcut_emblems;
+
             if(display._delegate._history_item.inactive) continue;
 
             if(current_number > 1 && current_number <= 9) {
