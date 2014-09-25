@@ -424,7 +424,6 @@ const GPasteIntegration = new Lang.Class({
     _on_key_release_event: function(o, e) {
         let symbol = e.get_key_symbol()
 
-        if(this._quick_mode && symbol === Clutter.Super_R || symbol == Clutter.Super_L) {
         if(this._quick_mode && (symbol === Clutter.Super_R || symbol == Clutter.Super_L)) {
             this._quick_mode = false;
             this._activate_selected();
