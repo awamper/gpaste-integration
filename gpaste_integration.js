@@ -354,8 +354,8 @@ const GPasteIntegration = new Lang.Class({
             this._list_view.show_shortcuts();
             return false;
         }
-        else if(e.has_control_modifier()) {
-            if(number !== NaN && number >= 1 && number <= 9) {
+        else if(e.has_control_modifier() || (this._quick_mode && !isNaN(number))) {
+            if(!isNaN(number) && number >= 1 && number <= 9) {
                 this._activate_by_shortcut(number);
             }
 
@@ -818,6 +818,7 @@ const GPasteIntegration = new Lang.Class({
         this.show(false);
         this._list_view.overlay_shortcut_emblems = false;
         this._list_view.unselect_all();
+        this._list_view.show_shortcuts();
     },
 
     destroy: function() {
