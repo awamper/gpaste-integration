@@ -175,6 +175,7 @@ const ListViewShortcutEmblem = new Lang.Class({
 
         this._display = this.params.display;
         this.number = this.params.number;
+        this.overlay = true;
 
         Main.uiGroup.add_child(this.actor);
     },
@@ -187,7 +188,10 @@ const ListViewShortcutEmblem = new Lang.Class({
         }
 
         let [x, y] = this._display.get_transformed_position()
-        this.actor.x = x + this.params.padding;
+
+        if(this.overlay) this.actor.x = x + this.params.padding;
+        else this.actor.x = x - (this.params.padding + this.actor.width);
+
         this.actor.y = y + this.params.padding;
     },
 
@@ -249,6 +253,7 @@ const ListView = new Lang.Class({
             box_style: '',
             shortcut_style: '',
             overlay_scrollbars: true,
+            overlay_shortcut_emblems: true,
             renderer: null,
             model: null
         });
@@ -279,6 +284,7 @@ const ListView = new Lang.Class({
         this._displays = [];
         this._renderer = null;
         this._model = null;
+        this._overlay_shortcut_emblems = this.params.overlay_shortcut_emblems;
 
         if(this.params.renderer !== null) {
             this.set_renderer(this.params.renderer);
@@ -547,6 +553,7 @@ const ListView = new Lang.Class({
 
         for(let i = 0; i < this._displays.length; i++) {
             let display = this._displays[i];
+            display.shortcut.overlay = this.overlay_shortcut_emblems;
 
             if(current_number > 1 && current_number <= 9) {
                 display.shortcut.number = current_number;
@@ -623,6 +630,14 @@ const ListView = new Lang.Class({
 
     get model() {
         return this.get_model();
+    },
+
+    set overlay_shortcut_emblems(overlay) {
+        this._overlay_shortcut_emblems = overlay;
+    },
+
+    get overlay_shortcut_emblems() {
+        return this._overlay_shortcut_emblems;
     }
 });
 Signals.addSignalMethods(ListView.prototype);
