@@ -508,6 +508,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         let keybindings = {};
         keybindings[PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY] =
             'Show clipboard contents(only <Super> modifier)';
+        keybindings[PrefsKeys.QUICK_MODE_KEY] =
+            'Enter quick mode(only <Super> modifier)';
 
         let keybindings_widget = new KeybindingsWidget(keybindings);
         keybindings_widget.set_sensitive(shortcuts_enabled);

@@ -35,6 +35,10 @@
       <default><![CDATA[['<Super>Z']]]></default>
     </key>
 
+    <key type="as" name="quick-mode">
+      <default><![CDATA[['<Super>Q']]]></default>
+    </key>
+
     <key type="b" name="enable-shortcuts">
       <default>true</default>
     </key>

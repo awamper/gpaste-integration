@@ -132,10 +132,22 @@ const GPasteIntegrationButton = new Lang.Class({
                 this._gpaste.show_selected_or_current_contents();
             })
         );
+        Main.wm.addKeybinding(
+            PrefsKeys.QUICK_MODE_KEY,
+            Utils.SETTINGS,
+            Meta.KeyBindingFlags.NONE,
+            Shell.KeyBindingMode.NORMAL |
+            Shell.KeyBindingMode.MESSAGE_TRAY |
+            Shell.KeyBindingMode.OVERVIEW,
+            Lang.bind(this, function() {
+                this._gpaste.quick_mode();
+            })
+        );
     },
 
     remove_keybindings: function() {
         Main.wm.removeKeybinding(PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY);
+        Main.wm.removeKeybinding(PrefsKeys.QUICK_MODE_KEY);
     },
 
     destroy: function() {
