@@ -210,6 +210,7 @@ const GPasteIntegration = new Lang.Class({
         this._history_name_changed_trigger = false;
         this._last_selected_item_index = null;
         this._activate_animation_running = false;
+        this._quick_mode = false;
         this._resize();
 
         CONNECTION_IDS.client_show_history =
@@ -423,18 +424,20 @@ const GPasteIntegration = new Lang.Class({
     _on_key_release_event: function(o, e) {
         let symbol = e.get_key_symbol()
 
+        if(this._quick_mode && symbol === Clutter.Super_R || symbol == Clutter.Super_L) {
+            this._quick_mode = false;
+            this._activate_selected();
+            this.hide(false);
+            return false;
+        }
+
         if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
             this._list_view.hide_shortcuts();
 
             return true;
         }
         else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
-            let selected_index = this._list_view.get_selected_index();
-
-            if(selected_index !== -1) {
-                this.activate_item(this._list_model, selected_index);
-            }
-
+            this._activate_selected();
             return true;
         }
         else if(symbol == Clutter.Delete) {
@@ -550,6 +553,14 @@ const GPasteIntegration = new Lang.Class({
         CONNECTION_IDS.history_changed = 0;
         CONNECTION_IDS.history_name_changed = 0;
         CONNECTION_IDS.item_info_mode = 0;
+    },
+
+    _activate_selected: function() {
+        let selected_index = this._list_view.get_selected_index();
+
+        if(selected_index !== -1) {
+            this.activate_item(this._list_model, selected_index);
+        }
     },
 
     _activate_by_shortcut: function(number) {
@@ -738,6 +749,7 @@ const GPasteIntegration = new Lang.Class({
 
         Main.popModal(this.actor);
         this._open = false;
+        this._quick_mode = false;
         this._disconnect_captured_event();
         this._list_view.unselect_all();
         this._list_view.hide_shortcuts();
@@ -798,6 +810,14 @@ const GPasteIntegration = new Lang.Class({
         }
 
         this._contents_preview_dialog.preview(history_item, display);
+    },
+
+    quick_mode: function() {
+        if(this._open || this._quick_mode) return;
+
+        this._quick_mode = true;
+        this.show(false);
+        this._list_view.unselect_all();
     },
 
     destroy: function() {
