@@ -348,15 +348,13 @@ const GPasteIntegration = new Lang.Class({
     _on_key_press_event: function(o, e) {
         let symbol = e.get_key_symbol()
         let ch = Utils.get_unichar(symbol);
+        let number = parseInt(ch);
 
         if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
             this._list_view.show_shortcuts();
             return false;
         }
         else if(e.has_control_modifier()) {
-            let unichar = Utils.get_unichar(symbol);
-            let number = parseInt(unichar);
-            
             if(number !== NaN && number >= 1 && number <= 9) {
                 this._activate_by_shortcut(number);
             }
