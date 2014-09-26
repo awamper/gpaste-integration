@@ -195,31 +195,46 @@ const ListViewShortcutEmblem = new Lang.Class({
         this.actor.y = y + this.params.padding;
     },
 
-    show: function() {
+    show: function(animation) {
         if(this.actor.opacity === 255) return;
 
+        animation = animation === undefined ? true : animation;
         this._reposition();
         this.actor.show();
-        Tweener.removeTweens(this.actor);
-        Tweener.addTween(this.actor, {
-            opacity: 255,
-            time: ANIMATION_TIMES.SHORTCUT_EMBLEM,
-            transition: 'easeOutQuad'
-        });
+
+        if(animation === true) {
+            Tweener.removeTweens(this.actor);
+            Tweener.addTween(this.actor, {
+                opacity: 255,
+                time: ANIMATION_TIMES.SHORTCUT_EMBLEM,
+                transition: 'easeOutQuad'
+            });
+        }
+        else {
+            this.actor.opacity = 255;
+        }
     },
 
-    hide: function() {
+    hide: function(animation) {
         if(this.actor.opacity === 0) return;
 
-        Tweener.removeTweens(this.actor);
-        Tweener.addTween(this.actor, {
-            opacity: 0,
-            time: ANIMATION_TIMES.SHORTCUT_EMBLEM,
-            transition: 'easeOutQuad',
-            onComplete: Lang.bind(this, function() {
-                this.actor.hide();
-            })
-        });
+        animation = animation === undefined ? true : animation;
+
+        if(animation === true) {
+            Tweener.removeTweens(this.actor);
+            Tweener.addTween(this.actor, {
+                opacity: 0,
+                time: ANIMATION_TIMES.SHORTCUT_EMBLEM,
+                transition: 'easeOutQuad',
+                onComplete: Lang.bind(this, function() {
+                    this.actor.hide();
+                })
+            });
+        }
+        else {
+            this.actor.opacity = 0;
+            this.actor.hide();
+        }
     },
 
     destroy: function() {
@@ -285,6 +300,7 @@ const ListView = new Lang.Class({
         this._renderer = null;
         this._model = null;
         this._overlay_shortcut_emblems = this.params.overlay_shortcut_emblems;
+        this._shortcut_emblems_shown = false;
 
         if(this.params.renderer !== null) {
             this.set_renderer(this.params.renderer);
@@ -303,6 +319,12 @@ const ListView = new Lang.Class({
 
     _on_scroll_changed: function() {
         this._remove_timeout();
+
+        if(this._shortcut_emblems_shown) {
+            this.hide_shortcuts(false);
+            this.show_shortcuts(false);
+        }
+
         if(this._loading_items || !this._is_need_preload()) return;
 
         TIMEOUT_IDS.SCROLL = Mainloop.timeout_add(200,
@@ -548,7 +570,8 @@ const ListView = new Lang.Class({
         }
     },
 
-    show_shortcuts: function() {
+    show_shortcuts: function(animation) {
+        this._shortcut_emblems_shown = true;
         let current_number = 1;
 
         for(let i = 0; i < this._displays.length; i++) {
@@ -557,7 +580,7 @@ const ListView = new Lang.Class({
 
             if(current_number > 1 && current_number <= 9) {
                 display.shortcut.number = current_number;
-                display.shortcut.show();
+                display.shortcut.show(animation);
                 current_number++;
             }
             else if(current_number >= 9) {
@@ -566,17 +589,19 @@ const ListView = new Lang.Class({
             else {
                 if(this._is_actor_visible_on_scroll(display, this.actor)) {
                     display.shortcut.number = current_number;
-                    display.shortcut.show();
+                    display.shortcut.show(animation);
                     current_number++;
                 }
             }
         }
     },
 
-    hide_shortcuts: function() {
+    hide_shortcuts: function(animation) {
+        this._shortcut_emblems_shown = false;
+
         for(let i = 0; i < this._displays.length; i++) {
             let display = this._displays[i];
-            display.shortcut.hide();
+            display.shortcut.hide(animation);
             display.shortcut.number = 0;
         }
     },

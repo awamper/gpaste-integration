@@ -87,7 +87,8 @@ const GPasteListView = new Lang.Class({
         }
     },
 
-    show_shortcuts: function() {
+    show_shortcuts: function(animation) {
+        this._shortcut_emblems_shown = true;
         let current_number = 1;
 
         for(let i = 0; i < this._displays.length; i++) {
@@ -98,7 +99,7 @@ const GPasteListView = new Lang.Class({
 
             if(current_number > 1 && current_number <= 9) {
                 display.shortcut.number = current_number;
-                display.shortcut.show();
+                display.shortcut.show(animation);
                 current_number++;
             }
             else if(current_number >= 9) {
@@ -107,7 +108,7 @@ const GPasteListView = new Lang.Class({
             else {
                 if(this._is_actor_visible_on_scroll(display, this.actor)) {
                     display.shortcut.number = current_number;
-                    display.shortcut.show();
+                    display.shortcut.show(animation);
                     current_number++;
                 }
             }
