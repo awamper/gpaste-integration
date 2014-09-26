@@ -10,6 +10,20 @@ const GPasteListView = new Lang.Class({
 
     _init: function(params) {
         this.parent(params);
+
+        this._select_on_hover = true;
+    },
+
+    _on_display_enter: function(display, event) {
+        if(!this._select_on_hover) return;
+
+        this.parent(display, event);
+    },
+
+    _on_display_leave: function(display, event) {
+        if(!this._select_on_hover) return;
+
+        this.parent(display, event);
     },
 
     select: function(actor) {
@@ -126,5 +140,9 @@ const GPasteListView = new Lang.Class({
         }
 
         return result;
+    },
+
+    set select_on_hover(select) {
+        this._select_on_hover = select;
     }
 });
