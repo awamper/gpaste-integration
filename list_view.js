@@ -351,31 +351,43 @@ const ListView = new Lang.Class({
     },
 
     _connect_display_signals: function(display) {
-        display.connect("enter-event",
-            Lang.bind(this, function(o, e) {
-                this.unselect_all();
-                this.select(display);
-            })
+        display.connect(
+            'enter-event',
+            Lang.bind(this, this._on_display_enter)
         );
-        display.connect("leave-event",
-            Lang.bind(this, function(o, e) {
-                this.unselect(display);
-                this.unset_active(display);
-            })
+        display.connect(
+            'leave-event',
+            Lang.bind(this, this._on_display_leave)
         );
-        display.connect("button-press-event",
-            Lang.bind(this, function(o, e) {
-                this.set_active(display);
-            })
+        display.connect(
+            'button-press-event',
+            Lang.bind(this, this._on_display_button_press)
         );
-        display.connect("button-release-event",
-            Lang.bind(this, function(o, e) {
-                let button = e.get_button();
-                this.unset_active(display);
-                let index = this._displays.indexOf(display);
-                this.emit("clicked", button, display, this.model, index);
-            })
+        display.connect(
+            'button-release-event',
+            Lang.bind(this, this._on_display_button_release)
         );
+    },
+
+    _on_display_enter: function(display, event) {
+        this.unselect_all();
+        this.select(display);
+    },
+
+    _on_display_leave: function(display, event) {
+        this.unselect(display);
+        this.unset_active(display);
+    },
+
+    _on_display_button_press: function(display, event) {
+        this.set_active(display);
+    },
+
+    _on_display_button_release: function(display, event) {
+        let button = event.get_button();
+        this.unset_active(display);
+        let index = this._displays.indexOf(display);
+        this.emit('clicked', button, display, this.model, index);
     },
 
     _add_shortcut_emblem_to_display: function(display) {

@@ -703,6 +703,10 @@ const GPasteIntegration = new Lang.Class({
 
         this._open = true;
         this.actor.show();
+        this._list_view.actor.show();
+        this._search_entry.show();
+        this._buttons.actor.show();
+        this._items_counter.actor.show();
         this._resize();
         target = target === undefined ? this._target_y : target;
 
@@ -740,6 +744,7 @@ const GPasteIntegration = new Lang.Class({
 
         this._connect_captured_event();
         this._list_view.overlay_shortcut_emblems = true;
+        this._list_view.select_on_hover = true;
         this._list_view.reset_scroll();
         this._list_view.select_first_visible();
     },
@@ -824,6 +829,24 @@ const GPasteIntegration = new Lang.Class({
         this.show(false);
         this._list_view.overlay_shortcut_emblems = false;
         this._list_view.unselect_all();
+        this._list_view.select_on_hover = false;
+
+        let monitor = Main.layoutManager.currentMonitor;
+        let is_primary = monitor.index === Main.layoutManager.primaryIndex;
+
+        let available_height = monitor.height;
+        if(is_primary) available_height -= Main.panel.actor.height;
+
+        this._search_entry.hide();
+        this._buttons.actor.hide();
+        this._items_counter.actor.hide();
+        this.actor.x =
+            Math.floor(monitor.width / 2)
+            - Math.floor(this.actor.width / 2);
+        this.actor.y =
+            Math.floor(available_height / 2)
+            - Math.floor(this.actor.height / 2);
+        if(is_primary) this.actor.y += Main.panel.actor.height;
 
         TIMEOUT_IDS.QUICK_MODE_SHORTCUTS = Mainloop.timeout_add(200,
             Lang.bind(this, function() {
