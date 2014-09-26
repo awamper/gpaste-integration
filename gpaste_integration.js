@@ -37,7 +37,8 @@ const CONNECTION_IDS = {
 
 const TIMEOUT_IDS = {
     FILTER: 0,
-    INFO: 0
+    INFO: 0,
+    QUICK_MODE_SHORTCUTS: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -744,6 +745,11 @@ const GPasteIntegration = new Lang.Class({
     },
 
     hide: function(animation, target) {
+        if(TIMEOUT_IDS.QUICK_MODE_SHORTCUTS > 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.QUICK_MODE_SHORTCUTS);
+            TIMEOUT_IDS.QUICK_MODE_SHORTCUTS = 0;
+        }
+
         if(!this._open) return;
 
         Main.popModal(this.actor);
@@ -751,7 +757,7 @@ const GPasteIntegration = new Lang.Class({
         this._quick_mode = false;
         this._disconnect_captured_event();
         this._list_view.unselect_all();
-        this._list_view.hide_shortcuts();
+        this._list_view.hide_shortcuts(false);
         this._history_switcher.hide();
         animation =
             animation === undefined
@@ -818,7 +824,13 @@ const GPasteIntegration = new Lang.Class({
         this.show(false);
         this._list_view.overlay_shortcut_emblems = false;
         this._list_view.unselect_all();
-        this._list_view.show_shortcuts();
+
+        TIMEOUT_IDS.QUICK_MODE_SHORTCUTS = Mainloop.timeout_add(200,
+            Lang.bind(this, function() {
+                TIMEOUT_IDS.QUICK_MODE_SHORTCUTS = 0;
+                this._list_view.show_shortcuts(false);
+            })
+        );
     },
 
     destroy: function() {
