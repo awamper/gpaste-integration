@@ -363,7 +363,7 @@ const GPasteIntegration = new Lang.Class({
             return false;
         }
         else if(symbol === Clutter.Escape) {
-            this.hide();
+            this.hide(!this._quick_mode);
             return true;
         }
         else if(symbol === Clutter.Up) {
