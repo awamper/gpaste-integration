@@ -19,4 +19,6 @@ const ACTIVATE_TRANSITION_TYPE_KEY = 'activate-transition-type';
 const ACTIVATE_ANIMATION_TIME_KEY = 'activate-animation-time';
 const ENABLE_TOOLTIPS_KEY = 'enable-tooltips';
 const ENABLE_COLOR_MARKS_KEY = 'enable-color-marks';
-const QUICK_MODE_KEY = 'quick-mode'
+const QUICK_MODE_KEY = 'quick-mode';
+const PINNED_ITEMS_KEY = 'pinned-items';
+const SHOW_PINNED_ITEMS_KEY = 'show-pinned-items';

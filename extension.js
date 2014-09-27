@@ -15,11 +15,15 @@ const GPasteIntegration = Me.imports.gpaste_integration;
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 const GPasteClient = Me.imports.gpaste_client;
+const PinnedItemsManager = Me.imports.pinned_items_manager;
+const Tooltips = Me.imports.tooltips;
 
 const SIGNAL_IDS = {
     ENABLE_SHORTCUTS: 0,
     BUS_WATCHER: 0
 };
+
+const MAX_PINNED_ITEM_LENGTH = 70;
 
 const GPasteIntegrationButton = new Lang.Class({
     Name: 'GPasteIntegrationButton',
@@ -33,6 +37,11 @@ const GPasteIntegrationButton = new Lang.Class({
             style_class: 'system-status-icon'
         });
         this.actor.add_child(icon);
+
+        PinnedItemsManager.get_manager().connect(
+            'changed',
+            Lang.bind(this, this._update_menu_items)
+        );
 
         this._gpaste = new GPasteIntegration.GPasteIntegration();
         this._gpaste.connect('shown',
@@ -57,7 +66,7 @@ const GPasteIntegrationButton = new Lang.Class({
             })
         );
 
-        this._add_menu_items();
+        this._update_menu_items();
 
         if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_SHORTCUTS_KEY)) {
             this.add_keybindings();
@@ -91,7 +100,86 @@ const GPasteIntegrationButton = new Lang.Class({
         }
     },
 
-    _add_menu_items: function() {
+    _onSourceKeyPress: function(actor, event) {
+        let symbol = event.get_key_symbol()
+        let ch = Utils.get_unichar(symbol);
+        let number = parseInt(ch);
+
+        if(number > 0 && number <= 9) {
+            let index = number - 1;
+            PinnedItemsManager.get_manager().activate(index);
+            this.menu.close();
+            return Clutter.EVENT_STOP;
+        }
+
+        this.parent(actor, event);
+        return Clutter.EVENT_PROPOGATE;
+    },
+
+    _update_menu_items: function() {
+        this.menu.removeAll();
+        let pinned_items = PinnedItemsManager.get_manager().list_items();
+
+        for (let i in pinned_items) {
+            let index = parseInt(i);
+            let item = pinned_items[i];
+            item = item.replace(/\n/g, ' ');
+            item = item.replace(/\s{2,}/g, ' ');
+            item = item.substr(0, MAX_PINNED_ITEM_LENGTH);
+            item = item.trim();
+
+            let menu_item = new PopupMenu.PopupMenuItem(item);
+            Tooltips.get_manager().add_tooltip(menu_item.actor, {
+                text: 'Left-click - activate\nRight-click - unpin',
+                timeout: 1000
+            });
+
+            if(index <= 8) {
+                let shortcut_label = new St.Label({
+                    style_class: 'gpaste-shortcut-label',
+                    text: (index + 1).toString()
+                });
+                menu_item.actor.insert_child_below(shortcut_label, menu_item.label);
+            }
+
+            menu_item.connect('activate',
+                Lang.bind(this, function(menu_item, event) {
+                    Tooltips.get_manager()._remove_timeout(menu_item.actor);
+                    Tooltips.get_manager()._hide_tooltip(menu_item.actor);
+                    let type = event.type();
+                    let symbol = null;
+                    let button = null;
+
+                    if(type === Clutter.EventType.BUTTON_RELEASE) {
+                        button = event.get_button();
+                    }
+                    else if(type === Clutter.EventType.KEY_PRESS) {
+                        symbol = event.get_key_symbol();
+                    }
+                    else {
+                        return Clutter.EVENT_PROPOGATE;
+                    }
+
+                    if(
+                        button === Clutter.BUTTON_PRIMARY
+                        || symbol === Clutter.KEY_space
+                        || symbol === Clutter.KEY_Return
+                    ) {
+                        PinnedItemsManager.get_manager().activate(index);
+                    }
+                    else if(button === Clutter.BUTTON_SECONDARY) {
+                        PinnedItemsManager.get_manager().remove(index);
+                    }
+
+                    return Clutter.EVENT_PROPOGATE;
+                })
+            );
+            this.menu.addMenuItem(menu_item);
+        }
+
+        let separator = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
+
         let track_item = new PopupMenu.PopupSwitchMenuItem("Track changes", true);
         track_item.connect('toggled', Lang.bind(this, function() {
             GPasteClient.get_client().track(track_item.state);
@@ -109,7 +197,7 @@ const GPasteIntegrationButton = new Lang.Class({
         }));
         this.menu.addMenuItem(clear_history_item);
 
-        let separator = new PopupMenu.PopupSeparatorMenuItem();
+        separator = new PopupMenu.PopupSeparatorMenuItem();
         this.menu.addMenuItem(separator);
 
         let preferences_item = new PopupMenu.PopupMenuItem("Preferences");
@@ -147,11 +235,23 @@ const GPasteIntegrationButton = new Lang.Class({
                 this._gpaste.quick_mode();
             })
         );
+        Main.wm.addKeybinding(
+            PrefsKeys.SHOW_PINNED_ITEMS_KEY,
+            Utils.SETTINGS,
+            Meta.KeyBindingFlags.NONE,
+            Shell.KeyBindingMode.NORMAL |
+            Shell.KeyBindingMode.MESSAGE_TRAY |
+            Shell.KeyBindingMode.OVERVIEW,
+            Lang.bind(this, function() {
+                this.menu.toggle();
+            })
+        );
     },
 
     remove_keybindings: function() {
         Main.wm.removeKeybinding(PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY);
         Main.wm.removeKeybinding(PrefsKeys.QUICK_MODE_KEY);
+        Main.wm.removeKeybinding(PrefsKeys.SHOW_PINNED_ITEMS_KEY);
     },
 
     destroy: function() {
@@ -161,6 +261,7 @@ const GPasteIntegrationButton = new Lang.Class({
 
         this.remove_keybindings();
         this._gpaste.destroy();
+        PinnedItemsManager.get_manager().destroy();
         this.parent();
     }
 });
