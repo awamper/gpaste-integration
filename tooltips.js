@@ -196,6 +196,7 @@ const TooltipsManager = new Lang.Class({
             params
         );
         Main.uiGroup.add_child(manager_data.tooltip_instance.actor);
+        manager_data.tooltip_instance.actor.raise_top();
         manager_data.tooltip_instance.show();
         this._adjust_tooltip_position(actor);
 
