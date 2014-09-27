@@ -35,6 +35,16 @@ const GPasteIntegrationButton = new Lang.Class({
         this.actor.add_child(icon);
 
         this._gpaste = new GPasteIntegration.GPasteIntegration();
+        this._gpaste.connect('shown',
+            Lang.bind(this, function() {
+                this.actor.add_style_pseudo_class('active');
+            })
+        );
+        this._gpaste.connect('hidden',
+            Lang.bind(this, function() {
+                this.actor.remove_style_pseudo_class('active');
+            })
+        );
         GPasteClient.get_client().connect(
             'tracking',
             Lang.bind(this, function(c, state) {

@@ -8,6 +8,7 @@ const Tweener = imports.ui.tweener;
 const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
 const Panel = imports.ui.panel;
+const Signals = imports.signals;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -726,11 +727,15 @@ const GPasteIntegration = new Lang.Class({
             Tweener.addTween(this.actor, {
                 time: time / St.get_slow_down_factor(),
                 transition: transition,
-                y: target
+                y: target,
+                onComplete: Lang.bind(this, function() {
+                    this.emit('shown');
+                })
             });
         }
         else {
             this.actor.y = target;
+            this.emit('shown');
         }
 
         if(!this._search_entry.is_empty()) {
@@ -783,12 +788,14 @@ const GPasteIntegration = new Lang.Class({
                 y: this._hidden_y,
                 onComplete: Lang.bind(this, function() {
                     this.actor.hide();
+                    this.emit('hidden');
                 })
             });
         }
         else {
             this.actor.hide();
             this.actor.y = this._hidden_y;
+            this.emit('hidden');
         }
     },
 
@@ -879,3 +886,4 @@ const GPasteIntegration = new Lang.Class({
         return this._history_switcher;
     }
 });
+Signals.addSignalMethods(GPasteIntegration.prototype);
