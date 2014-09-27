@@ -39,6 +39,10 @@
       <default><![CDATA[['<Super>Q']]]></default>
     </key>
 
+    <key type="as" name="show-pinned-items">
+      <default><![CDATA[['<Super><Shift>Q']]]></default>
+    </key>
+
     <key type="b" name="enable-shortcuts">
       <default>true</default>
     </key>
@@ -89,6 +93,10 @@
 
     <key type="b" name="enable-color-marks">
         <default>true</default>
+    </key>
+
+    <key type="as" name="pinned-items">
+        <default>[]</default>
     </key>
 
   </schema>

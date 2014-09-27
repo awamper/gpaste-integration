@@ -24,6 +24,7 @@ const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
 const GPasteSearchEntry = Me.imports.gpaste_search_entry;
+const PinnedItemsManager = Me.imports.pinned_items_manager;
 const Constants = Me.imports.constants;
 
 const FILTER_TIMEOUT_MS = 200;
@@ -356,6 +357,12 @@ const GPasteIntegration = new Lang.Class({
             this._list_view.show_shortcuts();
             return false;
         }
+        else if(e.has_control_modifier() && ch === 'd') {
+            let selected_index = this._list_view.get_selected_index();
+            if(selected_index !== -1) this._pin_or_unpin(selected_index);
+
+            return false;
+        }
         else if(e.has_control_modifier() || (this._quick_mode && !isNaN(number))) {
             if(!isNaN(number) && number >= 1 && number <= 9) {
                 this._activate_by_shortcut(number);
@@ -648,6 +655,19 @@ const GPasteIntegration = new Lang.Class({
                 this._search_entry.clear();
             })
         });
+    },
+
+    _pin_or_unpin: function(index) {
+        let history_item = this._list_model.get(index);
+        let pinned_index =
+            PinnedItemsManager.get_manager().get_index_by_text(history_item.text);
+
+        if(pinned_index !== -1) {
+            PinnedItemsManager.get_manager().remove(pinned_index);
+        }
+        else {
+            PinnedItemsManager.get_manager().add(history_item.text);
+        }
     },
 
     show_all: function() {
