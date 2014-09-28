@@ -89,8 +89,8 @@ const TooltipsManager = new Lang.Class({
             timeout: 700,
             timeout_id: 0,
             timeout_hide: 3000,
-            box_style_class: 'gnote-integration-tooltip-box',
-            label_style_class: 'gnote-integration-tooltip-label'
+            box_style_class: 'gpaste-tooltip-box',
+            label_style_class: 'gpaste-tooltip-label'
         };
         this._actors = [];
     },
