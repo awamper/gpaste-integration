@@ -86,40 +86,38 @@ const GPasteIntegrationButton = new Lang.Class({
     },
 
     _onEvent: function(actor, event) {
-        if(event.type() !== Clutter.EventType.BUTTON_RELEASE) {
-            return Clutter.EVENT_PROPAGATE;
-        }
+        if(event.type() === Clutter.EventType.KEY_RELEASE) {
+            let symbol = event.get_key_symbol()
+            let ch = Utils.get_unichar(symbol);
+            let number = parseInt(ch);
 
-        let button = event.get_button();
+            if(number > 0 && number <= 9) {
+                let index = number - 1;
+                PinnedItemsManager.get_manager().activate(index);
+                this.menu.close();
+            }
 
-        switch(button) {
-            case Clutter.BUTTON_SECONDARY:
-                this.menu.toggle();
-                break;
-            case Clutter.BUTTON_MIDDLE:
-                break;
-            default:
-                this._gpaste.toggle();
-                break;
-        }
-
-        return Clutter.EVENT_STOP;
-    },
-
-    _onSourceKeyPress: function(actor, event) {
-        let symbol = event.get_key_symbol()
-        let ch = Utils.get_unichar(symbol);
-        let number = parseInt(ch);
-
-        if(number > 0 && number <= 9) {
-            let index = number - 1;
-            PinnedItemsManager.get_manager().activate(index);
-            this.menu.close();
             return Clutter.EVENT_STOP;
         }
+        else if(event.type() === Clutter.EventType.BUTTON_RELEASE) {
+            let button = event.get_button();
 
-        this.parent(actor, event);
-        return Clutter.EVENT_PROPOGATE;
+            switch(button) {
+                case Clutter.BUTTON_SECONDARY:
+                    this.menu.toggle();
+                    break;
+                case Clutter.BUTTON_MIDDLE:
+                    break;
+                default:
+                    this._gpaste.toggle();
+                    break;
+            }
+
+            return Clutter.EVENT_STOP;
+        }
+        else {
+            return Clutter.EVENT_PROPOGATE;
+        }
     },
 
     _update_menu_items: function() {
