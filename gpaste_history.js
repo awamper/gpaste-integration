@@ -11,6 +11,13 @@ const CONNECTION_IDS = {
     GPASTE_CHANGED: 0
 };
 
+const CHANGE_TYPE = {
+    ADDED: 0,
+    REMOVED: 1,
+    LIFTED: 2,
+    CLEARED: 3
+};
+
 const GPasteHistory = new Lang.Class({
     Name: 'GPasteHistory',
 
@@ -39,6 +46,7 @@ const GPasteHistory = new Lang.Class({
                 return;
             }
 
+            let old_length = this._items.length;
             let new_items = [];
 
             for each(let text in history_list) {
@@ -58,9 +66,21 @@ const GPasteHistory = new Lang.Class({
                 new_items.push(history_item);
             }
 
+            let type;
+
+            if(old_length === new_items.length) {
+                type = CHANGE_TYPE.LIFTED;
+            }
+            else if(this._items.length > 0) {
+                type = CHANGE_TYPE.REMOVED;
+            }
+            else {
+                type = CHANGE_TYPE.ADDED;
+            }
+
             for each(let item in this._items) item.destroy();
             this.set_items(new_items);
-            this.emit('changed');
+            this.emit('changed', type);
         }
 
         GPasteClient.get_client().get_history(Lang.bind(this, on_history_result));
@@ -91,7 +111,7 @@ const GPasteHistory = new Lang.Class({
     clear: function() {
         this._destroy_all_items();
         this._items = [];
-        this.emit('changed')
+        this.emit('changed', CHANGE_TYPE.CLEARED);
     },
 
     destroy: function() {
