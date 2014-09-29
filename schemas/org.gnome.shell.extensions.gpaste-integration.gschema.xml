@@ -99,5 +99,9 @@
         <default>[]</default>
     </key>
 
+    <key type="b" name="enable-color-indication">
+        <default>true</default>
+    </key>
+
   </schema>
 </schemalist>
