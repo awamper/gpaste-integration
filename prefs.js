@@ -393,7 +393,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Color marks:',
             PrefsKeys.ENABLE_COLOR_MARKS_KEY
         );
-
+        page.add_boolean(
+            'Status icon color indication:',
+            PrefsKeys.ENABLE_COLOR_INDICATION_KEY
+        );
         page.add_separator();
 
         let modes = [];

@@ -98,6 +98,10 @@ const GPasteIntegrationButton = new Lang.Class({
     },
 
     _on_history_changed: function(gpaste_history, change_type) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_INDICATION_KEY)) {
+            return;
+        }
+
         let icon = new St.Icon({
             icon_name: Utils.ICONS.indicator,
             style_class: 'system-status-icon gpaste-system-status-icon',
