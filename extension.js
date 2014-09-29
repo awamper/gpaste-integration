@@ -8,10 +8,12 @@ const Panel = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Clutter = imports.gi.Clutter;
+const Tweener = imports.ui.tweener;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const GPasteIntegration = Me.imports.gpaste_integration;
+const GPasteHistory = Me.imports.gpaste_history;
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 const GPasteClient = Me.imports.gpaste_client;
@@ -36,7 +38,13 @@ const GPasteIntegrationButton = new Lang.Class({
             icon_name: Utils.ICONS.indicator,
             style_class: 'system-status-icon'
         });
-        this.actor.add_child(icon);
+
+        this._icons_table = new St.Table();
+        this._icons_table.add(icon, {
+            row: 0,
+            col: 0
+        });
+        this.actor.add_child(this._icons_table);
 
         PinnedItemsManager.get_manager().connect(
             'changed',
@@ -54,6 +62,10 @@ const GPasteIntegrationButton = new Lang.Class({
                 this.actor.remove_style_pseudo_class('active');
             })
         );
+        this._gpaste.history.connect('changed',
+            Lang.bind(this, this._on_history_changed)
+        );
+
         GPasteClient.get_client().connect(
             'tracking',
             Lang.bind(this, function(c, state) {
@@ -83,6 +95,49 @@ const GPasteIntegrationButton = new Lang.Class({
                     else this.remove_keybindings();
                 })
             );
+    },
+
+    _on_history_changed: function(gpaste_history, change_type) {
+        let icon = new St.Icon({
+            icon_name: Utils.ICONS.indicator,
+            style_class: 'system-status-icon gpaste-system-status-icon',
+            opacity: 0,
+            visible: true
+        });
+
+        this._icons_table.add(icon, {
+            row: 0,
+            col: 0
+        });
+
+        if(change_type === GPasteHistory.CHANGE_TYPE.ADDED) {
+            icon.add_style_pseudo_class('added');
+        }
+        else if(change_type === GPasteHistory.CHANGE_TYPE.REMOVED) {
+            icon.add_style_pseudo_class('removed');
+        }
+        else if(change_type === GPasteHistory.CHANGE_TYPE.LIFTED) {
+            icon.add_style_pseudo_class('lifted');
+        }
+        else {
+            icon.add_style_pseudo_class('cleared');
+        }
+
+        Tweener.addTween(icon, {
+            time: 0.4,
+            transition: 'easeInOutExpo',
+            opacity: 255,
+            onComplete: Lang.bind(this, function() {
+                Tweener.addTween(icon, {
+                    time: 0.6,
+                    transition: 'easeOutCirc',
+                    opacity: 0,
+                    onComplete: Lang.bind(this, function() {
+                        icon.destroy();
+                    })
+                });
+            })
+        });
     },
 
     _onEvent: function(actor, event) {

@@ -310,3 +310,23 @@
     border: 1px solid rgba(0, 0, 0, 1);
     border-radius: 6px;
 }
+
+.gpaste-system-status-icon {
+    /* nothing */
+}
+
+.gpaste-system-status-icon:added {
+    color: #00E600;
+}
+
+.gpaste-system-status-icon:removed {
+    color: #FF1900;
+}
+
+.gpaste-system-status-icon:lifted {
+    color: #0060E6;
+}
+
+.gpaste-system-status-icon:cleared {
+    color: white;
+}
