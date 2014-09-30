@@ -47,7 +47,12 @@ const GPasteSearchEntry = new Lang.Class({
         );
 
         Tooltips.get_manager().add_tooltip(this, {
-            text: 'Append "-f" to search only files or "-t" to search only text.'
+            text: (
+                'Append:\n' +
+                '"-f" to search only files\n' +
+                '"-t" - text\n' +
+                '"-l" - links'
+            )
         });
 
         this.term = '';
