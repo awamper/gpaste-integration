@@ -80,6 +80,8 @@ const GpasteHistorySwitcher = new Lang.Class({
         let current_history = GPasteClient.get_client().history_name;
         GPasteClient.get_client().list_histories(
             Lang.bind(this, function(histories) {
+                histories.sort();
+
                 for(let i = 0; i < histories.length; i++) {
                     let reactive = current_history === histories[i] ? false : true;
                     let history = new GpasteHistorySwitcherItem(histories[i], reactive);
