@@ -588,7 +588,7 @@ const GPasteIntegration = new Lang.Class({
             let uri = result;
 
             if(history_item.is_file_item() || history_item.is_image_item()) {
-                count = result.split('\n');
+                let count = result.split('\n');
                 if(count.length > 1) return;
                 uri = 'file://' + uri;
             }
