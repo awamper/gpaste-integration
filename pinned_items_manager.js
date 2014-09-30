@@ -7,8 +7,9 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 
-const CONNECTION_IDS = {
-    SETTINGS_CHANGED: 0
+const CHANGE_TYPE = {
+    ADDED: 0,
+    REMOVED: 1
 };
 
 const PinnedItemsManager = new Lang.Class({
@@ -16,12 +17,6 @@ const PinnedItemsManager = new Lang.Class({
 
     _init: function() {
         this._items = Utils.SETTINGS.get_strv(PrefsKeys.PINNED_ITEMS_KEY);
-        CONNECTION_IDS.SETTINGS_CHANGED = Utils.SETTINGS.connect(
-            'changed::' + PrefsKeys.PINNED_ITEMS_KEY,
-            Lang.bind(this, function() {
-                this.emit('changed');
-            })
-        );
     },
 
     is_index_exists: function(index) {
@@ -37,6 +32,7 @@ const PinnedItemsManager = new Lang.Class({
 
         let index = this._items.push(text);
         Utils.SETTINGS.set_strv(PrefsKeys.PINNED_ITEMS_KEY, this._items);
+        this.emit('changed', CHANGE_TYPE.ADDED);
         return index;
     },
 
@@ -45,6 +41,7 @@ const PinnedItemsManager = new Lang.Class({
 
         this._items.splice(index, 1);
         Utils.SETTINGS.set_strv(PrefsKeys.PINNED_ITEMS_KEY, this._items);
+        this.emit('changed', CHANGE_TYPE.REMOVED);
         return true;
     },
 
@@ -62,11 +59,6 @@ const PinnedItemsManager = new Lang.Class({
     },
 
     destroy: function() {
-        if(CONNECTION_IDS.SETTINGS_CHANGED != 0) {
-            Utils.SETTINGS.disconnect(CONNECTION_IDS.SETTINGS_CHANGED);
-            CONNECTION_IDS.SETTINGS_CHANGED = 0;
-        }
-
         delete this._items;
         this.emit('destroy');
     },
