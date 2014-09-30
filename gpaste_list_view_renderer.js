@@ -29,6 +29,8 @@ const IMAGE_PREVIEW_HEIGHT = 100;
 
 const FILE_MARK_COLOR = 'rgba(201, 0, 0, 1)';
 const IMAGE_MARK_COLOR = 'rgba(255, 85, 0, 1)';
+const LINK_MARK_COLOR = 'rgba(0, 185, 25, 1)';
+const TEXT_MARK_COLOR = 'rgba(0, 0, 0, 0.4)';
 const COLOR_MARK_WIDTH = 3;
 
 const CONNECTION_IDS = {
@@ -268,12 +270,14 @@ const GPasteListViewRenderer = new Lang.Class({
         }
 
         if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_MARKS_KEY)) {
-            if(this._history_item.is_file_item()) {
-                this._show_color_mark(FILE_MARK_COLOR);
-            }
-            if(this._history_item.is_image_item()) {
-                this._show_color_mark(IMAGE_MARK_COLOR);
-            }
+            let color;
+
+            if(this._history_item.is_file_item()) color = FILE_MARK_COLOR;
+            else if(this._history_item.is_image_item()) color = IMAGE_MARK_COLOR
+            else if(this._history_item.is_link_item()) color = LINK_MARK_COLOR
+            else color = TEXT_MARK_COLOR;
+
+            this._show_color_mark(color);
         }
 
         return this.actor;
