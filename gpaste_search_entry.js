@@ -8,7 +8,8 @@ const Tooltips = Me.imports.tooltips;
 
 const SEARCH_FLAGS = {
     ONLY_TEXT: '-t',
-    ONLY_FILES: '-f'
+    ONLY_FILES: '-f',
+    ONLY_LINKS: '-l'
 };
 
 const GPasteSearchEntry = new Lang.Class({
@@ -76,6 +77,10 @@ const GPasteSearchEntry = new Lang.Class({
         else if(Utils.ends_with(this.text, SEARCH_FLAGS.ONLY_TEXT)) {
             this.term = this.text.slice(0, -SEARCH_FLAGS.ONLY_TEXT.length);
             this.flag = SEARCH_FLAGS.ONLY_TEXT;
+        }
+        else if(Utils.ends_with(this.text, SEARCH_FLAGS.ONLY_LINKS)) {
+            this.term = this.text.slice(0, -SEARCH_FLAGS.ONLY_LINKS.length);
+            this.flag = SEARCH_FLAGS.ONLY_LINKS;
         }
         else {
             this.term = this.text;
