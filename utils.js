@@ -95,6 +95,59 @@ function fnv32a(str) {
     return hval >>> 0;
 }
 
+function get_url(text) {
+    let url_regexp = imports.misc.util._urlRegexp;
+    let url = parseUri(text);
+    let test_url = '';
+
+    if(is_blank(url.protocol)) {
+        test_url = 'http://' + url.source;
+    }
+    else {
+        test_url = url.source;
+    }
+
+    if(!test_url.match(url_regexp)) {
+        return false;
+    }
+    else {
+        return test_url;
+    }
+}
+
+// parseUri 1.2.2
+// (c) Steven Levithan <stevenlevithan.com>
+// MIT License
+
+function parseUri (str) {
+  var o   = parseUri.options,
+    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+    uri = {},
+    i   = 14;
+
+  while (i--) uri[o.key[i]] = m[i] || "";
+
+  uri[o.q.name] = {};
+  uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+    if ($1) uri[o.q.name][$1] = $2;
+  });
+
+  return uri;
+};
+
+parseUri.options = {
+  strictMode: false,
+  key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+  q:   {
+    name:   "queryKey",
+    parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+  },
+  parser: {
+    strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+    loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+  }
+};
+
 /**
  * getSettings:
  * @schema: (optional): the GSettings schema id
