@@ -330,3 +330,11 @@
 .gpaste-system-status-icon:cleared {
     color: white;
 }
+
+.gpaste-system-status-icon:pinned {
+    color: #E1FF00;
+}
+
+.gpaste-system-status-icon:unpinned {
+    color: #FF00E1;
+}
