@@ -645,7 +645,14 @@ const GPasteIntegration = new Lang.Class({
                     if(!item.is_file_item() && !item.is_image_item()) continue;
                 }
                 if(flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_TEXT) {
-                    if(item.is_file_item() || item.is_image_item()) continue;
+                    if(
+                        item.is_file_item()
+                        || item.is_image_item()
+                        || item.is_link_item()
+                    ) continue;
+                }
+                if(flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_LINKS) {
+                    if(!item.is_link_item()) continue;
                 }
 
                 item.markup = matches[i].string;
