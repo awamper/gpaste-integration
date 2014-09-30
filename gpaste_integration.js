@@ -444,7 +444,13 @@ const GPasteIntegration = new Lang.Class({
             return true;
         }
         else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
-            this._activate_selected();
+            if(e.has_control_modifier()) {
+                this._alt_activate_selected();
+            }
+            else {
+                this._activate_selected();
+            }
+
             return true;
         }
         else if(symbol == Clutter.Delete) {
@@ -568,6 +574,48 @@ const GPasteIntegration = new Lang.Class({
         if(selected_index !== -1) {
             this.activate_item(this._list_model, selected_index);
         }
+    },
+
+    _alt_activate_selected: function() {
+        let selected_index = this._list_view.get_selected_index();
+        if(selected_index === -1) return;
+
+        let history_item = this._list_model.get(selected_index);
+        if(history_item.is_text_item()) return;
+        history_item.get_raw(Lang.bind(this, function(result) {
+            if(!result) return;
+
+            let uri = result;
+
+            if(history_item.is_file_item() || history_item.is_image_item()) {
+                count = result.split('\n');
+                if(count.length > 1) return;
+                uri = 'file://' + uri;
+            }
+            else if(history_item.is_link_item()) {
+                uri = Utils.get_url(result);
+                if(!uri) return;
+            }
+            else {
+                return;
+            }
+
+            try {
+                Gio.app_info_launch_default_for_uri(
+                    uri,
+                    global.create_app_launch_context(0, -1)
+                );
+            }
+            catch(e) {
+                log('GPasteIntegration:_alt_activate_selected: ' + e);
+                return;
+            }
+
+            let display = this._list_view.get_display_for_item(history_item);
+            if(display) this._show_activate_animation(display);
+            this._history_changed_trigger = true;
+            this.hide(false);
+        }))
     },
 
     _activate_by_shortcut: function(number) {
