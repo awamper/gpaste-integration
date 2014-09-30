@@ -3,13 +3,21 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Signals = imports.signals;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Util = imports.misc.util;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const GPasteClient = Me.imports.gpaste_client;
 const Utils = Me.imports.utils;
 
-const FILE_ITEM_REGEXP = /\[Files\] (.+)/i;
-const IMAGE_ITEM_REGEXP = /\[Image, (.*\(.*\))\]/i;
+const FILE_ITEM_REGEXP = new RegExp(/\[Files\] (.+)/i);
+const IMAGE_ITEM_REGEXP = new RegExp(/\[Image, (.*\(.*\))\]/i);
+
+const TYPE = {
+    TEXT: 0,
+    FILE: 1,
+    IMAGE: 2,
+    LINK: 3
+}
 
 const GPasteHistoryItem = new Lang.Class({
     Name: 'GPasteHistoryItem',
@@ -19,20 +27,45 @@ const GPasteHistoryItem = new Lang.Class({
         this.markup = data.markup;
         this.hash = Utils.fnv32a(data.text);
         this.hidden = false;
+        this.type = TYPE.TEXT;
         this._inactive = false;
 
-        this._file_regexp = new RegExp(FILE_ITEM_REGEXP);
-        this._image_regexp = new RegExp(IMAGE_ITEM_REGEXP);
+        this._set_type();
 
         this._gpaste_history = gpaste_history;
     },
 
+    _set_type: function() {
+        let urls = Util.findUrls(this.text);
+
+        if(FILE_ITEM_REGEXP.test(this.text)) {
+            this.type = TYPE.FILE;
+        }
+        else if(IMAGE_ITEM_REGEXP.test(this.text)) {
+            this.type = TYPE.IMAGE;
+        }
+        else if(urls[0] !== undefined && urls[0].url === this.text) {
+            this.type = TYPE.LINK;
+        }
+        else {
+            this.type = TYPE.TEXT;
+        }
+    },
+
+    is_text_item: function() {
+        return this.type === TYPE.TEXT;
+    },
+
     is_file_item: function() {
-        return this._file_regexp.test(this.text);
+        return this.type === TYPE.FILE;
     },
 
     is_image_item: function() {
-        return this._image_regexp.test(this.text);
+        return this.type === TYPE.IMAGE;
+    },
+
+    is_link_item: function() {
+        return this.type === TYPE.LINK;
     },
 
     get_raw: function(callback) {
@@ -114,6 +147,7 @@ const GPasteHistoryItem = new Lang.Class({
         this.text = null;
         this.markup = null;
         this.hash = null;
+        this.type = null;
         this._inactive = null;
         this._gpaste_history = null;
     },
@@ -136,11 +170,11 @@ const GPasteHistoryItem = new Lang.Class({
         let result;
 
         if(this.is_file_item()) {
-            let matches = this._file_regexp.exec(this.text);
+            let matches = FILE_ITEM_REGEXP.exec(this.text);
             result = matches[1];
         }
         else if(this.is_image_item()) {
-            let matches = this._image_regexp.exec(this.text);
+            let matches = IMAGE_ITEM_REGEXP.exec(this.text);
             result = matches[1];
         }
         else {
