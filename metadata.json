@@ -1,5 +1,5 @@
 {
-  "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Delete> - delete element.\n<Ctrl>D - pin element\n<Up>/<Down> - select.\n<Ctrl>+1-9 - activate one of the first nine visible.\n<Super>z - clipboard contents preview.\n<Super>Q - quick selection mode.\n<Super><Shift>Q - show pinned items.",
+  "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Delete> - delete element.\n<Ctrl>Enter - alternative activation (open uri)\n<Ctrl>D - pin element\n<Up>/<Down> - select.\n<Ctrl>+1-9 - activate one of the first nine visible.\n<Super>z - clipboard contents preview.\n<Super>Q - quick selection mode.\n<Super><Shift>Q - show pinned items.\n\nSearch flags:\n'-f' to search only files\n'-t' - text\n'-l' - links",
   "name": "GPaste Integration",
   "shell-version": [
     "3.12"
