@@ -48,7 +48,7 @@ const GPasteIntegrationButton = new Lang.Class({
 
         PinnedItemsManager.get_manager().connect(
             'changed',
-            Lang.bind(this, this._update_menu_items)
+            Lang.bind(this, this._on_pinned_items_changed)
         );
 
         this._gpaste = new GPasteIntegration.GPasteIntegration();
@@ -97,35 +97,19 @@ const GPasteIntegrationButton = new Lang.Class({
             );
     },
 
-    _on_history_changed: function(gpaste_history, change_type) {
-        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_INDICATION_KEY)) {
-            return;
-        }
-
+    _flash_icon: function(style_pseudo_class) {
         let icon = new St.Icon({
             icon_name: Utils.ICONS.indicator,
             style_class: 'system-status-icon gpaste-system-status-icon',
             opacity: 0,
             visible: true
         });
+        icon.add_style_pseudo_class(style_pseudo_class);
 
         this._icons_table.add(icon, {
             row: 0,
             col: 0
         });
-
-        if(change_type === GPasteHistory.CHANGE_TYPE.ADDED) {
-            icon.add_style_pseudo_class('added');
-        }
-        else if(change_type === GPasteHistory.CHANGE_TYPE.REMOVED) {
-            icon.add_style_pseudo_class('removed');
-        }
-        else if(change_type === GPasteHistory.CHANGE_TYPE.LIFTED) {
-            icon.add_style_pseudo_class('lifted');
-        }
-        else {
-            icon.add_style_pseudo_class('cleared');
-        }
 
         Tweener.addTween(icon, {
             time: 0.4,
@@ -142,6 +126,47 @@ const GPasteIntegrationButton = new Lang.Class({
                 });
             })
         });
+    },
+
+    _on_pinned_items_changed: function(pinned_items_manager, change_type) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_INDICATION_KEY)) {
+            return;
+        }
+
+        let style_pseudo_class;
+
+        if(change_type === PinnedItemsManager.CHANGE_TYPE.ADDED) {
+            style_pseudo_class = 'pinned';
+        }
+        else {
+            style_pseudo_class = 'unpinned';
+        }
+
+        this._flash_icon(style_pseudo_class);
+        this._update_menu_items();
+    },
+
+    _on_history_changed: function(gpaste_history, change_type) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_COLOR_INDICATION_KEY)) {
+            return;
+        }
+
+        let style_pseudo_class;
+
+        if(change_type === GPasteHistory.CHANGE_TYPE.ADDED) {
+            style_pseudo_class = 'added';
+        }
+        else if(change_type === GPasteHistory.CHANGE_TYPE.REMOVED) {
+            style_pseudo_class = 'removed';
+        }
+        else if(change_type === GPasteHistory.CHANGE_TYPE.LIFTED) {
+            style_pseudo_class = 'lifted';
+        }
+        else {
+            style_pseudo_class = 'cleared';
+        }
+
+        this._flash_icon(style_pseudo_class);
     },
 
     _onButtonPress: function(actor, event) {
