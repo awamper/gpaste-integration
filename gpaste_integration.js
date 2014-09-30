@@ -665,7 +665,8 @@ const GPasteIntegration = new Lang.Class({
         }
 
         this._fuzzy_search.filter(
-            term,this._history.get_items(),
+            term,
+            this._history.get_items(),
             Lang.bind(this, on_filter_result)
         );
     },
