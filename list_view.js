@@ -4,6 +4,7 @@ const Signals = imports.signals;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
+const Clutter = imports.gi.Clutter;
 const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -367,6 +368,13 @@ const ListView = new Lang.Class({
             'button-release-event',
             Lang.bind(this, this._on_display_button_release)
         );
+
+        let click_action = new Clutter.ClickAction();
+        click_action.connect(
+            'long-press',
+            Lang.bind(this, this._on_display_long_press)
+        );
+        display.add_action(click_action);
     },
 
     _on_display_enter: function(display, event) {
@@ -388,6 +396,15 @@ const ListView = new Lang.Class({
         this.unset_active(display);
         let index = this._displays.indexOf(display);
         this.emit('clicked', button, display, this.model, index);
+    },
+
+    _on_display_long_press: function(action, display, state) {
+        if (state == Clutter.LongPressState.ACTIVATE) {
+            let index = this._displays.indexOf(display);
+            this.emit('long-press', action.get_button(), display, this.model, index);
+        }
+
+        return true;
     },
 
     _add_shortcut_emblem_to_display: function(display) {

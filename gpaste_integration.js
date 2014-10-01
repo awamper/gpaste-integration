@@ -134,6 +134,10 @@ const GPasteIntegration = new Lang.Class({
             'unselected',
             Lang.bind(this, this._on_item_unselected)
         );
+        this._list_view.connect(
+            'long-press',
+            Lang.bind(this, this._alt_activate_selected)
+        );
 
         this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
