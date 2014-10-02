@@ -81,7 +81,7 @@ const GPasteClient = new Lang.Class({
             DBUS_PATH
         );
         this._provider.connectSignal(
-            'Changed',
+            'Update',
             Lang.bind(this, function(proxy, sender) {
                 this.emit('changed');
             })
