@@ -116,10 +116,17 @@ const GPasteIntegrationButton = new Lang.Class({
     },
 
     _on_enter: function() {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_PREVIEW_ON_HOVER_KEY)) {
+            return;
+        }
+
         this._remove_timeout();
         this._hide_preview_dialog();
-
-        TIMEOUT_IDS.SHOW_PREVIEW = Mainloop.timeout_add(300,
+        let timeout = Utils.SETTINGS.get_int(
+            PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY
+        );
+        TIMEOUT_IDS.SHOW_PREVIEW = Mainloop.timeout_add(
+            timeout,
             Lang.bind(this, function() {
                 TIMEOUT_IDS.SHOW_PREVIEW = 0;
                 this._gpaste.show_selected_or_current_contents();

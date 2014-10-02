@@ -399,6 +399,29 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         );
         page.add_separator();
 
+        let spin_properties = {
+            lower: 100,
+            upper: 2000,
+            step_increment: 100
+        };
+        let preview_on_hover = page.add_boolean(
+            'Enable clipboard preview on icon hover:',
+            PrefsKeys.ENABLE_PREVIEW_ON_HOVER_KEY
+        );
+        preview_on_hover.connect('notify::active',
+            Lang.bind(this, function(s) {
+                let active = s.get_active();
+                preview_on_hover_spinner.set_sensitive(active);
+            })
+        );
+        let preview_on_hover_spinner = page.add_spin(
+            'Timeout(ms):',
+            PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY,
+            spin_properties,
+            'int'
+        );
+        page.add_separator();
+
         let modes = [];
         for each(let mode in Constants.ITEM_INFO_MODE) {
             modes.push({
@@ -417,7 +440,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             set_sensitive_for_mode(mode);
         }));
 
-        let spin_properties = {
+        spin_properties = {
             lower: 100,
             upper: 2000,
             step_increment: 100

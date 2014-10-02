@@ -103,5 +103,13 @@
         <default>true</default>
     </key>
 
+    <key type="b" name="enable-preview-on-hover">
+        <default>true</default>
+    </key>
+
+    <key type="i" name="preview-on-hover-timeout">
+        <default>300</default>
+    </key>
+
   </schema>
 </schemalist>
