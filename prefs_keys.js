@@ -23,3 +23,5 @@ const QUICK_MODE_KEY = 'quick-mode';
 const PINNED_ITEMS_KEY = 'pinned-items';
 const SHOW_PINNED_ITEMS_KEY = 'show-pinned-items';
 const ENABLE_COLOR_INDICATION_KEY = 'enable-color-indication';
+const ENABLE_PREVIEW_ON_HOVER_KEY = 'enable-preview-on-hover';
+const PREVIEW_ON_HOVER_TIMEOUT_KEY = 'preview-on-hover-timeout';
