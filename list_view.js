@@ -360,19 +360,15 @@ const ListView = new Lang.Class({
             'leave-event',
             Lang.bind(this, this._on_display_leave)
         );
-        display.connect(
-            'button-press-event',
-            Lang.bind(this, this._on_display_button_press)
-        );
-        display.connect(
-            'button-release-event',
-            Lang.bind(this, this._on_display_button_release)
-        );
 
         let click_action = new Clutter.ClickAction();
         click_action.connect(
             'long-press',
             Lang.bind(this, this._on_display_long_press)
+        );
+        click_action.connect(
+            'clicked',
+            Lang.bind(this, this._on_display_clicked)
         );
         display.add_action(click_action);
     },
@@ -387,21 +383,23 @@ const ListView = new Lang.Class({
         this.unset_active(display);
     },
 
-    _on_display_button_press: function(display, event) {
-        this.set_active(display);
-    },
-
-    _on_display_button_release: function(display, event) {
-        let button = event.get_button();
+    _on_display_clicked: function(action, display) {
         this.unset_active(display);
+        let button = action.get_button();
         let index = this._displays.indexOf(display);
         this.emit('clicked', button, display, this.model, index);
     },
 
     _on_display_long_press: function(action, display, state) {
-        if (state == Clutter.LongPressState.ACTIVATE) {
+        if (state === Clutter.LongPressState.QUERY) {
+            this.set_active(display);
+        }
+        else if (state === Clutter.LongPressState.ACTIVATE) {
             let index = this._displays.indexOf(display);
             this.emit('long-press', action.get_button(), display, this.model, index);
+        }
+        else {
+            // nothing
         }
 
         return true;
