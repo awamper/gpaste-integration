@@ -80,10 +80,14 @@ const GPasteHistoryItem = new Lang.Class({
                 info = object.query_info_finish(res);
             }
             catch(e) {
-                log('GpasteHistoryItem.get_info(): %s'.format(e));
 
-                if(e.code === 1) callback('No such file or directory', null);
-                else callback(e.message, null);
+                if(e.code === 1) {
+                    callback('No such file or directory', null);
+                }
+                else {
+                    log('GpasteHistoryItem.get_info(): %s'.format(e));
+                    callback(e.message, null);
+                }
 
                 return;
             }
