@@ -1,6 +1,7 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Gio = imports.gi.Gio;
+const Mainloop = imports.mainloop;
 const Main = imports.ui.main;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
@@ -25,6 +26,10 @@ const SIGNAL_IDS = {
     BUS_WATCHER: 0
 };
 
+const TIMEOUT_IDS = {
+    SHOW_PREVIEW: 0
+}
+
 const MAX_PINNED_ITEM_LENGTH = 70;
 
 const GPasteIntegrationButton = new Lang.Class({
@@ -33,6 +38,15 @@ const GPasteIntegrationButton = new Lang.Class({
 
     _init: function() {
         this.parent(0.0, "gpaste-integration");
+
+        this.actor.connect(
+            'enter-event',
+            Lang.bind(this, this._on_enter)
+        );
+        this.actor.connect(
+            'leave-event',
+            Lang.bind(this, this._on_leave)
+        );
 
         let icon = new St.Icon({
             icon_name: Utils.ICONS.indicator,
@@ -54,11 +68,15 @@ const GPasteIntegrationButton = new Lang.Class({
         this._gpaste = new GPasteIntegration.GPasteIntegration();
         this._gpaste.connect('shown',
             Lang.bind(this, function() {
+                this._remove_timeout();
+                this._hide_preview_dialog();
                 this.actor.add_style_pseudo_class('active');
             })
         );
         this._gpaste.connect('hidden',
             Lang.bind(this, function() {
+                this._remove_timeout();
+                this._hide_preview_dialog();
                 this.actor.remove_style_pseudo_class('active');
             })
         );
@@ -95,6 +113,34 @@ const GPasteIntegrationButton = new Lang.Class({
                     else this.remove_keybindings();
                 })
             );
+    },
+
+    _on_enter: function() {
+        this._remove_timeout();
+        this._hide_preview_dialog();
+
+        TIMEOUT_IDS.SHOW_PREVIEW = Mainloop.timeout_add(300,
+            Lang.bind(this, function() {
+                TIMEOUT_IDS.SHOW_PREVIEW = 0;
+                this._gpaste.show_selected_or_current_contents();
+            })
+        );
+    },
+
+    _on_leave: function() {
+        this._remove_timeout();
+        this._hide_preview_dialog();
+    },
+
+    _remove_timeout: function() {
+        if(TIMEOUT_IDS.SHOW_PREVIEW !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.SHOW_PREVIEW);
+            TIMEOUT_IDS.SHOW_PREVIEW = 0;
+        }
+    },
+
+    _hide_preview_dialog: function() {
+        this._gpaste.hide_clipboard_preview();
     },
 
     _flash_icon: function(style_pseudo_class) {
@@ -347,6 +393,8 @@ const GPasteIntegrationButton = new Lang.Class({
             Utils.SETTINGS.disconnect(SIGNAL_IDS.ENABLE_SHORTCUTS);
         }
 
+        this._remove_timeout();
+        this._hide_preview_dialog();
         this.remove_keybindings();
         this._gpaste.destroy();
         PinnedItemsManager.get_manager().destroy();

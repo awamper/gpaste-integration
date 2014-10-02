@@ -909,6 +909,12 @@ const GPasteIntegration = new Lang.Class({
         this._contents_preview_dialog.preview(history_item, display);
     },
 
+    hide_clipboard_preview: function() {
+        this._contents_preview_dialog.hide(
+            Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+        );
+    },
+
     quick_mode: function() {
         if(this._open || this._quick_mode) return;
 
