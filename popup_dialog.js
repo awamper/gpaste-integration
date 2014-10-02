@@ -109,17 +109,32 @@ const PopupDialog = new Lang.Class({
         }
     },
 
-    show: function(animation) {
-        if(this.shown) return;
-
-        this._reposition();
-
+    _show_done: function() {
         if(this.params.modal) {
             Main.pushModal(this.actor, {
                 keybindingMode: Shell.KeyBindingMode.NORMAL
             });
         }
         if(this._event_blocker) this._event_blocker.show();
+        this._connect_captured_event();
+    },
+
+    _hide_done: function() {
+        if(this._event_blocker) {
+            this._event_blocker.hide();
+        }
+
+        if(this.params.modal && Main._findModal(this.actor) !== -1) {
+            Main.popModal(this.actor);
+        }
+
+        this._disconnect_captured_event();
+    },
+
+    show: function(animation) {
+        if(this.shown) return;
+
+        this._reposition();
 
         this.actor.set_opacity(0);
         this.actor.set_scale(MIN_SCALE, MIN_SCALE);
@@ -133,7 +148,7 @@ const PopupDialog = new Lang.Class({
         if(!animation) {
             this.actor.set_opacity(255);
             this.actor.set_scale(1, 1);
-            this._connect_captured_event();
+            this._show_done();
             this.shown = true;
             return;
         }
@@ -146,18 +161,14 @@ const PopupDialog = new Lang.Class({
             time: 0.3,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
-                this._connect_captured_event();
+                this._show_done();
                 this.shown = true;
             })
         });
     },
 
     hide: function(animation) {
-        if(!this.shown) return;
-
-        if(this._event_blocker) this._event_blocker.hide();
-        if(this.params.modal) Main.popModal(this.actor);
-        this._disconnect_captured_event();
+        // if(!this.shown) return;
 
         animation =
             animation === undefined
@@ -168,6 +179,7 @@ const PopupDialog = new Lang.Class({
             this.actor.hide();
             this.actor.set_scale(1, 1);
             this.actor.set_opacity(255);
+            this._hide_done();
             this.shown = false;
             return;
         }
@@ -183,6 +195,7 @@ const PopupDialog = new Lang.Class({
                 this.actor.hide();
                 this.actor.set_scale(1, 1);
                 this.actor.set_opacity(255);
+                this._hide_done();
                 this.shown = false;
             })
         });
