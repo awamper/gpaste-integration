@@ -778,7 +778,7 @@ const GPasteIntegration = new Lang.Class({
             ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
             : animation;
         let push_result = Main.pushModal(this.actor, {
-            keybindingMode: Shell.KeyBindingMode.NORMAL
+            actionMode: Shell.ActionMode.NORMAL
         });
 
         if(!push_result) return;

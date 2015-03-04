@@ -358,9 +358,9 @@ const GPasteIntegrationButton = new Lang.Class({
             PrefsKeys.SHOW_CLIPBOARD_CONTENTS_KEY,
             Utils.SETTINGS,
             Meta.KeyBindingFlags.NONE,
-            Shell.KeyBindingMode.NORMAL |
-            Shell.KeyBindingMode.MESSAGE_TRAY |
-            Shell.KeyBindingMode.OVERVIEW,
+            Shell.ActionMode.NORMAL |
+            Shell.ActionMode.MESSAGE_TRAY |
+            Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
                 this._gpaste.show_selected_or_current_contents();
             })
@@ -369,9 +369,9 @@ const GPasteIntegrationButton = new Lang.Class({
             PrefsKeys.QUICK_MODE_KEY,
             Utils.SETTINGS,
             Meta.KeyBindingFlags.NONE,
-            Shell.KeyBindingMode.NORMAL |
-            Shell.KeyBindingMode.MESSAGE_TRAY |
-            Shell.KeyBindingMode.OVERVIEW,
+            Shell.ActionMode.NORMAL |
+            Shell.ActionMode.MESSAGE_TRAY |
+            Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
                 this._gpaste.quick_mode();
             })
@@ -380,9 +380,9 @@ const GPasteIntegrationButton = new Lang.Class({
             PrefsKeys.SHOW_PINNED_ITEMS_KEY,
             Utils.SETTINGS,
             Meta.KeyBindingFlags.NONE,
-            Shell.KeyBindingMode.NORMAL |
-            Shell.KeyBindingMode.MESSAGE_TRAY |
-            Shell.KeyBindingMode.OVERVIEW,
+            Shell.ActionMode.NORMAL |
+            Shell.ActionMode.MESSAGE_TRAY |
+            Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
                 this.menu.toggle();
             })

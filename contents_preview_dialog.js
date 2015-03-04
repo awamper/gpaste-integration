@@ -2,6 +2,7 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const Pango = imports.gi.Pango;
+const Gio = imports.gi.Gio;
 const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -267,8 +268,9 @@ const ContentsPreviewDialog = new Lang.Class({
     show_image: function(uri) {
         let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let texture_cache = St.TextureCache.get_default();
-        let image = texture_cache.load_uri_async(
-            uri,
+        let image_file = Gio.file_new_for_uri(uri);
+        let image = texture_cache.load_file_async(
+            image_file,
             Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_IMAGE_MAX_WIDTH_KEY),
             Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_IMAGE_MAX_HEIGHT_KEY),
             scale_factor

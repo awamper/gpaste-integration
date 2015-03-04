@@ -84,8 +84,9 @@ const GPasteListViewRenderer = new Lang.Class({
         let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let texture_cache = St.TextureCache.get_default();
 
-        this._image_preview = texture_cache.load_uri_async(
-            uri,
+        let image_file = Gio.file_new_for_uri(uri);
+        this._image_preview = texture_cache.load_file_async(
+            image_file,
             IMAGE_PREVIEW_WIDTH,
             this.actor.get_height(), //IMAGE_PREVIEW_HEIGHT,
             scale_factor
