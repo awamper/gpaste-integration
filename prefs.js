@@ -362,8 +362,15 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
         stack.add_titled(gpaste.page, gpaste.name, gpaste.name);
 
-        this.add(stack_switcher);
         this.add(stack);
+
+        this.connect('realize',
+            Lang.bind(this, function() {
+                let headerbar = this.get_toplevel().get_titlebar();
+                headerbar.set_custom_title(stack_switcher);
+                headerbar.show_all();
+            })
+        );
     },
 
     _get_main_page: function() {
