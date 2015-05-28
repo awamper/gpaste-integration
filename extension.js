@@ -241,6 +241,7 @@ const GPasteIntegrationButton = new Lang.Class({
 
             switch(button) {
                 case Clutter.BUTTON_SECONDARY:
+                    this._remove_timeout();
                     this.menu.toggle();
                     break;
                 case Clutter.BUTTON_MIDDLE:
