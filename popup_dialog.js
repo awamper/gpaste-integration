@@ -32,18 +32,10 @@ const PopupDialog = new Lang.Class({
         this.actor.set_pivot_point(0.5, 0.5);
 
         this._event_blocker = null;
+        this._modal_mode = null;
 
         if(this.params.modal) {
-            this._event_blocker = new St.Bin({
-                opacity: 0,
-                x: Main.uiGroup.x,
-                y: Main.uiGroup.y,
-                width: Main.uiGroup.width,
-                height: Main.uiGroup.height,
-                reactive: true
-            });
-            this._event_blocker.hide();
-            Main.uiGroup.add_child(this._event_blocker);
+            this.enable_modal();
         }
 
         Main.uiGroup.add_child(this.actor);
@@ -110,7 +102,7 @@ const PopupDialog = new Lang.Class({
     },
 
     _show_done: function() {
-        if(this.params.modal) {
+        if(this._modal_mode) {
             Main.pushModal(this.actor, {
                 actionMode: Shell.ActionMode.NORMAL
             });
@@ -124,7 +116,7 @@ const PopupDialog = new Lang.Class({
             this._event_blocker.hide();
         }
 
-        if(this.params.modal && Main._findModal(this.actor) !== -1) {
+        if(this._modal_mode && Main._findModal(this.actor) !== -1) {
             Main.popModal(this.actor);
         }
 
@@ -199,6 +191,33 @@ const PopupDialog = new Lang.Class({
                 this.shown = false;
             })
         });
+    },
+
+    enable_modal: function() {
+        if(this._modal_mode) return;
+
+        this._modal_mode = true;
+        this._event_blocker = new St.Bin({
+            opacity: 0,
+            x: Main.uiGroup.x,
+            y: Main.uiGroup.y,
+            width: Main.uiGroup.width,
+            height: Main.uiGroup.height,
+            reactive: true
+        });
+        this._event_blocker.hide();
+        Main.uiGroup.add_child(this._event_blocker);
+    },
+
+    disable_modal: function() {
+        if(!this._modal_mode) return;
+
+        this._modal_mode = false;
+
+        if(this._event_blocker) {
+            this._event_blocker.destroy();
+            this._event_blocker = null;
+        }
     },
 
     destroy: function() {

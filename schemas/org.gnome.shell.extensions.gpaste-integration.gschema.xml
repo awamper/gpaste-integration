@@ -24,11 +24,11 @@
     </key>
 
     <key type="i" name="preview-image-max-width">
-        <default>350</default>
+        <default>450</default>
     </key>
 
     <key type="i" name="preview-image-max-height">
-        <default>300</default>
+        <default>450</default>
     </key>
 
     <key type="as" name="show-clipboard-contents">
@@ -108,7 +108,11 @@
     </key>
 
     <key type="i" name="preview-on-hover-timeout">
-        <default>300</default>
+        <default>400</default>
+    </key>
+
+    <key type="b" name="preview-item-on-hover">
+      <default>false</default>
     </key>
 
   </schema>

@@ -263,11 +263,17 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_captured_event: function(object, event) {
-        if(event.type() !== Clutter.EventType.BUTTON_PRESS) return;
+        if(
+            event.type() === Clutter.EventType.BUTTON_PRESS &&
+            !Utils.is_pointer_inside_actor(this.actor)
+        ) {
+            if(
+                this._contents_preview_dialog.shown &&
+                Utils.is_pointer_inside_actor(this._contents_preview_dialog.actor)
+            ) {
+                return;
+            }
 
-        let [x, y, mods] = global.get_pointer();
-
-        if(x < this.actor.x || y > (this.actor.y + this.actor.height)) {
             this.hide();
         }
     },
@@ -303,6 +309,21 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_selected: function(object, display) {
+        if(
+            Utils.SETTINGS.get_boolean(PrefsKeys.PREVIEW_ITEM_ON_HOVER_KEY) &&
+            !this._quick_mode
+        ) {
+            TIMEOUT_IDS.INFO = Mainloop.timeout_add(
+                Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY),
+                Lang.bind(this, function() {
+                    this.show_selected_or_current_contents();
+                    TIMEOUT_IDS.INFO = 0;
+                })
+            );
+
+            return true;
+        }
+
         let proceed =
             Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
             === Constants.ITEM_INFO_MODE.TIMEOUT;
@@ -322,15 +343,15 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_unselected: function(object, display) {
-        let proceed =
-            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
-            !== Constants.ITEM_INFO_MODE.DISABLED;
-        if(!proceed) return false;
-
         if(TIMEOUT_IDS.INFO !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.INFO);
             TIMEOUT_IDS.INFO = 0;
         }
+
+        let proceed =
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+            !== Constants.ITEM_INFO_MODE.DISABLED;
+        if(!proceed) return false;
 
         let item_info_mode = Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY);
 
@@ -810,12 +831,14 @@ const GPasteIntegration = new Lang.Class({
                 transition: transition,
                 y: target,
                 onComplete: Lang.bind(this, function() {
+                    this._list_view.select_first_visible();
                     this.emit('shown');
                 })
             });
         }
         else {
             this.actor.y = target;
+            this._list_view.select_first_visible();
             this.emit('shown');
         }
 
@@ -832,7 +855,6 @@ const GPasteIntegration = new Lang.Class({
         this._list_view.overlay_shortcut_emblems = true;
         this._list_view.select_on_hover = true;
         this._list_view.reset_scroll();
-        this._list_view.select_first_visible();
     },
 
     hide: function(animation, target) {

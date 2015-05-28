@@ -389,6 +389,12 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             }
         }
 
+        function set_sensitive_for_timeot() {
+            let icon_active = preview_on_hover.get_active();
+            let item_active = preview_item_on_hover.get_active();
+            preview_on_hover_spinner.set_sensitive(icon_active || item_active);
+        }
+
         let name = 'Main';
         let page = new PrefsGrid(this._settings);
 
@@ -415,12 +421,12 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Enable clipboard preview on icon hover:',
             PrefsKeys.ENABLE_PREVIEW_ON_HOVER_KEY
         );
-        preview_on_hover.connect('notify::active',
-            Lang.bind(this, function(s) {
-                let active = s.get_active();
-                preview_on_hover_spinner.set_sensitive(active);
-            })
+        preview_on_hover.connect('notify::active', Lang.bind(this, set_sensitive_for_timeot));
+        let preview_item_on_hover = page.add_boolean(
+            'Preview item on hover:',
+            PrefsKeys.PREVIEW_ITEM_ON_HOVER_KEY
         );
+        preview_item_on_hover.connect('notify::active', Lang.bind(this, set_sensitive_for_timeot));
         let preview_on_hover_spinner = page.add_spin(
             'Timeout(ms):',
             PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY,
@@ -479,7 +485,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
 
         let range_properties = {
             min: 10,
-            max: 100,
+            max: 50,
             step: 10,
             size: 300
         };
@@ -488,6 +494,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.WIDTH_PERCENTS_KEY,
             range_properties
         )
+        range_properties.max = 100;
         page.add_range(
             'Dialog height (% of screen):',
             PrefsKeys.HEIGHT_PERCENTS_KEY,

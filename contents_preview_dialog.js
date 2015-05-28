@@ -5,12 +5,18 @@ const Pango = imports.gi.Pango;
 const Gio = imports.gi.Gio;
 const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Mainloop = imports.mainloop;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 const PopupDialog = Me.imports.popup_dialog;
 const ItemInfoView = Me.imports.item_info_view;
+
+const LEAVE_TIMEOUT_MS = 40;
+const TIMEOUT_IDS = {
+    LEAVE: 0
+};
 
 const ContentsPreviewView = new Lang.Class({
     Name: 'ContentsPreviewView',
@@ -32,6 +38,7 @@ const ContentsPreviewView = new Lang.Class({
         });
         this.actor.connect('destroy', Lang.bind(this, this.destroy));
 
+        this.image_actor = null;
         this._image_box = new St.BoxLayout();
         this.actor.add_child(this._image_box);
 
@@ -80,15 +87,22 @@ const ContentsPreviewView = new Lang.Class({
     },
 
     add_image: function(actor) {
-        this._image_box.add_child(actor);
+        this.image_actor = actor;
+        this._image_box.add_child(this.image_actor);
     },
 
     clear: function() {
+        if(this.image_actor) {
+            this.image_actor.destroy();
+            this.image_actor = null;
+        }
+
         this._entry.set_text('');
     },
 
     destroy: function() {
         this.actor.destroy();
+        this.image_actor = null;
     },
 
     get scroll() {
@@ -106,7 +120,7 @@ const ContentsPreviewDialog = new Lang.Class({
 
     _init: function() {
         this.parent({
-            modal: true
+            modal: false
         });
 
         this._box = new St.BoxLayout({
@@ -118,25 +132,35 @@ const ContentsPreviewDialog = new Lang.Class({
 
         this._contents_view = null;
         this._relative_actor = null;
+        this._image_width = 0;
     },
 
     _on_captured_event: function(o, e) {
         if(e.type() === Clutter.EventType.KEY_RELEASE) {
             let symbol = e.get_key_symbol();
 
-            if(symbol === Clutter.Super_R || symbol == Clutter.Super_L) {
-                this.hide(
-                    Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
-                );
+            if(
+                symbol === Clutter.Super_R ||
+                symbol === Clutter.Super_L ||
+                symbol === Clutter.Escape ||
+                this._relative_actor
+            ) {
+                let animation =
+                    !this._relative_actor
+                    ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
+                    : false;
+                this.hide(animation);
             }
 
-            return true;
+            return false;
         }
         else if(e.type() === Clutter.EventType.KEY_PRESS) {
             let symbol = e.get_key_symbol();
 
-            if(symbol === Clutter.Up) this._scroll_step_up();
-            if(symbol === Clutter.Down) this._scroll_step_down();
+            if(!this._relative_actor) {
+                if(symbol === Clutter.Up) this._scroll_step_up();
+                if(symbol === Clutter.Down) this._scroll_step_down();
+            }
 
             if(symbol === Clutter.Control_L || symbol === Clutter.Control_R) {
                 let clipboard = St.Clipboard.get_default();
@@ -146,9 +170,14 @@ const ContentsPreviewDialog = new Lang.Class({
                 );
             }
 
-            return true;
+            return false;
         }
         else if(e.type() === Clutter.EventType.SCROLL) {
+            if(this._relative_actor && !Utils.is_pointer_inside_actor(this.actor)) {
+                this.hide(false);
+                return false;
+            }
+
             let direction = e.get_scroll_direction();
 
             if(direction === Clutter.ScrollDirection.UP) {
@@ -159,6 +188,29 @@ const ContentsPreviewDialog = new Lang.Class({
             }
 
             return true;
+        }
+        else if(e.type() === Clutter.EventType.MOTION) {
+            if(!this._relative_actor) return false;
+
+            if(TIMEOUT_IDS.LEAVE !== 0) {
+                Mainloop.source_remove(TIMEOUT_IDS.LEAVE);
+                TIMEOUT_IDS.LEAVE = 0;
+            }
+
+            if(
+                !Utils.is_pointer_inside_actor(this.actor) &&
+                !Utils.is_pointer_inside_actor(this._relative_actor)
+            ) {
+                TIMEOUT_IDS.LEAVE = Mainloop.timeout_add(
+                    LEAVE_TIMEOUT_MS,
+                    Lang.bind(this, function() {
+                        this.hide(false);
+                        TIMEOUT_IDS.LEAVE = 0;
+                    })
+                );
+            }
+
+            return false;
         }
 
         return false;
@@ -210,7 +262,15 @@ const ContentsPreviewDialog = new Lang.Class({
         let offset_x = 10;
         let offset_y = 10;
 
-        this._contents_view.actor.width = this._relative_actor.width - margin;
+        if(!this._contents_view.image_actor) {
+            // this._contents_view.actor.width = this._relative_actor.width - margin;
+        }
+        else {
+            if(this._image_width > 0) {
+                this._contents_view.actor.width = this._image_width;
+            }
+
+        }
 
         if(this.actor.width > available_width) {
             offset_x =
@@ -223,20 +283,32 @@ const ContentsPreviewDialog = new Lang.Class({
                 - (this.actor.height + y + margin);
         }
 
-        this.actor.x = x + offset_x;
-        this.actor.y = y + offset_y;
+        this.actor.x = x - this.actor.width - margin;
+        this.actor.y = y + offset_y - margin;
     },
 
     clear: function() {
+        if(TIMEOUT_IDS.LEAVE !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.LEAVE);
+            TIMEOUT_IDS.LEAVE = 0;
+        }
+
         if(this._contents_view !== null) this._contents_view.destroy();
         this._contents_view = null;
+        this._image_width = 0;
     },
 
     preview: function(history_item, relative_actor) {
         this.clear();
 
-        if(relative_actor) this._relative_actor = relative_actor;
-        else this._relative_actor = null;
+        if(relative_actor) {
+            this._relative_actor = relative_actor;
+            this.disable_modal();
+        }
+        else {
+            this._relative_actor = null;
+            this.enable_modal();
+        }
 
         history_item.get_raw(
             Lang.bind(this, function(raw_item) {
@@ -277,10 +349,22 @@ const ContentsPreviewDialog = new Lang.Class({
         );
         image.connect('size-change',
             Lang.bind(this, function() {
+                if(this._contents_view.image_actor.width < 1) return;
+                this._image_width = this._contents_view.image_actor.width;
                 this._reposition();
             })
         );
 
         this._contents_view.add_image(image);
     },
+
+    destroy: function() {
+        if(TIMEOUT_IDS.LEAVE !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.LEAVE);
+            TIMEOUT_IDS.LEAVE = 0;
+        }
+
+        this._image_width = 0;
+        this.parent();
+    }
 });
