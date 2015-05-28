@@ -265,7 +265,8 @@ const GPasteIntegration = new Lang.Class({
     _on_captured_event: function(object, event) {
         if(
             event.type() === Clutter.EventType.BUTTON_PRESS &&
-            !Utils.is_pointer_inside_actor(this.actor)
+            !Utils.is_pointer_inside_actor(this.actor) &&
+            !Utils.is_pointer_inside_actor(Main.panel.actor)
         ) {
             if(
                 this._contents_preview_dialog.shown &&
