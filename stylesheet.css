@@ -258,11 +258,11 @@
 }
 
 .gpaste-dialog-contents-view-box StScrollView StScrollBar {
-    min-width: 8px;
-    min-height: 8px;
+    min-width: 12px;
+    min-height: 12px;
 }
 
-.gpaste-dialog-contents-view-box StScrollBar StBin#trough {
+ .gpaste-dialog-contents-view-box StScrollBar StBin#trough {
     padding-left: 20px;
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 0px;
