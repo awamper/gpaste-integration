@@ -142,7 +142,7 @@ const GPasteIntegration = new Lang.Class({
         this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
         this._contents_preview_dialog =
-            new ContentsPreviewDialog.ContentsPreviewDialog()
+            new ContentsPreviewDialog.ContentsPreviewDialog(this);
 
         let fuzzy_options = {
             pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
@@ -218,6 +218,7 @@ const GPasteIntegration = new Lang.Class({
         this._last_selected_item_index = null;
         this._activate_animation_running = false;
         this._quick_mode = false;
+        this.force_update = false;
         this._resize();
 
         CONNECTION_IDS.client_show_history =
@@ -238,6 +239,10 @@ const GPasteIntegration = new Lang.Class({
         if(this.is_open) {
             if(this._history_name_changed_trigger) {
                 this._history_name_changed_trigger = false;
+                this.show_all();
+            }
+            if(this.force_update) {
+                this.force_update = false;
                 this.show_all();
             }
 

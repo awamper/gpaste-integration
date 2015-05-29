@@ -9,6 +9,9 @@ const Utils = Me.imports.utils;
 const GPasteIface =
    '<node> \
        <interface name="org.gnome.GPaste"> \
+           <method name="Add"> \
+               <arg type="s" direction="in" /> \
+           </method> \
            <method name="GetHistory"> \
                <arg type="as" direction="out" /> \
            </method> \
@@ -110,6 +113,14 @@ const GPasteClient = new Lang.Class({
             log("%s: %s".format(method, error));
             if(typeof callback === 'function') callback(null, error);
         }
+    },
+
+    add: function(text, callback) {
+        this._provider.AddRemote(text,
+            Lang.bind(this, function(result, error) {
+                this._return(result, error, 'add', callback);
+            })
+        );
     },
 
     get_element: function(index, callback) {

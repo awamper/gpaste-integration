@@ -12,16 +12,19 @@ const Utils = Me.imports.utils;
 const PrefsKeys = Me.imports.prefs_keys;
 const PopupDialog = Me.imports.popup_dialog;
 const ItemInfoView = Me.imports.item_info_view;
+const GPasteClient = Me.imports.gpaste_client;
 
 const LEAVE_TIMEOUT_MS = 40;
+const COPY_SELECTION_TIMEOUT_MS = 400;
 const TIMEOUT_IDS = {
-    LEAVE: 0
+    LEAVE: 0,
+    SELECTION: 0
 };
 
 const ContentsPreviewView = new Lang.Class({
     Name: 'ContentsPreviewView',
 
-    _init: function(contents) {
+    _init: function(gpaste_integration, contents) {
         this._contents = contents;
         let style_string =
             'min-width: %spx; max-width: %spx; min-height: 80px; max-height: %spx;'
@@ -55,6 +58,7 @@ const ContentsPreviewView = new Lang.Class({
         this._entry.clutter_text.set_ellipsize(
             Pango.EllipsizeMode.NONE
         );
+        this._entry.clutter_text.connect('cursor-changed', Lang.bind(this, this._on_cursor_changed));
 
         this._label_box = new St.BoxLayout({
             vertical: true
@@ -79,7 +83,52 @@ const ContentsPreviewView = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
+        this._copy_button = new St.Button({
+            label: 'copy selection',
+            visible: false,
+            style_class: 'gpaste-copy-button'
+        });
+        this._copy_button.connect('clicked', Lang.bind(this, function() {
+            this._copy_button.hide();
+            let selection = this._entry.clutter_text.get_selection();
+
+            if(!Utils.is_blank(selection)) {
+                gpaste_integration.force_update = true;
+                GPasteClient.get_client().add(selection);
+            }
+        }));
+        Main.uiGroup.add_child(this._copy_button);
+
         this.set_contents(contents);
+    },
+
+    _on_cursor_changed: function() {
+        this._remove_timeout();
+        let selection = this._entry.clutter_text.get_selection();
+
+        if(!Utils.is_blank(selection)) {
+            TIMEOUT_IDS.SELECTION = Mainloop.timeout_add(
+                COPY_SELECTION_TIMEOUT_MS,
+                Lang.bind(this, function() {
+                    this._remove_timeout();
+
+                    let [pointer_x, pointer_y] = global.get_pointer();
+                    this._copy_button.translation_x = pointer_x + 5;
+                    this._copy_button.translation_y = pointer_y + 5;
+                    this._copy_button.show();
+                })
+            );
+        }
+        else {
+            this._copy_button.hide();
+        }
+    },
+
+    _remove_timeout: function() {
+        if(TIMEOUT_IDS.SELECTION > 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.SELECTION);
+            TIMEOUT_IDS.SELECTION = 0;
+        }
     },
 
     set_contents: function(contents) {
@@ -92,15 +141,20 @@ const ContentsPreviewView = new Lang.Class({
     },
 
     clear: function() {
+        this._remove_timeout();
+
         if(this.image_actor) {
             this.image_actor.destroy();
             this.image_actor = null;
         }
 
+        this._copy_button.hide();
         this._entry.set_text('');
     },
 
     destroy: function() {
+        this._remove_timeout();
+        this._copy_button.destroy();
         this.actor.destroy();
         this.image_actor = null;
     },
@@ -118,7 +172,7 @@ const ContentsPreviewDialog = new Lang.Class({
     Name: 'ContentsPreviewDialog',
     Extends: PopupDialog.PopupDialog,
 
-    _init: function() {
+    _init: function(gpaste_integration) {
         this.parent({
             modal: false
         });
@@ -133,6 +187,7 @@ const ContentsPreviewDialog = new Lang.Class({
         this._contents_view = null;
         this._relative_actor = null;
         this._image_width = 0;
+        this._gpaste_integration = gpaste_integration;
     },
 
     _on_captured_event: function(o, e) {
@@ -308,7 +363,7 @@ const ContentsPreviewDialog = new Lang.Class({
             Lang.bind(this, function(raw_item) {
                 if(!raw_item) return;
 
-                this._contents_view = new ContentsPreviewView(raw_item);
+                this._contents_view = new ContentsPreviewView(this._gpaste_integration, raw_item);
                 this._box.add_child(this._contents_view.actor);
 
                 this.show(
@@ -359,6 +414,7 @@ const ContentsPreviewDialog = new Lang.Class({
         }
 
         this._image_width = 0;
+        this._gpaste_integration = null;
         this.parent();
     }
 });

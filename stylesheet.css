@@ -340,3 +340,21 @@
 .gpaste-system-status-icon:unpinned {
     color: #FF00E1;
 }
+
+.gpaste-copy-button {
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid black;
+    padding: 2px;
+    color: #C4C4C4;
+    max-width: 200px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.gpaste-copy-button:hover {
+    color: #3465a4;
+}
+
+.gpaste-copy-button:active {
+    color: #0D4CA3;
+}
