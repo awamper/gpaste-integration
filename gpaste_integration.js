@@ -718,7 +718,7 @@ const GPasteIntegration = new Lang.Class({
         let [x, y] = display.get_transformed_position();
         let clone = new Clutter.Clone({
             source: display,
-            width: display.width,
+            width: this._table.width,
             height: display.height,
             x: x,
             y: y
