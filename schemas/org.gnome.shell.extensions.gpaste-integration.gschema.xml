@@ -115,5 +115,9 @@
       <default>true</default>
     </key>
 
+    <key type="b" name="show-indexes">
+      <default>false</default>
+    </key>
+
   </schema>
 </schemalist>

@@ -26,3 +26,4 @@ const ENABLE_COLOR_INDICATION_KEY = 'enable-color-indication';
 const ENABLE_PREVIEW_ON_HOVER_KEY = 'enable-preview-on-hover';
 const PREVIEW_ON_HOVER_TIMEOUT_KEY = 'preview-on-hover-timeout';
 const PREVIEW_ITEM_ON_HOVER_KEY = 'preview-item-on-hover';
+const SHOW_INDEXES_KEY = 'show-indexes';

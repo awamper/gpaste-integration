@@ -8,6 +8,7 @@ const Util = imports.misc.util;
 const Me = ExtensionUtils.getCurrentExtension();
 const GPasteClient = Me.imports.gpaste_client;
 const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
 
 const FILE_ITEM_REGEXP = new RegExp(/\[Files\] (.+)/i);
 const IMAGE_ITEM_REGEXP = new RegExp(/\[Image, (.*\(.*\))\]/i);
@@ -183,6 +184,10 @@ const GPasteHistoryItem = new Lang.Class({
         }
         else {
             result = this.text;
+        }
+
+        if(Utils.SETTINGS.get_boolean(PrefsKeys.SHOW_INDEXES_KEY)) {
+            result = '%s. %s'.format(this.index, result);
         }
 
         return result;

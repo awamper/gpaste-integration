@@ -410,6 +410,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'Status icon color indication:',
             PrefsKeys.ENABLE_COLOR_INDICATION_KEY
         );
+        page.add_boolean(
+            'Show indexes for the items:',
+            PrefsKeys.SHOW_INDEXES_KEY
+        );
         page.add_separator();
 
         let spin_properties = {
