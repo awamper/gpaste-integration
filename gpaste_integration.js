@@ -23,6 +23,7 @@ const Fuzzy = Me.imports.fuzzy;
 const ContentsPreviewDialog = Me.imports.contents_preview_dialog;
 const GPasteClient = Me.imports.gpaste_client;
 const GPasteHistory = Me.imports.gpaste_history;
+const GPasteHistoryItem = Me.imports.gpaste_history_item;
 const GPasteSearchEntry = Me.imports.gpaste_search_entry;
 const PinnedItemsManager = Me.imports.pinned_items_manager;
 const Constants = Me.imports.constants;
@@ -608,14 +609,13 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
-    _alt_activate_selected: function(selected_index) {
-        selected_index =
-            Utils.is_int(selected_index)
-            ? selected_index
-            : this._list_view.get_selected_index();
-        if(selected_index === -1) return;
+    _alt_activate_selected: function(history_item) {
+        if(!(history_item instanceof GPasteHistoryItem.GPasteHistoryItem)) {
+            let selected_index = this._list_view.get_selected_index();
+            if(selected_index === -1) return;
+            history_item = this._list_model.get(selected_index);
+        }
 
-        let history_item = this._list_model.get(selected_index);
         if(history_item.is_text_item()) return;
         history_item.get_raw(Lang.bind(this, function(result) {
             if(!result) return;

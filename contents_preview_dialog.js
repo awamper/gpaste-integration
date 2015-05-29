@@ -397,7 +397,7 @@ const ContentsPreviewDialog = new Lang.Class({
                 if(!history_item.is_text_item()) {
                     this._contents_view.activate_button.connect('clicked',
                         Lang.bind(this, function() {
-                            this._gpaste_integration._alt_activate_selected(history_item.index);
+                            this._gpaste_integration._alt_activate_selected(history_item);
                         })
                     );
                     this._contents_view.activate_button.show();
