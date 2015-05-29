@@ -69,14 +69,14 @@ const GPasteIntegrationButton = new Lang.Class({
         this._gpaste.connect('shown',
             Lang.bind(this, function() {
                 this._remove_timeout();
-                this._hide_preview_dialog();
+                this._gpaste.hide_clipboard_preview();
                 this.actor.add_style_pseudo_class('active');
             })
         );
         this._gpaste.connect('hidden',
             Lang.bind(this, function() {
                 this._remove_timeout();
-                this._hide_preview_dialog();
+                this._gpaste.hide_clipboard_preview();
                 this.actor.remove_style_pseudo_class('active');
             })
         );
@@ -121,7 +121,7 @@ const GPasteIntegrationButton = new Lang.Class({
         }
 
         this._remove_timeout();
-        this._hide_preview_dialog();
+        this._gpaste.hide_clipboard_preview();
         let timeout = Utils.SETTINGS.get_int(
             PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY
         );
@@ -136,7 +136,7 @@ const GPasteIntegrationButton = new Lang.Class({
 
     _on_leave: function() {
         this._remove_timeout();
-        this._hide_preview_dialog();
+        this._gpaste.hide_clipboard_preview();
     },
 
     _remove_timeout: function() {
@@ -144,10 +144,6 @@ const GPasteIntegrationButton = new Lang.Class({
             Mainloop.source_remove(TIMEOUT_IDS.SHOW_PREVIEW);
             TIMEOUT_IDS.SHOW_PREVIEW = 0;
         }
-    },
-
-    _hide_preview_dialog: function() {
-        this._gpaste.hide_clipboard_preview();
     },
 
     _flash_icon: function(style_pseudo_class) {
@@ -247,6 +243,7 @@ const GPasteIntegrationButton = new Lang.Class({
                 case Clutter.BUTTON_MIDDLE:
                     break;
                 default:
+                    this._gpaste.hide_clipboard_preview();
                     this._gpaste.toggle();
                     break;
             }
@@ -402,7 +399,7 @@ const GPasteIntegrationButton = new Lang.Class({
         }
 
         this._remove_timeout();
-        this._hide_preview_dialog();
+        this._gpaste.hide_clipboard_preview();
         this.remove_keybindings();
         this._gpaste.destroy();
         PinnedItemsManager.get_manager().destroy();
