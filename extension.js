@@ -129,7 +129,7 @@ const GPasteIntegrationButton = new Lang.Class({
             timeout,
             Lang.bind(this, function() {
                 TIMEOUT_IDS.SHOW_PREVIEW = 0;
-                this._gpaste.show_selected_or_current_contents();
+                this._gpaste.show_selected_or_current_contents(true);
             })
         );
     },

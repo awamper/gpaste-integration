@@ -298,17 +298,11 @@ const ContentsPreviewDialog = new Lang.Class({
         this._image_width = 0;
     },
 
-    preview: function(history_item, relative_actor) {
+    preview: function(history_item, relative_actor, modal) {
         this.clear();
 
-        if(relative_actor) {
-            this._relative_actor = relative_actor;
-            this.disable_modal();
-        }
-        else {
-            this._relative_actor = null;
-            this.enable_modal();
-        }
+        modal === true ? this.enable_modal() : this.disable_modal();
+        relative_actor ? this._relative_actor = relative_actor : this._relative_actor = null;
 
         history_item.get_raw(
             Lang.bind(this, function(raw_item) {

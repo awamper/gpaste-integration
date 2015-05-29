@@ -908,16 +908,18 @@ const GPasteIntegration = new Lang.Class({
         else this.show();
     },
 
-    show_selected_or_current_contents: function() {
+    show_selected_or_current_contents: function(no_modal) {
         if(this._contents_preview_dialog.shown) return;
 
         let history_item = this._history.items[0];
         let selected_index = this._list_view.get_selected_index();
         let display = this._list_view.get_display(selected_index);
         let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
+        let modal = true;
 
         if(display) {
             history_item = display._delegate._history_item;
+            modal = false;
 
             if(animation) {
                 display.opacity = 20;
@@ -930,7 +932,7 @@ const GPasteIntegration = new Lang.Class({
             }
         }
 
-        this._contents_preview_dialog.preview(history_item, display);
+        this._contents_preview_dialog.preview(history_item, display, no_modal ? false : modal);
     },
 
     hide_clipboard_preview: function() {

@@ -218,6 +218,10 @@ const PopupDialog = new Lang.Class({
             this._event_blocker.destroy();
             this._event_blocker = null;
         }
+
+        if(Main._findModal(this.actor) !== -1) {
+            Main.popModal(this.actor);
+        }
     },
 
     destroy: function() {
