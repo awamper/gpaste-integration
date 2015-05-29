@@ -112,7 +112,7 @@
     </key>
 
     <key type="b" name="preview-item-on-hover">
-      <default>false</default>
+      <default>true</default>
     </key>
 
   </schema>
