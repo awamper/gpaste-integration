@@ -34,11 +34,11 @@ const PopupDialog = new Lang.Class({
         this._event_blocker = null;
         this._modal_mode = null;
 
+        Main.uiGroup.add_child(this.actor);
+
         if(this.params.modal) {
             this.enable_modal();
         }
-
-        Main.uiGroup.add_child(this.actor);
 
         this._shown = false;
     },
@@ -206,7 +206,7 @@ const PopupDialog = new Lang.Class({
             reactive: true
         });
         this._event_blocker.hide();
-        Main.uiGroup.add_child(this._event_blocker);
+        Main.uiGroup.insert_child_below(this._event_blocker, this.actor);
     },
 
     disable_modal: function() {
