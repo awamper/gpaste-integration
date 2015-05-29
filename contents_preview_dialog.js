@@ -385,7 +385,18 @@ const ContentsPreviewDialog = new Lang.Class({
         this.clear();
 
         modal === true ? this.enable_modal() : this.disable_modal();
-        relative_actor ? this._relative_actor = relative_actor : this._relative_actor = null;
+
+        if(relative_actor) {
+            this._relative_actor = relative_actor;
+            this._relative_actor.connect('destroy',
+                Lang.bind(this, function() {
+                    this.hide(false);
+                })
+            );
+        }
+        else {
+            this._relative_actor = null;
+        }
 
         history_item.get_raw(
             Lang.bind(this, function(raw_item) {
