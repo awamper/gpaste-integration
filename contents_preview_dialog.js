@@ -70,12 +70,32 @@ const ContentsPreviewView = new Lang.Class({
         this._scroll_view.add_actor(this._label_box);
         this.actor.add_child(this._scroll_view);
 
+        let info_box = new St.Table();
+
+        this.activate_button = new St.Button({
+            label: 'Open',
+            style_class: 'gpaste-preview-activate-button',
+            visible: false
+        });
+        info_box.add(this.activate_button, {
+            row: 0,
+            col: 0,
+            x_expand: true,
+            x_fill: false,
+            x_align: St.Align.START,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.MIDDLE
+        });
+
         this.info_view = new ItemInfoView.ItemInfoView({
             label_style_class: 'gpaste-item-box-info-label'
         });
         this.info_view.show();
-        this.actor.add(this.info_view.actor, {
-            x_expand: false,
+        info_box.add(this.info_view.actor, {
+            row: 0,
+            col: 1,
+            x_expand: true,
             x_fill: false,
             x_align: St.Align.END,
             y_expand: false,
@@ -83,6 +103,14 @@ const ContentsPreviewView = new Lang.Class({
             y_align: St.Align.MIDDLE
         });
 
+        this.actor.add_child(info_box, {
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.START,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.MIDDLE
+        })
         this._copy_button = new St.Button({
             label: 'copy selection',
             visible: false,
@@ -365,6 +393,15 @@ const ContentsPreviewDialog = new Lang.Class({
 
                 this._contents_view = new ContentsPreviewView(this._gpaste_integration, raw_item);
                 this._box.add_child(this._contents_view.actor);
+
+                if(!history_item.is_text_item()) {
+                    this._contents_view.activate_button.connect('clicked',
+                        Lang.bind(this, function() {
+                            this._gpaste_integration._alt_activate_selected(history_item.index);
+                        })
+                    );
+                    this._contents_view.activate_button.show();
+                }
 
                 this.show(
                     Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)

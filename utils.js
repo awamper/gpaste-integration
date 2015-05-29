@@ -192,3 +192,9 @@ function getSettings(schema) {
 
     return new Gio.Settings({ settings_schema: schemaObj });
 }
+
+function is_int(value) {
+  return !isNaN(value) &&
+         parseInt(Number(value)) == value &&
+         !isNaN(parseInt(value, 10));
+}

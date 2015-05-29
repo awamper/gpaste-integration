@@ -608,8 +608,11 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
-    _alt_activate_selected: function() {
-        let selected_index = this._list_view.get_selected_index();
+    _alt_activate_selected: function(selected_index) {
+        selected_index =
+            Utils.is_int(selected_index)
+            ? selected_index
+            : this._list_view.get_selected_index();
         if(selected_index === -1) return;
 
         let history_item = this._list_model.get(selected_index);

@@ -358,3 +358,19 @@
 .gpaste-copy-button:active {
     color: #0D4CA3;
 }
+
+.gpaste-preview-activate-button {
+    color: #C4C4C4;
+    padding: 2px;
+    font-weight: bold;
+    font-size: 10px;
+    text-decoration: underline;
+}
+
+.gpaste-preview-activate-button:hover {
+    color: #3465a4;
+}
+
+.gpaste-preview-activate-button:active {
+    color: #0D4CA3;
+}
