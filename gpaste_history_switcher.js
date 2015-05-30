@@ -1,5 +1,6 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -7,6 +8,12 @@ const Utils = Me.imports.utils;
 const GPasteClient = Me.imports.gpaste_client;
 const PopupDialog = Me.imports.popup_dialog;
 const PrefsKeys = Me.imports.prefs_keys;
+
+const BUTTON_TIMEOUT_MS = 300;
+const TIMEOUT_IDS = {
+    BUTTON_ENTER: 0,
+    BUTTON_LEAVE: 0
+};
 
 const GpasteHistorySwitcherItem = new Lang.Class({
     Name: 'GpasteHistorySwitcherItem',
@@ -53,6 +60,10 @@ const GpasteHistorySwitcherItem = new Lang.Class({
 
         this.on_clicked(this);
     },
+
+    get button() {
+        return this._history_button;
+    }
 });
 
 const GpasteHistorySwitcher = new Lang.Class({
@@ -73,24 +84,64 @@ const GpasteHistorySwitcher = new Lang.Class({
         this.actor.add_child(this._box);
 
         this._gpaste_integration = gpaste_integration;
+        this._last_history_name = GPasteClient.get_client().history_name;
     },
 
     _load_histories: function() {
         this._box.destroy_all_children();
-        let current_history = GPasteClient.get_client().history_name;
+
         GPasteClient.get_client().list_histories(
             Lang.bind(this, function(histories) {
                 histories.sort();
 
                 for(let i = 0; i < histories.length; i++) {
-                    let reactive = current_history === histories[i] ? false : true;
+                    let reactive = this._last_history_name === histories[i] ? false : true;
                     let history = new GpasteHistorySwitcherItem(histories[i], reactive);
+
                     history.on_clicked = Lang.bind(this, function(history_switcher_item) {
                         this._gpaste_integration.history.switch_history(
                             history_switcher_item.name
                         );
+                        this._last_history_name = history_switcher_item.name;
                         this.hide();
                     });
+
+                    history.button.connect('enter-event', Lang.bind(this, function() {
+                        if(!reactive) return;
+
+                        if(TIMEOUT_IDS.BUTTON_LEAVE !== 0) {
+                            Mainloop.source_remove(TIMEOUT_IDS.BUTTON_LEAVE);
+                            TIMEOUT_IDS.BUTTON_LEAVE = 0;
+                        }
+
+
+                        TIMEOUT_IDS.BUTTON_ENTER = Mainloop.timeout_add(BUTTON_TIMEOUT_MS,
+                            Lang.bind(this, function() {
+                                TIMEOUT_IDS.BUTTON_ENTER = 0;
+                                this._gpaste_integration.history.switch_history(history.name);
+                            })
+                        );
+                    }));
+                    history.button.connect('leave-event', Lang.bind(this, function() {
+                        if(TIMEOUT_IDS.BUTTON_ENTER !== 0) {
+                            Mainloop.source_remove(TIMEOUT_IDS.BUTTON_ENTER);
+                            TIMEOUT_IDS.BUTTON_ENTER = 0;
+                        }
+
+                        TIMEOUT_IDS.BUTTON_LEAVE = Mainloop.timeout_add(BUTTON_TIMEOUT_MS,
+                            Lang.bind(this, function() {
+                                TIMEOUT_IDS.BUTTON_LEAVE = 0;
+                                let current_history = GPasteClient.get_client().history_name;
+
+                                if(current_history !== this._last_history_name) {
+                                    this._gpaste_integration.history.switch_history(
+                                        this._last_history_name
+                                    );
+                                }
+                            })
+                        );
+                    }));
+
                     this._box.add(history.actor, {
                         x_expand: true,
                         x_fill: true
@@ -113,6 +164,15 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     hide: function() {
+        if(TIMEOUT_IDS.BUTTON_ENTER !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.BUTTON_ENTER);
+            TIMEOUT_IDS.BUTTON_ENTER = 0;
+        }
+        if(TIMEOUT_IDS.BUTTON_LEAVE !== 0) {
+            Mainloop.source_remove(TIMEOUT_IDS.BUTTON_LEAVE);
+            TIMEOUT_IDS.BUTTON_LEAVE = 0;
+        }
+
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
     }
 });
