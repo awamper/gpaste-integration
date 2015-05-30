@@ -32,6 +32,53 @@ const TIMEOUT_IDS = {
 
 const MAX_PINNED_ITEM_LENGTH = 70;
 
+const GPasteEntryMenuItem = new Lang.Class({
+    Name: 'GPasteEntryMenuItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function(params) {
+        this.parent(params);
+
+        this._hint_text = 'Add item';
+
+        let primary_icon = new St.Icon({
+            icon_name: 'list-add-symbolic',
+            icon_size: 20,
+            reactive: false
+        });
+        this.entry = new St.Entry({
+            hint_text: this._hint_text
+        });
+
+        this.entry.set_primary_icon(primary_icon);
+        this.entry.clutter_text.connect('activate', Lang.bind(this, this.activate));
+        this.actor.add(this.entry, {
+            expand: true,
+            x_align: St.Align.START
+        });
+    },
+
+    _onButtonReleaseEvent: function(actor, event) {
+        return true;
+    },
+
+    _onKeyFocusIn: function(actor) {
+        return;
+    },
+
+    _onKeyFocusOut: function(actor) {
+        return;
+    },
+
+    activate: function() {
+        this.emit('activate', this.entry_text);
+    },
+
+    get entry_text() {
+        return this.entry.text === this._hint_text ? '' : this.entry.text;
+    }
+});
+
 const GPasteIntegrationButton = new Lang.Class({
     Name: 'GPasteIntegrationButton',
     Extends: PanelMenu.Button,
@@ -46,6 +93,13 @@ const GPasteIntegrationButton = new Lang.Class({
         this.actor.connect(
             'leave-event',
             Lang.bind(this, this._on_leave)
+        );
+        this.menu.connect('menu-closed',
+            Lang.bind(this, function() {
+                if(this._new_pinned_item) {
+                    this._new_pinned_item.entry.set_text('');
+                }
+            })
         );
 
         let icon = new St.Icon({
@@ -229,6 +283,17 @@ const GPasteIntegrationButton = new Lang.Class({
                 PinnedItemsManager.get_manager().activate(index);
                 this.menu.close();
             }
+            else if(ch) {
+                if(!this._new_pinned_item) return;
+
+                if(this._block_entry_grab_focus) {
+                    this._block_entry_grab_focus = false;
+                    return;
+                }
+
+                this._new_pinned_item.entry.set_text(ch);
+                this._new_pinned_item.entry.grab_key_focus();
+            }
 
             return Clutter.EVENT_STOP;
         }
@@ -316,6 +381,14 @@ const GPasteIntegrationButton = new Lang.Class({
             this.menu.addMenuItem(menu_item);
         }
 
+
+        this._new_pinned_item = new GPasteEntryMenuItem();
+        this._new_pinned_item.connect('activate', Lang.bind(this, function(entry_menu_item, text) {
+            if(Utils.is_blank(text)) return;
+            PinnedItemsManager.get_manager().add(text);
+        }));
+        this.menu.addMenuItem(this._new_pinned_item);
+
         let separator = new PopupMenu.PopupSeparatorMenuItem();
         this.menu.addMenuItem(separator);
 
@@ -382,6 +455,7 @@ const GPasteIntegrationButton = new Lang.Class({
             Shell.ActionMode.MESSAGE_TRAY |
             Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
+                this._block_entry_grab_focus = true;
                 this.menu.toggle();
             })
         );
