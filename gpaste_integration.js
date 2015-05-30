@@ -43,7 +43,8 @@ const CONNECTION_IDS = {
 const TIMEOUT_IDS = {
     FILTER: 0,
     INFO: 0,
-    QUICK_MODE_SHORTCUTS: 0
+    QUICK_MODE_SHORTCUTS: 0,
+    NEW_ITEM_TIMEOUT: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -252,7 +253,15 @@ const GPasteIntegration = new Lang.Class({
             );
     },
 
-    _on_history_changed: function() {
+    _on_history_changed: function(history, change_type) {
+        if(TIMEOUT_IDS.NEW_ITEM_TIMEOUT) {
+            Mainloop.source_remove(TIMEOUT_IDS.NEW_ITEM_TIMEOUT);
+            TIMEOUT_IDS.NEW_ITEM_TIMEOUT = 0;
+        }
+
+        this._history_changed_trigger = true;
+        this._contents_preview_dialog.hide(false);
+
         if(this.is_open) {
             if(this._history_name_changed_trigger) {
                 this._history_name_changed_trigger = false;
@@ -280,8 +289,24 @@ const GPasteIntegration = new Lang.Class({
                 this._list_view.select_first_visible();
             }
         }
+        else {
+            let proceed =
+                Utils.SETTINGS.get_boolean(PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_KEY) && (
+                change_type === GPasteHistory.CHANGE_TYPE.ADDED ||
+                change_type === GPasteHistory.CHANGE_TYPE.REMOVED
+            );
+            if(!proceed) return;
 
-        this._history_changed_trigger = true;
+            this.show_selected_or_current_contents(true);
+
+            TIMEOUT_IDS.NEW_ITEM_TIMEOUT = Mainloop.timeout_add(
+                Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY),
+                Lang.bind(this, function() {
+                    TIMEOUT_IDS.NEW_ITEM_TIMEOUT = 0;
+                    this.hide_clipboard_preview();
+                })
+            );
+        }
     },
 
     _on_captured_event: function(object, event) {

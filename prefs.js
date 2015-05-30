@@ -437,6 +437,21 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             spin_properties,
             'int'
         );
+
+        let preview_on_change = page.add_boolean(
+            'Preview on clipboard change:',
+            PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_KEY
+        );
+        preview_on_change.connect('notify::active', Lang.bind(this, function() {
+            preview_on_change_spinner.set_sensitive(preview_on_change.get_active());
+        }))
+        spin_properties.upper = 5000;
+        let preview_on_change_spinner = page.add_spin(
+            'Preview time(ms):',
+            PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY,
+            spin_properties,
+            'int'
+        );
         page.add_separator();
 
         let modes = [];

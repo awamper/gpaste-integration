@@ -119,5 +119,13 @@
       <default>false</default>
     </key>
 
+    <key type="b" name="preview-clipboard-on-change">
+        <default>true</default>
+    </key>
+
+    <key type="i" name="preview-clipboard-on-change-timeout">
+        <default>2000</default>
+    </key>
+
   </schema>
 </schemalist>
