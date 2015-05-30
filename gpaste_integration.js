@@ -35,7 +35,9 @@ const CONNECTION_IDS = {
     history_name_changed: 0,
     client_show_history: 0,
     captured_event: 0,
-    item_info_mode: 0
+    item_info_mode: 0,
+    image_preview: 0,
+    show_indexes: 0
 };
 
 const TIMEOUT_IDS = {
@@ -230,6 +232,20 @@ const GPasteIntegration = new Lang.Class({
         CONNECTION_IDS.item_info_mode =
             Utils.SETTINGS.connect(
                 'changed::' + PrefsKeys.ITEM_INFO_MODE_KEY,
+                Lang.bind(this, function() {
+                    this._history_changed_trigger = true;
+                })
+            );
+        CONNECTION_IDS.image_preview =
+            Utils.SETTINGS.connect(
+                'changed::' + PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY,
+                Lang.bind(this, function() {
+                    this._history_changed_trigger = true;
+                })
+            );
+        CONNECTION_IDS.show_indexes =
+            Utils.SETTINGS.connect(
+                'changed::' + PrefsKeys.SHOW_INDEXES_KEY,
                 Lang.bind(this, function() {
                     this._history_changed_trigger = true;
                 })
@@ -594,11 +610,15 @@ const GPasteIntegration = new Lang.Class({
         this._history.disconnect(CONNECTION_IDS.history_name_changed);
         this._disconnect_captured_event();
         Utils.SETTINGS.disconnect(CONNECTION_IDS.item_info_mode);
+        Utils.SETTINGS.disconnect(CONNECTION_IDS.image_preview);
+        Utils.SETTINGS.disconnect(CONNECTION_IDS.show_indexes);
 
         CONNECTION_IDS.client_show_history = 0;
         CONNECTION_IDS.history_changed = 0;
         CONNECTION_IDS.history_name_changed = 0;
         CONNECTION_IDS.item_info_mode = 0;
+        CONNECTION_IDS.image_preview = 0;
+        CONNECTION_IDS.show_indexes = 0;
     },
 
     _activate_selected: function() {
