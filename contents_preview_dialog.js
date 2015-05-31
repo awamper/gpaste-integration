@@ -43,7 +43,6 @@ const ContentsPreviewView = new Lang.Class({
 
         this.image_actor = null;
         this._image_box = new St.BoxLayout();
-        this.actor.add_child(this._image_box);
 
         this._entry = new St.Entry({
             style_class: 'gpaste-contents-preview-entry'
@@ -62,6 +61,10 @@ const ContentsPreviewView = new Lang.Class({
 
         this._label_box = new St.BoxLayout({
             vertical: true
+        });
+        this._label_box.add(this._image_box, {
+            x_expand: true,
+            x_fill: false
         });
         this._label_box.add_child(this._entry);
         this._scroll_view = new St.ScrollView({
@@ -166,6 +169,7 @@ const ContentsPreviewView = new Lang.Class({
     add_image: function(actor) {
         this.image_actor = actor;
         this._image_box.add_child(this.image_actor);
+        this.actor.style = 'min-width: 0px;';
     },
 
     clear: function() {
@@ -214,7 +218,6 @@ const ContentsPreviewDialog = new Lang.Class({
 
         this._contents_view = null;
         this._relative_actor = null;
-        this._image_width = 0;
         this._gpaste_integration = gpaste_integration;
     },
 
@@ -300,7 +303,7 @@ const ContentsPreviewDialog = new Lang.Class({
     },
 
     _scroll_step_up: function() {
-        if(this._contents_view === null || !this.shown) return;
+        if(this._contents_view === null || !this.shown || !this._contents_view.scroll) return;
         let value = this._contents_view.scroll.vscroll.adjustment.value;
         let step_increment =
             this._contents_view.scroll.vscroll.adjustment.step_increment;
@@ -312,7 +315,7 @@ const ContentsPreviewDialog = new Lang.Class({
     },
 
     _scroll_step_down: function() {
-        if(this._contents_view === null || !this.shown) return;
+        if(this._contents_view === null || !this.shown || !this._contents_view.scroll) return;
         let value = this._contents_view.scroll.vscroll.adjustment.value;
         let step_increment =
             this._contents_view.scroll.vscroll.adjustment.step_increment;
@@ -345,16 +348,6 @@ const ContentsPreviewDialog = new Lang.Class({
         let offset_x = 10;
         let offset_y = 10;
 
-        if(!this._contents_view.image_actor) {
-            // this._contents_view.actor.width = this._relative_actor.width - margin;
-        }
-        else {
-            if(this._image_width > 0) {
-                this._contents_view.actor.width = this._image_width;
-            }
-
-        }
-
         if(this.actor.width > available_width) {
             offset_x =
                 (monitor.width + monitor.x)
@@ -378,7 +371,6 @@ const ContentsPreviewDialog = new Lang.Class({
 
         if(this._contents_view !== null) this._contents_view.destroy();
         this._contents_view = null;
-        this._image_width = 0;
     },
 
     preview: function(history_item, relative_actor, modal) {
@@ -447,7 +439,6 @@ const ContentsPreviewDialog = new Lang.Class({
         image.connect('size-change',
             Lang.bind(this, function() {
                 if(this._contents_view.image_actor.width < 1) return;
-                this._image_width = this._contents_view.image_actor.width;
                 this._reposition();
             })
         );
@@ -461,7 +452,6 @@ const ContentsPreviewDialog = new Lang.Class({
             TIMEOUT_IDS.LEAVE = 0;
         }
 
-        this._image_width = 0;
         this._gpaste_integration = null;
         this.parent();
     }
