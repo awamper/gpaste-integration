@@ -44,7 +44,8 @@ const TIMEOUT_IDS = {
     FILTER: 0,
     INFO: 0,
     QUICK_MODE_SHORTCUTS: 0,
-    NEW_ITEM_TIMEOUT: 0
+    NEW_ITEM_TIMEOUT: 0,
+    TRACK_MOUSE: 0
 };
 
 const GPasteIntegration = new Lang.Class({
@@ -299,11 +300,27 @@ const GPasteIntegration = new Lang.Class({
 
             this.show_selected_or_current_contents(true);
 
+            TIMEOUT_IDS.TRACK_MOUSE = Mainloop.timeout_add(150,
+                Lang.bind(this, function() {
+                    if(Utils.is_pointer_inside_actor(this._contents_preview_dialog.actor)) {
+                        TIMEOUT_IDS.TRACK_MOUSE = 0;
+                        this.hide_clipboard_preview();
+                        return GLib.SOURCE_REMOVE;
+                    }
+
+                    return GLib.SOURCE_CONTINUE;
+                })
+            );
             TIMEOUT_IDS.NEW_ITEM_TIMEOUT = Mainloop.timeout_add(
                 Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY),
                 Lang.bind(this, function() {
                     TIMEOUT_IDS.NEW_ITEM_TIMEOUT = 0;
                     this.hide_clipboard_preview();
+
+                    if(TIMEOUT_IDS.TRACK_MOUSE !== 0) {
+                        Mainloop.source_remove(TIMEOUT_IDS.TRACK_MOUSE);
+                        TIMEOUT_IDS.TRACK_MOUSE = 0;
+                    }
                 })
             );
         }
