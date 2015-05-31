@@ -284,11 +284,11 @@ const GPasteIntegrationButton = new Lang.Class({
                 this.menu.close();
             }
             else if(ch) {
-                if(!this._new_pinned_item) return;
+                if(!this._new_pinned_item) return Clutter.EVENT_STOP;
 
                 if(this._block_entry_grab_focus) {
                     this._block_entry_grab_focus = false;
-                    return;
+                    return Clutter.EVENT_STOP;
                 }
 
                 this._new_pinned_item.entry.set_text(ch);
