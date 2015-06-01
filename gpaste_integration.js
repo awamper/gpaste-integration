@@ -994,7 +994,10 @@ const GPasteIntegration = new Lang.Class({
                 0,
                 this._search_entry.text.length
             );
-            this._filter(this._search_entry.text);
+            this._filter(
+                this._search_entry.term,
+                this._search_entry.flag
+            );
             this._search_entry.grab_key_focus();
         }
 
