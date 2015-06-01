@@ -29,3 +29,5 @@ const PREVIEW_ITEM_ON_HOVER_KEY = 'preview-item-on-hover';
 const SHOW_INDEXES_KEY = 'show-indexes';
 const PREVIEW_CLIPBOARD_ON_CHANGE_KEY = 'preview-clipboard-on-change';
 const PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY = 'preview-clipboard-on-change-timeout';
+const MERGE_DECORATOR_KEY = 'merge-decorator';
+const MERGE_SEPARATOR_KEY = 'merge-separator';

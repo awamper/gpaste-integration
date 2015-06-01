@@ -49,6 +49,26 @@ function escape_html(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
+function escape_special_chars(str) {
+  return str
+    .replace(/[\\]/g, '\\\\')
+    .replace(/[\b]/g, '\\b')
+    .replace(/[\f]/g, '\\f')
+    .replace(/[\n]/g, '\\n')
+    .replace(/[\r]/g, '\\r')
+    .replace(/[\t]/g, '\\t');
+}
+
+function unescape_special_chars(str) {
+  return str
+    .replace(/\\\\/g, '\\')
+    .replace(/\\b/g, '\b')
+    .replace(/\\f/g, '\f')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t');
+}
+
 function get_unichar(keyval) {
     let ch = Clutter.keysym_to_unicode(keyval);
 

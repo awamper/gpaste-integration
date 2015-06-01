@@ -54,6 +54,11 @@ const GPasteIface =
            <method name="OnExtensionStateChanged"> \
                <arg type="b" direction="in" /> \
            </method> \
+           <method name="Merge"> \
+                <arg type="s" direction="in" /> \
+                <arg type="s" direction="in" /> \
+                <arg type="au" direction="in" /> \
+           </method> \
            <method name="Reexecute" /> \
            <signal name="ReexecuteSelf" /> \
            <signal name="Tracking"> \
@@ -177,6 +182,10 @@ const GPasteClient = new Lang.Class({
                 this._return(result, error, 'empty', callback);
             })
         );
+    },
+
+    merge_sync: function(decorator, separator, indexes) {
+        this._provider.MergeSync(decorator, separator, indexes);
     },
 
     delete_sync: function(index) {

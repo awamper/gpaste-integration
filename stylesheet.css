@@ -154,6 +154,10 @@
     transition-duration: 200ms;
 }
 
+.gpaste-toggle-button:checked {
+    color: rgba(64, 255, 64, 1);
+}
+
 .gpaste-toggle-button:active {
     color: rgba(0, 255, 0, 1);
     transition-duration: 200ms;

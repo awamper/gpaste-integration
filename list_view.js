@@ -334,6 +334,7 @@ const ListView = new Lang.Class({
     },
 
     _on_item_deleted: function(model, item, index) {
+        this.uncheck(index);
         let display = this._displays[index];
         if(display) this._remove_display(this._displays[index]);
 
@@ -374,11 +375,13 @@ const ListView = new Lang.Class({
     },
 
     _on_display_enter: function(display, event) {
+        display.select_toggle.show();
         this.unselect_all();
         this.select(display);
     },
 
     _on_display_leave: function(display, event) {
+        if(!display.select_toggle.checked) display.select_toggle.hide();
         this.unselect(display);
         this.unset_active(display);
     },
@@ -446,6 +449,32 @@ const ListView = new Lang.Class({
             this._connect_display_signals(display);
             this._displays.push(display);
             this._add_shortcut_emblem_to_display(display);
+
+            let select_icon = new St.Icon({
+                icon_name: 'object-select-symbolic',
+                icon_size: 20
+            });
+            let select_toggle = new St.Button({
+                visible: false,
+                toggle_mode: true,
+                style_class: 'gpaste-toggle-button',
+                child: select_icon,
+            });
+            select_toggle.set_translation(-10, 0, 0);
+            select_toggle.connect('clicked',
+                Lang.bind(this, function() {
+                    if(select_toggle.checked) this.check(index);
+                    else this.uncheck(index);
+                })
+            );
+            display.select_toggle = select_toggle
+            display.add(select_toggle, {
+                row: 0,
+                col: 3,
+                x_expand: false,
+                x_fill: false
+            });
+
             added_height += display.height;
         }
 
@@ -507,6 +536,37 @@ const ListView = new Lang.Class({
         this.emit('selected', actor);
     },
 
+    check: function(index) {
+        let display = this.get_display(index);
+        if(!display) return;
+        display.select_toggle.set_checked(true);
+        display.select_toggle.show();
+        this.emit('toggled', index, true);
+    },
+
+    check_all: function() {
+        for(let i = 0; i < this._displays.length; i++) this.check(i);
+    },
+
+    uncheck: function(index) {
+        let display = this.get_display(index);
+        if(!display || !display.select_toggle.visible) return;
+        display.select_toggle.set_checked(false);
+        display.select_toggle.hide();
+        this.emit('toggled', index, false);
+    },
+
+    uncheck_all: function() {
+        for(let i = 0; i < this._displays.length; i++) this.uncheck(i);
+    },
+
+    toggle_check: function(index) {
+        let display = this.get_display(index);
+        if(!display) return;
+        if(display.select_toggle.checked) this.uncheck(index);
+        else this.check(index);
+    },
+
     set_active: function(actor) {
         actor.add_style_pseudo_class('active');
     },
@@ -540,6 +600,17 @@ const ListView = new Lang.Class({
         }
 
         return result;
+    },
+
+    get_checked_indexes: function() {
+        let results = [];
+
+        for(let i = 0; i < this._displays.length; i++) {
+            let display = this._displays[i];
+            if(display.select_toggle.checked) results.push(i);
+        }
+
+        return results;
     },
 
     select_first: function() {
@@ -690,6 +761,10 @@ const ListView = new Lang.Class({
 
     get overlay_shortcut_emblems() {
         return this._overlay_shortcut_emblems;
+    },
+
+    get multiselection_mode() {
+        return this.get_checked_indexes().length > 0;
     }
 });
 Signals.addSignalMethods(ListView.prototype);

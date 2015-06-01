@@ -339,6 +339,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         this._settings = Utils.getSettings();
 
         let main = this._get_main_page();
+        let preview = this._get_preview_page();
         let size = this._get_size_page();
         let animations = this._get_animations_page();
         let keybindings = this._get_keybindings_page();
@@ -357,6 +358,7 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         });
 
         stack.add_titled(main.page, main.name, main.name);
+        stack.add_titled(preview.page, preview.name, preview.name);
         stack.add_titled(size.page, size.name, size.name);
         stack.add_titled(animations.page, animations.name, animations.name);
         stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
@@ -389,12 +391,6 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             }
         }
 
-        function set_sensitive_for_timeot() {
-            let icon_active = preview_on_hover.get_active();
-            let item_active = preview_item_on_hover.get_active();
-            preview_on_hover_spinner.set_sensitive(icon_active || item_active);
-        }
-
         let name = 'Main';
         let page = new PrefsGrid(this._settings);
 
@@ -415,6 +411,71 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.SHOW_INDEXES_KEY
         );
         page.add_separator();
+
+        let modes = [];
+        for each(let mode in Constants.ITEM_INFO_MODE) {
+            modes.push({
+                title: Constants.ITEM_INFO_MODE_NAME[mode],
+                value: mode
+            });
+        }
+        let combo = page.add_combo(
+            'Show item details:',
+            PrefsKeys.ITEM_INFO_MODE_KEY,
+            modes,
+            'int'
+        );
+        combo.connect('changed', Lang.bind(this, function() {
+            let mode = parseInt(combo.get_active_id(), 10);
+            set_sensitive_for_mode(mode);
+        }));
+
+        let spin_properties = {
+            lower: 100,
+            upper: 2000,
+            step_increment: 100
+        };
+        let item_details_timeout = page.add_spin(
+            'Item details timeout(ms):',
+            PrefsKeys.ITEM_INFO_TIMEOUT_KEY,
+            spin_properties,
+            'int'
+        );
+        let item_image_preview = page.add_boolean(
+            'Image preview:',
+            PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
+        );
+
+        set_sensitive_for_mode(
+            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
+        );
+
+        page.add_separator();
+
+        let merge_decorator = page.add_entry(
+            'Merge decorator:',
+            PrefsKeys.MERGE_DECORATOR_KEY
+        );
+        let merge_separator = page.add_entry(
+            'Merge separator:',
+            PrefsKeys.MERGE_SEPARATOR_KEY
+        );
+
+        return {
+            page: page,
+            name: name
+        };
+    },
+
+    _get_preview_page: function() {
+        function set_sensitive_for_timeot() {
+            let icon_active = preview_on_hover.get_active();
+            let item_active = preview_item_on_hover.get_active();
+            preview_on_hover_spinner.set_sensitive(icon_active || item_active);
+        }
+
+        let name = 'Preview';
+        let page = new PrefsGrid(this._settings);
 
         let spin_properties = {
             lower: 100,
@@ -438,6 +499,8 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'int'
         );
 
+        page.add_separator();
+
         let preview_on_change = page.add_boolean(
             'Preview on clipboard change:',
             PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_KEY
@@ -451,45 +514,6 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY,
             spin_properties,
             'int'
-        );
-        page.add_separator();
-
-        let modes = [];
-        for each(let mode in Constants.ITEM_INFO_MODE) {
-            modes.push({
-                title: Constants.ITEM_INFO_MODE_NAME[mode],
-                value: mode
-            });
-        }
-        let combo = page.add_combo(
-            'Show item details:',
-            PrefsKeys.ITEM_INFO_MODE_KEY,
-            modes,
-            'int'
-        );
-        combo.connect('changed', Lang.bind(this, function() {
-            let mode = parseInt(combo.get_active_id(), 10);
-            set_sensitive_for_mode(mode);
-        }));
-
-        spin_properties = {
-            lower: 100,
-            upper: 2000,
-            step_increment: 100
-        };
-        let item_details_timeout = page.add_spin(
-            'Item details timeout(ms):',
-            PrefsKeys.ITEM_INFO_TIMEOUT_KEY,
-            spin_properties,
-            'int'
-        );
-        let item_image_preview = page.add_boolean(
-            'Image preview:',
-            PrefsKeys.ENABLE_IMAGE_PREVIEW_KEY
-        );
-
-        set_sensitive_for_mode(
-            Utils.SETTINGS.get_int(PrefsKeys.ITEM_INFO_MODE_KEY)
         );
 
         return {

@@ -127,5 +127,13 @@
         <default>2000</default>
     </key>
 
+    <key type="s" name="merge-decorator">
+        <default>''</default>
+    </key>
+
+    <key type="s" name="merge-separator">
+        <default>'\\n'</default>
+    </key>
+
   </schema>
 </schemalist>
