@@ -21,6 +21,8 @@ const TIMEOUT_IDS = {
     SELECTION: 0
 };
 
+const SPECIAL_CHAR_SEPARATOR = '\u2063\n';
+
 const ContentsPreviewView = new Lang.Class({
     Name: 'ContentsPreviewView',
 
@@ -122,6 +124,7 @@ const ContentsPreviewView = new Lang.Class({
         this._copy_button.connect('clicked', Lang.bind(this, function() {
             this._copy_button.hide();
             let selection = this._entry.clutter_text.get_selection();
+            selection = selection.replace(SPECIAL_CHAR_SEPARATOR, '');
 
             if(!Utils.is_blank(selection)) {
                 gpaste_integration.force_update = true;
@@ -170,6 +173,10 @@ const ContentsPreviewView = new Lang.Class({
         this.image_actor = actor;
         this._image_box.add_child(this.image_actor);
         this.actor.style = 'min-width: 0px;';
+
+        let text = this._entry.get_text();
+        text = Utils.wordwrap(text, 70, SPECIAL_CHAR_SEPARATOR, true);
+        this._entry.set_text(text);
     },
 
     clear: function() {

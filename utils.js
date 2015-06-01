@@ -218,3 +218,17 @@ function is_int(value) {
          parseInt(Number(value)) == value &&
          !isNaN(parseInt(value, 10));
 }
+
+function wordwrap(str, width, brk, cut) {
+    brk = brk || '\n';
+    width = width || 75;
+    cut = cut || false;
+
+    if(!str) return str;
+
+    let regex =
+        '.{1,' + width + '}(\\s|$)' + (cut ? '|.{' + width +
+        '}|.+$' : '|\\S+?(\\s|$)');
+
+    return str.match(RegExp(regex, 'g')).join(brk);
+}
