@@ -445,7 +445,6 @@ const ContentsPreviewDialog = new Lang.Class({
         );
         image.connect('size-change',
             Lang.bind(this, function() {
-                if(this._contents_view.image_actor.width < 1) return;
                 this._reposition();
             })
         );
