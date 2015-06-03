@@ -145,7 +145,7 @@
 .gpaste-toggle-button {
     padding-right: 4px;
     padding-top: 2px;
-    color: #C4C4C4;
+    color: rgba(0, 0, 0, 0.7);
     transition-duration: 200ms;
 }
 
@@ -410,11 +410,11 @@
 
 .gpaste-upload-button {
     padding-top: 2px;
-    color: #C4C4C4;
+    color: rgba(0, 0, 0, 0.7);
 }
 
 .gpaste-upload-button:hover {
-    color: rgba(0, 255, 0, 0.5);
+    color: rgba(0, 255, 0, 0.7);
 }
 
 .gpaste-upload-button:active {
