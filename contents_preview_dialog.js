@@ -442,6 +442,9 @@ const ContentsPreviewDialog = new Lang.Class({
                             this._contents_view.info_view.hide();
                             return;
                         }
+                        if(result === 'No such file or directory') {
+                            this._contents_view.activate_button.hide();
+                        }
 
                         this._contents_view.info_view.set_text(result);
                         if(uri === null) return;
