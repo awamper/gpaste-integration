@@ -518,12 +518,6 @@ const GPasteIntegration = new Lang.Class({
             this._list_view.show_shortcuts();
             return false;
         }
-        else if(e.has_control_modifier() && ch === 'd') {
-            let selected_index = this._list_view.get_selected_index();
-            if(selected_index !== -1) this._pin_or_unpin(selected_index);
-
-            return false;
-        }
         else if(e.has_control_modifier() || (this._quick_mode && !isNaN(number))) {
             if(!isNaN(number) && number >= 1 && number <= 9) {
                 this._activate_by_shortcut(number);
@@ -601,7 +595,6 @@ const GPasteIntegration = new Lang.Class({
             return false;
         }
 
-
         if(code === 38 && e.has_control_modifier() && e.has_shift_modifier()) {
             if(this._list_view.multiselection_mode) this._list_view.uncheck_all();
             else this._list_view.check_all();
@@ -610,6 +603,12 @@ const GPasteIntegration = new Lang.Class({
         }
         else if(code === 39 && e.has_control_modifier()) {
             this._upload_selected_item();
+
+            return true;
+        }
+        else if(code === 40 && e.has_control_modifier()) {
+            let selected_index = this._list_view.get_selected_index();
+            if(selected_index !== -1) this._pin_or_unpin(selected_index);
 
             return true;
         }
