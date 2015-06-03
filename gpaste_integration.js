@@ -1052,6 +1052,11 @@ const GPasteIntegration = new Lang.Class({
         }
 
         if(!this._search_entry.is_empty()) {
+            if(this._quick_mode) {
+                this.show_all();
+                return;
+            }
+
             this._search_entry.clutter_text.set_selection(
                 0,
                 this._search_entry.text.length
