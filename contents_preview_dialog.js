@@ -13,6 +13,7 @@ const PrefsKeys = Me.imports.prefs_keys;
 const PopupDialog = Me.imports.popup_dialog;
 const ItemInfoView = Me.imports.item_info_view;
 const GPasteClient = Me.imports.gpaste_client;
+const ImgurUploader = Me.imports.imgur_uploader;
 
 const LEAVE_TIMEOUT_MS = 40;
 const COPY_SELECTION_TIMEOUT_MS = 400;
@@ -85,7 +86,23 @@ const ContentsPreviewView = new Lang.Class({
         info_box.add(this.activate_button, {
             row: 0,
             col: 0,
-            x_expand: true,
+            x_expand: false,
+            x_fill: false,
+            x_align: St.Align.START,
+            y_expand: false,
+            y_fill: false,
+            y_align: St.Align.MIDDLE
+        });
+
+        this.upload_button = new St.Button({
+            label: 'Upload',
+            style_class: 'gpaste-preview-activate-button',
+            visible: false
+        });
+        info_box.add(this.upload_button, {
+            row: 0,
+            col: 1,
+            x_expand: false,
             x_fill: false,
             x_align: St.Align.START,
             y_expand: false,
@@ -419,14 +436,23 @@ const ContentsPreviewDialog = new Lang.Class({
                 this._reposition();
 
                 history_item.get_info(
-                    Lang.bind(this, function(result, uri) {
+                    Lang.bind(this, function(result, uri, content_type, raw) {
                         if(!result) {
                             this._contents_view.info_view.hide();
+                            return;
                         }
-                        else {
-                            this._contents_view.info_view.set_text(result);
-                            if(uri !== null) this.show_image(uri);
-                        }
+
+                        this._contents_view.info_view.set_text(result);
+                        if(uri === null) return;
+                        this.show_image(uri);
+
+                        if(!ImgurUploader.supported_format(raw)) return;
+                        this._contents_view.upload_button.show();
+                        this._contents_view.upload_button.connect('clicked',
+                            Lang.bind(this, function() {
+                                this._gpaste_integration._upload_selected_item(history_item);
+                            })
+                        );
                     })
                 );
             })

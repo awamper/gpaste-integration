@@ -946,9 +946,13 @@ const GPasteIntegration = new Lang.Class({
         this.hide(false);
     },
 
-    _upload_selected_item: function() {
-        let selected_index = this._list_view.get_selected_index();
-        let history_item = this._list_model.get(selected_index);
+    _upload_selected_item: function(history_item) {
+        if(!(history_item instanceof GPasteHistoryItem.GPasteHistoryItem)) {
+            let selected_index = this._list_view.get_selected_index();
+            if(selected_index === -1) return;
+            history_item = this._list_model.get(selected_index);
+        }
+
         history_item.get_info(
             Lang.bind(this, function(result, uri, content_type, raw) {
                 if(!content_type || !raw) return;
