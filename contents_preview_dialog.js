@@ -420,8 +420,9 @@ const ContentsPreviewDialog = new Lang.Class({
 
                 this._contents_view = new ContentsPreviewView(this._gpaste_integration, raw_item);
                 this._box.add_child(this._contents_view.actor);
+                let uris = raw_item.split('\n');
 
-                if(!history_item.is_text_item()) {
+                if(!history_item.is_text_item() && uris.length === 1) {
                     this._contents_view.activate_button.connect('clicked',
                         Lang.bind(this, function() {
                             this._gpaste_integration._alt_activate_selected(history_item);
