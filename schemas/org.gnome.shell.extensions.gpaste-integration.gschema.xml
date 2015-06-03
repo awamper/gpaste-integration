@@ -24,11 +24,11 @@
     </key>
 
     <key type="i" name="preview-image-max-width">
-        <default>350</default>
+        <default>300</default>
     </key>
 
     <key type="i" name="preview-image-max-height">
-        <default>350</default>
+        <default>300</default>
     </key>
 
     <key type="as" name="show-clipboard-contents">
