@@ -478,7 +478,7 @@ const ListView = new Lang.Class({
 
     _add_display_buttons: function(display) {
         let select_icon = new St.Icon({
-            icon_name: 'object-select-symbolic',
+            icon_name: 'emblem-ok-symbolic',
             icon_size: 20
         });
         let select_toggle = new St.Button({
@@ -544,6 +544,7 @@ const ListView = new Lang.Class({
         let display = this.get_display(index);
         if(!display) return;
         display.select_toggle.set_checked(true);
+        display.select_toggle.child.icon_name = 'checkbox-checked-symbolic';
         display.select_toggle.show();
         this.emit('toggled', index, true);
     },
@@ -557,6 +558,7 @@ const ListView = new Lang.Class({
         if(!display || !display.select_toggle.visible) return;
         display.select_toggle.set_checked(false);
         display.select_toggle.hide();
+        display.select_toggle.child.icon_name = 'emblem-ok-symbolic';
         this.emit('toggled', index, false);
     },
 
