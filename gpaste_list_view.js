@@ -1,8 +1,10 @@
 const Lang = imports.lang;
+const St = imports.gi.St;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const ListView = Me.imports.list_view;
+const Utils = Me.imports.utils;
 
 const GPasteListView = new Lang.Class({
     Name: 'GPasteListView',
@@ -17,13 +19,56 @@ const GPasteListView = new Lang.Class({
     _on_display_enter: function(display, event) {
         if(!this._select_on_hover) return;
 
+        if(display.upload_button) display.upload_button.show();
         this.parent(display, event);
     },
 
     _on_display_leave: function(display, event) {
         if(!this._select_on_hover) return;
 
+        if(display.upload_button) display.upload_button.hide();
         this.parent(display, event);
+    },
+
+    _add_display_buttons: function(display) {
+        this.parent(display);
+
+        let history_item = display._delegate._history_item;
+        let supported_format = (
+            Utils.ends_with(history_item.text, '.jpg') ||
+            Utils.ends_with(history_item.text, '.jpeg') ||
+            Utils.ends_with(history_item.text, '.png') ||
+            Utils.ends_with(history_item.text, '.gif')
+        );
+
+        if(
+            !history_item.is_image_item() &&
+            (!history_item.is_file_item() || !supported_format)
+        ) return;
+
+        let upload_icon = new St.Icon({
+            icon_name: 'send-to-symbolic',
+            icon_size: 20
+        });
+        let upload_button = new St.Button({
+            child: upload_icon,
+            visible: false,
+            style_class: 'gpaste-upload-button'
+        });
+        upload_button.connect('clicked',
+            Lang.bind(this, function() {
+                this.emit('upload-item');
+            })
+        );
+
+        upload_button.set_translation(-30, 0, 0);
+        display.upload_button = upload_button;
+        display.add(upload_button, {
+            row: 0,
+            col: 3,
+            x_expand: false,
+            x_fill: false
+        });
     },
 
     select: function(actor) {

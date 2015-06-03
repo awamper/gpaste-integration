@@ -449,31 +449,7 @@ const ListView = new Lang.Class({
             this._connect_display_signals(display);
             this._displays.push(display);
             this._add_shortcut_emblem_to_display(display);
-
-            let select_icon = new St.Icon({
-                icon_name: 'object-select-symbolic',
-                icon_size: 20
-            });
-            let select_toggle = new St.Button({
-                visible: false,
-                toggle_mode: true,
-                style_class: 'gpaste-toggle-button',
-                child: select_icon,
-            });
-            select_toggle.set_translation(-10, 0, 0);
-            select_toggle.connect('clicked',
-                Lang.bind(this, function() {
-                    if(select_toggle.checked) this.check(index);
-                    else this.uncheck(index);
-                })
-            );
-            display.select_toggle = select_toggle
-            display.add(select_toggle, {
-                row: 0,
-                col: 3,
-                x_expand: false,
-                x_fill: false
-            });
+            this._add_display_buttons(display);
 
             added_height += display.height;
         }
@@ -498,6 +474,34 @@ const ListView = new Lang.Class({
                 'is not ListView.Model';
             throw new Error(msg);
         }
+    },
+
+    _add_display_buttons: function(display) {
+        let select_icon = new St.Icon({
+            icon_name: 'object-select-symbolic',
+            icon_size: 20
+        });
+        let select_toggle = new St.Button({
+            visible: false,
+            toggle_mode: true,
+            style_class: 'gpaste-toggle-button',
+            child: select_icon,
+        });
+        select_toggle.set_translation(-10, 0, 0);
+        select_toggle.connect('clicked',
+            Lang.bind(this, function() {
+                let index = this._displays.indexOf(display);
+                if(select_toggle.checked) this.check(index);
+                else this.uncheck(index);
+            })
+        );
+        display.select_toggle = select_toggle
+        display.add(select_toggle, {
+            row: 0,
+            col: 3,
+            x_expand: false,
+            x_fill: false
+        });
     },
 
     set_renderer: function(renderer) {

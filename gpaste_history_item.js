@@ -74,7 +74,7 @@ const GPasteHistoryItem = new Lang.Class({
     },
 
     get_info: function(callback) {
-        function on_query_complete(object, res, uri) {
+        function on_query_complete(object, res, uri, raw) {
             let info;
 
             try {
@@ -83,11 +83,11 @@ const GPasteHistoryItem = new Lang.Class({
             catch(e) {
 
                 if(e.code === 1) {
-                    callback('No such file or directory', null);
+                    callback('No such file or directory', null, null, null);
                 }
                 else {
                     log('GpasteHistoryItem.get_info(): %s'.format(e));
-                    callback(e.message, null);
+                    callback(e.message, null, null, null);
                 }
 
                 return;
@@ -111,7 +111,7 @@ const GPasteHistoryItem = new Lang.Class({
                 uri = null;
             }
 
-            callback(result, uri);
+            callback(result, uri, content_type, raw);
         }
 
         function on_raw_result(raw_item) {
@@ -120,7 +120,7 @@ const GPasteHistoryItem = new Lang.Class({
             let uris = raw_item.split('\n');
 
             if(uris.length > 1) {
-                callback('%s items'.format(uris.length), null);
+                callback('%s items'.format(uris.length), null, null, null);
                 return;
             }
 
@@ -131,7 +131,7 @@ const GPasteHistoryItem = new Lang.Class({
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 null,
-                Lang.bind(this, on_query_complete, uri)
+                Lang.bind(this, on_query_complete, uri, raw_item)
             );
         }
 
@@ -140,7 +140,7 @@ const GPasteHistoryItem = new Lang.Class({
                 this.text.length,
                 this.text.split('\n').length
             );
-            callback(info, null);
+            callback(info, null, null, null);
             return;
         }
 

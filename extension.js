@@ -134,8 +134,13 @@ const GPasteIntegrationButton = new Lang.Class({
                 this.actor.remove_style_pseudo_class('active');
             })
         );
-        this._gpaste.history.connect('changed',
+        this._gpaste.history.connect(
+            'changed',
             Lang.bind(this, this._on_history_changed)
+        );
+        this._gpaste.progress_bar.actor.connect(
+            'show',
+            Lang.bind(this, this._reposition_progress_bar)
         );
 
         GPasteClient.get_client().connect(
@@ -418,6 +423,18 @@ const GPasteIntegrationButton = new Lang.Class({
             this._gpaste.hide(false);
         }));
         this.menu.addMenuItem(preferences_item);
+    },
+
+    _reposition_progress_bar: function() {
+        let [x, y] = this.actor.get_transformed_position();
+        let progress_bar_x = Math.round(
+            (x + this.actor.width / 2) - (this._gpaste.progress_bar.actor.width / 2)
+        );
+        let progress_bar_y = Math.round(
+            (y + this.actor.height / 2) - (this._gpaste.progress_bar.actor.height / 2)
+        );
+        this._gpaste.progress_bar.actor.x = progress_bar_x;
+        this._gpaste.progress_bar.actor.y = progress_bar_y;
     },
 
     on_state_changed: function(state) {

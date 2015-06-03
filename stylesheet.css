@@ -378,3 +378,45 @@
 .gpaste-preview-activate-button:active {
     color: #0D4CA3;
 }
+
+.gpaste-progress-bar-box {
+    width: 150px;
+    height: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid white;
+}
+
+.gpaste-progress-bar-label {
+    font-size: 8px;
+    font-style: italic;
+}
+
+.gpaste-progress-bar {
+    background-color: #3465a4;
+    border: 2px solid #3465a4;
+}
+
+.gpaste-progress-bar-panel-box {
+    width: 40px;
+    height: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.gpaste-progress-bar-panel {
+    background-color: #3465a4;
+    border: 1px solid #3465a4;
+}
+
+.gpaste-upload-button {
+    padding-top: 2px;
+    color: #C4C4C4;
+}
+
+.gpaste-upload-button:hover {
+    color: rgba(0, 255, 0, 0.5);
+}
+
+.gpaste-upload-button:active {
+    color: rgba(0, 255, 0, 1);
+}

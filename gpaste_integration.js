@@ -28,6 +28,8 @@ const GPasteSearchEntry = Me.imports.gpaste_search_entry;
 const GPasteMergePanel = Me.imports.gpaste_merge_panel;
 const PinnedItemsManager = Me.imports.pinned_items_manager;
 const Constants = Me.imports.constants;
+const ImgurUploader = Me.imports.imgur_uploader;
+const GPasteProgressBar = Me.imports.progress_bar;
 
 const FILTER_TIMEOUT_MS = 200;
 
@@ -148,6 +150,12 @@ const GPasteIntegration = new Lang.Class({
             'toggled',
             Lang.bind(this, this._on_item_toggled)
         );
+        this._list_view.connect(
+            'upload-item',
+            Lang.bind(this, function() {
+                this._upload_selected_item();
+            })
+        );
 
         this._merge_panel = new GPasteMergePanel.GPasteMergePanel();
         this._merge_panel.button.connect('clicked', Lang.bind(this, this._merge_checked_items))
@@ -155,6 +163,21 @@ const GPasteIntegration = new Lang.Class({
         this._buttons = new GPasteButtons.GPasteButtons(this);
         this._contents_preview_dialog =
             new ContentsPreviewDialog.ContentsPreviewDialog(this);
+
+        this._imgur_uploader = new ImgurUploader.ImgurUploader();
+        this._imgur_uploader.connect('error', Lang.bind(this, this._on_imgur_error));
+        this._imgur_uploader.connect('progress', Lang.bind(this, this._on_imgur_progress));
+        this._imgur_uploader.connect('done', Lang.bind(this, this._on_imgur_done));
+
+        this._panel_progress_bar = new GPasteProgressBar.GPasteProgressBar({
+            box_style_class: 'gpaste-progress-bar-panel-box',
+            progress_style_class: 'gpaste-progress-bar-panel',
+            x_fill: false,
+            y_fill: false,
+            expand: false
+        });
+        this._panel_progress_bar.hide();
+        Main.uiGroup.add_child(this._panel_progress_bar.actor);
 
         let fuzzy_options = {
             pre: GPasteListViewRenderer.HIGHLIGHT_MARKUP.START,
@@ -487,7 +510,7 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_key_press_event: function(o, e) {
-        let symbol = e.get_key_symbol()
+        let symbol = e.get_key_symbol();
         let ch = Utils.get_unichar(symbol);
         let number = parseInt(ch);
 
@@ -578,9 +601,15 @@ const GPasteIntegration = new Lang.Class({
             return false;
         }
 
-        if (code === 38 && e.has_control_modifier() && e.has_shift_modifier()) {
+
+        if(code === 38 && e.has_control_modifier() && e.has_shift_modifier()) {
             if(this._list_view.multiselection_mode) this._list_view.uncheck_all();
             else this._list_view.check_all();
+
+            return true;
+        }
+        else if(code === 39 && e.has_control_modifier()) {
+            this._upload_selected_item();
 
             return true;
         }
@@ -679,6 +708,25 @@ const GPasteIntegration = new Lang.Class({
             if(this._search_entry.text === this._search_entry.hint_text) return;
             // this.actor.grab_key_focus();
             this.show_all();
+        }
+    },
+
+    _on_imgur_error: function(uploader, error) {
+        this._panel_progress_bar.hide();
+        Main.notify(error);
+    },
+
+    _on_imgur_progress: function(uploader, uploaded, total) {
+        this._panel_progress_bar.show();
+        let percents = uploaded / total * 100;
+        this._panel_progress_bar.set_progress_percents(percents);
+    },
+
+    _on_imgur_done: function(uploader, result) {
+        this._panel_progress_bar.hide();
+
+        if(result.link) {
+            GPasteClient.get_client().add(result.link);
         }
     },
 
@@ -897,6 +945,20 @@ const GPasteIntegration = new Lang.Class({
         GPasteClient.get_client().merge_sync(decorator, separator, this._merge_queue);
         this._merge_queue = [];
         this.hide(false);
+    },
+
+    _upload_selected_item: function() {
+        let selected_index = this._list_view.get_selected_index();
+        let history_item = this._list_model.get(selected_index);
+        history_item.get_info(
+            Lang.bind(this, function(result, uri, content_type, raw) {
+                if(!content_type || !raw) return;
+                if(!Utils.starts_with(content_type, 'image')) return;
+
+                this.hide(false);
+                this._imgur_uploader.upload(raw, content_type);
+            })
+        );
     },
 
     show_all: function() {
@@ -1133,6 +1195,7 @@ const GPasteIntegration = new Lang.Class({
     },
 
     destroy: function() {
+        this._imgur_uploader = null;
         this._disconnect_all();
         this._buttons.destroy();
         this._list_view.destroy();
@@ -1153,6 +1216,10 @@ const GPasteIntegration = new Lang.Class({
 
     get history_switcher() {
         return this._history_switcher;
+    },
+
+    get progress_bar() {
+        return this._panel_progress_bar;
     }
 });
 Signals.addSignalMethods(GPasteIntegration.prototype);
