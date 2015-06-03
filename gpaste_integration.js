@@ -158,7 +158,16 @@ const GPasteIntegration = new Lang.Class({
         );
 
         this._merge_panel = new GPasteMergePanel.GPasteMergePanel();
-        this._merge_panel.button.connect('clicked', Lang.bind(this, this._merge_checked_items))
+        this._merge_panel.button.connect(
+            'clicked',
+            Lang.bind(this, this._merge_checked_items)
+        );
+        this._merge_panel.reset_button.connect(
+            'clicked',
+            Lang.bind(this, function() {
+                this._list_view.uncheck_all();
+            })
+        );
         this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
         this._contents_preview_dialog =
