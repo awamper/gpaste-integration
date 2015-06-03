@@ -6,9 +6,25 @@ const Mainloop = imports.mainloop;
 
 const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
 
 const ClientId = "7714a4928bff2fd";
 const _httpSession = new Soup.SessionAsync();
+
+
+function supported_format(filename) {
+    let supported_format = (
+        Utils.ends_with(filename, '.jpg') ||
+        Utils.ends_with(filename, '.jpeg') ||
+        Utils.ends_with(filename, '.png') ||
+        Utils.ends_with(filename, '.gif')
+    );
+
+    return supported_format;
+}
 
 const Uploader = new Lang.Class({
     Name: 'Uploader',
