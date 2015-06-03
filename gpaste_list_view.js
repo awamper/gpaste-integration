@@ -5,6 +5,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const ListView = Me.imports.list_view;
 const Utils = Me.imports.utils;
+const ImgurUploader = Me.imports.imgur_uploader;
 
 const GPasteListView = new Lang.Class({
     Name: 'GPasteListView',
@@ -34,16 +35,9 @@ const GPasteListView = new Lang.Class({
         this.parent(display);
 
         let history_item = display._delegate._history_item;
-        let supported_format = (
-            Utils.ends_with(history_item.text, '.jpg') ||
-            Utils.ends_with(history_item.text, '.jpeg') ||
-            Utils.ends_with(history_item.text, '.png') ||
-            Utils.ends_with(history_item.text, '.gif')
-        );
-
         if(
             !history_item.is_image_item() &&
-            (!history_item.is_file_item() || !supported_format)
+            (!history_item.is_file_item() || !ImgurUploader.supported_format(history_item.text))
         ) return;
 
         let upload_icon = new St.Icon({
