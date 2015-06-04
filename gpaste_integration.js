@@ -745,10 +745,12 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_fpaste_error: function(uploader, error) {
+        this._panel_progress_bar.hide();
         Main.notify(error);
     },
 
     _on_fpaste_done: function(uploader, result_url) {
+        this._panel_progress_bar.hide();
         if(Utils.is_blank(result_url)) return;
         GPasteClient.get_client().add(result_url);
     },
@@ -993,6 +995,9 @@ const GPasteIntegration = new Lang.Class({
         }
 
         if(history_item.is_text_item() || history_item.is_link_item()) {
+            this._panel_progress_bar.pulse_mode = true;
+            this._panel_progress_bar.show();
+            this._panel_progress_bar.start();
             history_item.get_raw(Lang.bind(this, function(result) {
                 this.hide(false);
                 this._fpaste_uploader.upload(result);
