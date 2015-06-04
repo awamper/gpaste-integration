@@ -32,8 +32,6 @@ const GPasteListView = new Lang.Class({
     },
 
     _add_display_buttons: function(display) {
-        this.parent(display);
-
         let history_item = display._delegate._history_item;
         if(
             history_item.is_file_item() &&
@@ -55,14 +53,10 @@ const GPasteListView = new Lang.Class({
             })
         );
 
-        upload_button.set_translation(-30, 0, 0);
         display.upload_button = upload_button;
-        display.add(upload_button, {
-            row: 0,
-            col: 3,
-            x_expand: false,
-            x_fill: false
-        });
+        display.buttons_box.add_child(upload_button);
+
+        this.parent(display);
     },
 
     select: function(actor) {

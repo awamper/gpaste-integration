@@ -143,7 +143,7 @@
 }
 
 .gpaste-toggle-button {
-    padding-right: 4px;
+    padding-right: 5px;
     padding-top: 2px;
     color: rgba(0, 0, 0, 0.7);
     transition-duration: 200ms;
@@ -409,6 +409,7 @@
 }
 
 .gpaste-upload-button {
+    padding-right: 5px;
     padding-top: 2px;
     color: rgba(0, 0, 0, 0.7);
 }
@@ -419,4 +420,22 @@
 
 .gpaste-upload-button:active {
     color: rgba(0, 255, 0, 1);
+}
+
+.gpaste-delete-button {
+    padding-right: 5px;
+    padding-top: 2px;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.gpaste-delete-button:hover {
+    color: rgba(255, 0, 0, 0.7);
+}
+
+.gpaste-delete-button:active {
+    color: rgba(255, 0, 0, 1);
+}
+
+.gpaste-list-view-buttons-box {
+    padding-right: 10px;
 }

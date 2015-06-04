@@ -157,6 +157,12 @@ const GPasteIntegration = new Lang.Class({
                 this._upload_selected_item();
             })
         );
+        this._list_view.connect(
+            'delete-request',
+            Lang.bind(this, function(list_view, model, index) {
+                this.delete_item(model, index);
+            })
+        );
 
         this._merge_panel = new GPasteMergePanel.GPasteMergePanel();
         this._merge_panel.button.connect(
@@ -420,7 +426,7 @@ const GPasteIntegration = new Lang.Class({
 
         switch(button) {
             case Clutter.BUTTON_SECONDARY:
-                this.delete_item(model, index);
+                this._list_view.toggle_check(index);
                 break;
             case Clutter.BUTTON_MIDDLE:
                 break;

@@ -375,6 +375,7 @@ const ListView = new Lang.Class({
     },
 
     _on_display_enter: function(display, event) {
+        display.delete_button.show();
         display.select_toggle.show();
         this.unselect_all();
         this.select(display);
@@ -382,6 +383,7 @@ const ListView = new Lang.Class({
 
     _on_display_leave: function(display, event) {
         if(!display.select_toggle.checked) display.select_toggle.hide();
+        display.delete_button.hide();
         this.unselect(display);
         this.unset_active(display);
     },
@@ -445,6 +447,17 @@ const ListView = new Lang.Class({
             let renderer = new this.renderer();
             let display = renderer.get_display(this.model, i);
             if(!display) continue;
+            let buttons_box = new St.BoxLayout({
+                style_class: 'gpaste-list-view-buttons-box',
+                vertical: false
+            });
+            display.add(buttons_box, {
+                col: 3,
+                row: 0,
+                x_expand: false,
+                x_fill: false
+            });
+            display.buttons_box = buttons_box;
             this._box.add_child(display);
             this._connect_display_signals(display);
             this._displays.push(display);
@@ -477,6 +490,24 @@ const ListView = new Lang.Class({
     },
 
     _add_display_buttons: function(display) {
+        let delete_icon = new St.Icon({
+            icon_name: 'user-trash-symbolic',
+            icon_size: 20
+        });
+        let delete_button = new St.Button({
+            visible: false,
+            style_class: 'gpaste-delete-button',
+            child: delete_icon
+        });
+        delete_button.connect('clicked',
+            Lang.bind(this, function() {
+                let index = this._displays.indexOf(display);
+                this.emit('delete-request', this.model, index);
+            })
+        );
+        display.delete_button = delete_button;
+        display.buttons_box.add_child(delete_button);
+
         let select_icon = new St.Icon({
             icon_name: 'emblem-ok-symbolic',
             icon_size: 20
@@ -487,7 +518,6 @@ const ListView = new Lang.Class({
             style_class: 'gpaste-toggle-button',
             child: select_icon,
         });
-        select_toggle.set_translation(-10, 0, 0);
         select_toggle.connect('clicked',
             Lang.bind(this, function() {
                 let index = this._displays.indexOf(display);
@@ -496,12 +526,7 @@ const ListView = new Lang.Class({
             })
         );
         display.select_toggle = select_toggle
-        display.add(select_toggle, {
-            row: 0,
-            col: 3,
-            x_expand: false,
-            x_fill: false
-        });
+        display.buttons_box.add_child(select_toggle);
     },
 
     set_renderer: function(renderer) {
@@ -558,7 +583,7 @@ const ListView = new Lang.Class({
         let display = this.get_display(index);
         if(!display || !display.select_toggle.visible) return;
         display.select_toggle.set_checked(false);
-        display.select_toggle.hide();
+        if(!display.has_style_pseudo_class('hover')) display.select_toggle.hide();
         display.select_toggle.child.icon_name = 'emblem-ok-symbolic';
         this.emit('toggled', index, false);
     },
