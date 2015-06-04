@@ -1,5 +1,6 @@
 const Lang = imports.lang;
 const Signals = imports.signals;
+const Mainloop = imports.mainloop;
 const Soup = imports.gi.Soup;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -75,3 +76,32 @@ const FpasteUploader = new Lang.Class({
     }
 });
 Signals.addSignalMethods(FpasteUploader.prototype);
+
+const DummyUploader = new Lang.Class({
+    Name: 'FpasteDummyUploader',
+
+    _init: function () {
+        // nothing
+    },
+
+    upload: function (text) {
+        let size = 200000;
+        let chunk = 5000;
+        let progress = 0;
+
+        log('DummyUploader.upload()');
+
+        let update = Lang.bind(this, function() {
+            if(progress < size) {
+                progress += chunk;
+                Mainloop.timeout_add(100, update);
+            }
+            else {
+                this.emit('done', 'https://paste.fedoraproject.org/228847/43342355');
+            }
+        });
+
+        Mainloop.idle_add(update);
+    }
+});
+Signals.addSignalMethods(DummyUploader.prototype);
