@@ -540,12 +540,13 @@ const ListView = new Lang.Class({
         this.emit('selected', actor);
     },
 
-    check: function(index) {
+    check: function(index, no_signal) {
         let display = this.get_display(index);
         if(!display) return;
         display.select_toggle.set_checked(true);
         display.select_toggle.child.icon_name = 'checkbox-checked-symbolic';
         display.select_toggle.show();
+        if(no_signal) return;
         this.emit('toggled', index, true);
     },
 

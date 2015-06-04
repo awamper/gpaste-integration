@@ -165,7 +165,7 @@ const GPasteIntegration = new Lang.Class({
         this._merge_panel.reset_button.connect(
             'clicked',
             Lang.bind(this, function() {
-                this._list_view.uncheck_all();
+                this.reset_selection();
             })
         );
         this._items_counter = new ListView.ItemsCounter(this._list_model);
@@ -273,7 +273,7 @@ const GPasteIntegration = new Lang.Class({
         this._last_selected_item_index = null;
         this._activate_animation_running = false;
         this._quick_mode = false;
-        this._merge_queue = [];
+        this._merge_queue_hashes = [];
         this.force_update = false;
         this._resize();
 
@@ -311,7 +311,7 @@ const GPasteIntegration = new Lang.Class({
             TIMEOUT_IDS.NEW_ITEM_TIMEOUT = 0;
         }
 
-        this._merge_queue = [];
+        this._merge_queue_hashes = [];
         this._history_changed_trigger = true;
         this._contents_preview_dialog.hide(false);
 
@@ -486,19 +486,20 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _on_item_toggled: function(object, index, checked) {
+        let hash = this._list_model.get(index).hash;
+
         if(checked) {
-            this._merge_queue.push(index)
+            this._merge_queue_hashes.push(hash);
         }
         else {
-            if(this._merge_queue.indexOf(index) !== -1) {
-                this._merge_queue.splice(this._merge_queue.indexOf(index), 1);
-            }
+            let index = this._merge_queue_hashes.indexOf(hash);
+            if(index !== -1) this._merge_queue_hashes.splice(index, 1);
         }
 
-        if(this._list_view.multiselection_mode) {
+        if(this._merge_queue_hashes.length > 0) {
             this._merge_panel.set_label(
                 'Selected %s out of %s'.format(
-                    this._list_view.get_checked_indexes().length,
+                    this._merge_queue_hashes.length,
                     this._history.length
                 )
             );
@@ -605,7 +606,7 @@ const GPasteIntegration = new Lang.Class({
         }
 
         if(code === 38 && e.has_control_modifier() && e.has_shift_modifier()) {
-            if(this._list_view.multiselection_mode) this._list_view.uncheck_all();
+            if(this._merge_queue_hashes.length > 0) this.reset_selection();
             else this._list_view.check_all();
 
             return true;
@@ -846,6 +847,14 @@ const GPasteIntegration = new Lang.Class({
     _show_items: function(history_items) {
         this._list_model.set_items(history_items);
         this._list_view.select_first_visible();
+
+        if(this._merge_queue_hashes.length > 0) {
+            for each(let item in history_items) {
+                if(this._merge_queue_hashes.indexOf(item.hash) !== -1) {
+                    this._list_view.check(item.index, true);
+                }
+            }
+        }
     },
 
     _filter: function(term, flag) {
@@ -946,12 +955,19 @@ const GPasteIntegration = new Lang.Class({
     },
 
     _merge_checked_items: function() {
-        if(this._merge_queue.length < 2) return;
+        if(this._merge_queue_hashes.length < 2) return;
+
+        let merge_indexes = [];
+
+        for each(let hash in this._merge_queue_hashes) {
+            let history_item = this._history.get_by_hash(hash);
+            if(hash !== null) merge_indexes.push(history_item.index);
+        }
 
         let decorator = Utils.unescape_special_chars(this._merge_panel.decorator);
         let separator = Utils.unescape_special_chars(this._merge_panel.separator);
-        GPasteClient.get_client().merge_sync(decorator, separator, this._merge_queue);
-        this._merge_queue = [];
+        GPasteClient.get_client().merge_sync(decorator, separator, merge_indexes);
+        this._merge_queue_hashes = [];
         this.hide(false);
     },
 
@@ -1106,9 +1122,9 @@ const GPasteIntegration = new Lang.Class({
         this._quick_mode = false;
         this._disconnect_captured_event();
         this._list_view.unselect_all();
-        this._list_view.uncheck_all();
         this._list_view.hide_shortcuts(false);
         this._history_switcher.hide();
+        this.reset_selection();
         animation =
             animation === undefined
             ? Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
@@ -1209,6 +1225,14 @@ const GPasteIntegration = new Lang.Class({
                 this._list_view.show_shortcuts(false);
             })
         );
+    },
+
+    reset_selection: function() {
+        this._list_view.uncheck_all();
+        this._merge_queue_hashes = [];
+        this._merge_panel.hide();
+        this._items_counter.actor.show();
+        this._buttons.actor.show();
     },
 
     destroy: function() {
