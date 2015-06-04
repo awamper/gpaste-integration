@@ -29,6 +29,7 @@ const GPasteMergePanel = Me.imports.gpaste_merge_panel;
 const PinnedItemsManager = Me.imports.pinned_items_manager;
 const Constants = Me.imports.constants;
 const ImgurUploader = Me.imports.imgur_uploader;
+const FpasteUploader = Me.imports.fpaste_uploader;
 const GPasteProgressBar = Me.imports.progress_bar;
 
 const FILTER_TIMEOUT_MS = 200;
@@ -177,6 +178,10 @@ const GPasteIntegration = new Lang.Class({
         this._imgur_uploader.connect('error', Lang.bind(this, this._on_imgur_error));
         this._imgur_uploader.connect('progress', Lang.bind(this, this._on_imgur_progress));
         this._imgur_uploader.connect('done', Lang.bind(this, this._on_imgur_done));
+
+        this._fpaste_uploader = new FpasteUploader.FpasteUploader();
+        this._fpaste_uploader.connect('error', Lang.bind(this, this._on_fpaste_error));
+        this._fpaste_uploader.connect('done', Lang.bind(this, this._on_fpaste_done));
 
         this._panel_progress_bar = new GPasteProgressBar.GPasteProgressBar({
             box_style_class: 'gpaste-progress-bar-panel-box',
@@ -739,6 +744,15 @@ const GPasteIntegration = new Lang.Class({
         }
     },
 
+    _on_fpaste_error: function(uploader, error) {
+        Main.notify(error);
+    },
+
+    _on_fpaste_done: function(uploader, result_url) {
+        if(Utils.is_blank(result_url)) return;
+        GPasteClient.get_client().add(result_url);
+    },
+
     _resize: function() {
         let width_percents = Utils.SETTINGS.get_int(
             PrefsKeys.WIDTH_PERCENTS_KEY
@@ -976,6 +990,14 @@ const GPasteIntegration = new Lang.Class({
             let selected_index = this._list_view.get_selected_index();
             if(selected_index === -1) return;
             history_item = this._list_model.get(selected_index);
+        }
+
+        if(history_item.is_text_item() || history_item.is_link_item()) {
+            history_item.get_raw(Lang.bind(this, function(result) {
+                this.hide(false);
+                this._fpaste_uploader.upload(result);
+            }));
+            return;
         }
 
         history_item.get_info(
@@ -1237,6 +1259,7 @@ const GPasteIntegration = new Lang.Class({
 
     destroy: function() {
         this._imgur_uploader = null;
+        this._fpaste_uploader = null;
         this._disconnect_all();
         this._buttons.destroy();
         this._list_view.destroy();

@@ -430,11 +430,27 @@ const ContentsPreviewDialog = new Lang.Class({
                     );
                     this._contents_view.activate_button.show();
                 }
+                else {
+                    let parent = this._contents_view.activate_button.get_parent();
+                    parent.remove_child(
+                        this._contents_view.activate_button
+                    );
+                }
 
                 this.show(
                     Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY)
                 );
                 this._reposition();
+
+                if(history_item.is_text_item() || history_item.is_link_item()) {
+                    this._contents_view.upload_button.connect('clicked',
+                        Lang.bind(this, function() {
+                            this._gpaste_integration._upload_selected_item(history_item);
+                        })
+                    );
+                    this._contents_view.upload_button.show();
+                    return;
+                }
 
                 history_item.get_info(
                     Lang.bind(this, function(result, uri, content_type, raw) {

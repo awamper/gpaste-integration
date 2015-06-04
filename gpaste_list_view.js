@@ -36,8 +36,8 @@ const GPasteListView = new Lang.Class({
 
         let history_item = display._delegate._history_item;
         if(
-            !history_item.is_image_item() &&
-            (!history_item.is_file_item() || !ImgurUploader.supported_format(history_item.text))
+            history_item.is_file_item() &&
+            !ImgurUploader.supported_format(history_item.text)
         ) return;
 
         let upload_icon = new St.Icon({
