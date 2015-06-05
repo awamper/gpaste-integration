@@ -36,7 +36,10 @@ const GPasteListView = new Lang.Class({
         if(
             history_item.is_file_item() &&
             !ImgurUploader.supported_format(history_item.text)
-        ) return;
+        ) {
+            this.parent(display);
+            return;
+        }
 
         let upload_icon = new St.Icon({
             icon_name: 'send-to-symbolic',
