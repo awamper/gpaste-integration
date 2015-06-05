@@ -581,7 +581,7 @@ const ListView = new Lang.Class({
 
     uncheck: function(index) {
         let display = this.get_display(index);
-        if(!display || !display.select_toggle.visible) return;
+        if(!display || !display.select_toggle || !display.select_toggle.visible) return;
         display.select_toggle.set_checked(false);
         if(!display.has_style_pseudo_class('hover')) display.select_toggle.hide();
         display.select_toggle.child.icon_name = 'emblem-ok-symbolic';
