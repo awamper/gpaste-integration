@@ -983,7 +983,7 @@ const GPasteIntegration = new Lang.Class({
 
         for each(let hash in this._merge_queue_hashes) {
             let history_item = this._history.get_by_hash(hash);
-            if(hash !== null) merge_indexes.push(history_item.index);
+            if(history_item !== null) merge_indexes.push(history_item.index);
         }
 
         let decorator = Utils.unescape_special_chars(this._merge_panel.decorator);
