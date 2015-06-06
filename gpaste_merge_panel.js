@@ -56,10 +56,11 @@ const GPasteMergePanel = new Lang.Class({
         });
         this.delete_button = new St.Button({
             child: delete_icon,
-            style_class: 'gpaste-button'
+            style_class: 'gpaste-button',
+            style: 'padding-left: 5px;'
         });
 
-        this.actor.add(this._merge_count_label, {
+        this.actor.add(this.reset_button, {
             x_expand: false,
             x_fill: false,
             x_align: St.Align.START,
@@ -67,7 +68,7 @@ const GPasteMergePanel = new Lang.Class({
             y_fill: false,
             y_align: St.Align.MIDDLE
         });
-        this.actor.add(this.reset_button, {
+        this.actor.add(this._merge_count_label, {
             x_expand: false,
             x_fill: false,
             x_align: St.Align.START,
