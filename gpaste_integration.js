@@ -175,6 +175,12 @@ const GPasteIntegration = new Lang.Class({
                 this.reset_selection();
             })
         );
+        this._merge_panel.delete_button.connect(
+            'clicked',
+            Lang.bind(this, function() {
+                this._delete_checked_items();
+            })
+        );
         this._items_counter = new ListView.ItemsCounter(this._list_model);
         this._buttons = new GPasteButtons.GPasteButtons(this);
         this._contents_preview_dialog =
@@ -991,6 +997,42 @@ const GPasteIntegration = new Lang.Class({
         GPasteClient.get_client().merge_sync(decorator, separator, merge_indexes);
         this._merge_queue_hashes = [];
         this.hide(false);
+    },
+
+    _delete_checked_items: function() {
+        if(this._merge_queue_hashes.length < 1) return;
+
+        let delete_indexes = [];
+
+        for each(let hash in this._merge_queue_hashes) {
+            let history_item = this._history.get_by_hash(hash);
+            if(history_item === null) continue;
+            delete_indexes.push(history_item.index);
+        }
+
+        delete_indexes.sort(function(a, b) {return a - b});
+        this.reset_selection();
+
+        for(let i = 0; i < delete_indexes.length; i++) {
+            let index = delete_indexes[i];
+
+            for (let model_index in this._list_model.items) {
+                let model_hash = this._list_model.get(model_index).hash;
+                if(this._history.items[index].hash === model_hash) {
+                    this._list_model.delete(model_index);
+                    break;
+                }
+            }
+
+            GPasteClient.get_client().delete_sync(index - i);
+        }
+
+        this._last_selected_item_index = null;
+
+        if(this._list_model.length <= 1 && this._search_entry.is_empty()) {
+            GPasteClient.get_client().empty();
+            this.hide();
+        }
     },
 
     _upload_selected_item: function(history_item) {
