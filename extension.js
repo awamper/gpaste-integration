@@ -273,7 +273,7 @@ const GPasteIntegrationButton = new Lang.Class({
                     })
                 });
                 Tweener.addTween(flash_icon, {
-                    time: 0.4,
+                    time: 0.6,
                     scale_x: 0.5,
                     scale_y: 0.5,
                     translation_y: -30,
