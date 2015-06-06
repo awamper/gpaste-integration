@@ -31,3 +31,5 @@ const PREVIEW_CLIPBOARD_ON_CHANGE_KEY = 'preview-clipboard-on-change';
 const PREVIEW_CLIPBOARD_ON_CHANGE_TIMEOUT_KEY = 'preview-clipboard-on-change-timeout';
 const MERGE_DECORATOR_KEY = 'merge-decorator';
 const MERGE_SEPARATOR_KEY = 'merge-separator';
+const PREVIEW_POSITION_X_KEY = 'preview-position-x';
+const PREVIEW_POSITION_Y_KEY = 'preview-position-y';

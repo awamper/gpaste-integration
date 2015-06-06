@@ -516,6 +516,34 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
             'int'
         );
 
+        let positions = [];
+        for each(let position in Constants.PREVIEW_POSITION_X) {
+            positions.push({
+                title: Constants.PREVIEW_POSITION_X_NAME[position],
+                value: position
+            });
+        }
+        let combo_postion_x = page.add_combo(
+            'Position X:',
+            PrefsKeys.PREVIEW_POSITION_X_KEY,
+            positions,
+            'int'
+        );
+
+        positions = [];
+        for each(let position in Constants.PREVIEW_POSITION_Y) {
+            positions.push({
+                title: Constants.PREVIEW_POSITION_Y_NAME[position],
+                value: position
+            });
+        }
+        let combo_position_y = page.add_combo(
+            'Position Y:',
+            PrefsKeys.PREVIEW_POSITION_Y_KEY,
+            positions,
+            'int'
+        );
+
         return {
             page: page,
             name: name

@@ -14,6 +14,7 @@ const PopupDialog = Me.imports.popup_dialog;
 const ItemInfoView = Me.imports.item_info_view;
 const GPasteClient = Me.imports.gpaste_client;
 const ImgurUploader = Me.imports.imgur_uploader;
+const Constants = Me.imports.constants;
 
 const LEAVE_TIMEOUT_MS = 40;
 const COPY_SELECTION_TIMEOUT_MS = 400;
@@ -358,8 +359,29 @@ const ContentsPreviewDialog = new Lang.Class({
 
         if(!this._relative_actor) {
             margin = Main.panel.actor.height;
-            this.actor.x = monitor.width - this.actor.width - margin;
-            this.actor.y = Main.panel.actor.y + margin * 2;
+            let position_x = Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_POSITION_X_KEY);
+            let position_y = Utils.SETTINGS.get_int(PrefsKeys.PREVIEW_POSITION_Y_KEY);
+
+            if(position_x === Constants.PREVIEW_POSITION_X.LEFT) {
+                this.actor.x = margin;
+            }
+            else if(position_x === Constants.PREVIEW_POSITION_X.MIDDLE) {
+                this.actor.x = Math.round(monitor.width / 2 - this.actor.width / 2);
+            }
+            else {
+                this.actor.x = monitor.width - this.actor.width - margin;
+            }
+
+            if(position_y === Constants.PREVIEW_POSITION_Y.TOP) {
+                this.actor.y = Main.panel.actor.y + margin * 2;
+            }
+            else if(position_y === Constants.PREVIEW_POSITION_Y.MIDDLE) {
+                this.actor.y = Math.round(monitor.height / 2 - this.actor.height / 2);
+            }
+            else {
+                this.actor.y = monitor.height - this.actor.height - margin;
+            }
+
             return;
         }
 

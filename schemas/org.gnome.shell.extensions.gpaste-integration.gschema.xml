@@ -135,5 +135,13 @@
         <default>'\\n'</default>
     </key>
 
+    <key type="i" name="preview-position-x">
+        <default>2</default>
+    </key>
+
+    <key type="i" name="preview-position-y">
+        <default>0</default>
+    </key>
+
   </schema>
 </schemalist>
