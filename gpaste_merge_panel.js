@@ -29,15 +29,15 @@ const GPasteMergePanel = new Lang.Class({
             width: 50,
             style: 'font-size: 12px;'
         });
-        let merge_box = new St.BoxLayout({
+        this.merge_box = new St.BoxLayout({
             vertical: false,
             style: 'padding-top: 10px;'
         });
-        merge_box.add_child(decorator_label);
-        merge_box.add_child(this._decorator_entry);
-        merge_box.add_child(separator_label);
-        merge_box.add_child(this._separator_entry);
-        merge_box.add_child(this._merge_button);
+        this.merge_box.add_child(decorator_label);
+        this.merge_box.add_child(this._decorator_entry);
+        this.merge_box.add_child(separator_label);
+        this.merge_box.add_child(this._separator_entry);
+        this.merge_box.add_child(this._merge_button);
 
         this._merge_count_label = new St.Label();
 
@@ -83,7 +83,7 @@ const GPasteMergePanel = new Lang.Class({
             y_fill: false,
             y_align: St.Align.MIDDLE
         });
-        this.actor.add(merge_box, {
+        this.actor.add(this.merge_box, {
             expand: true,
             x_fill: false,
             x_align: St.Align.END,

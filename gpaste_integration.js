@@ -523,6 +523,8 @@ const GPasteIntegration = new Lang.Class({
             this._items_counter.actor.hide();
             this._buttons.actor.hide();
             this._merge_panel.show();
+            if(this._merge_queue_hashes.length < 2) this._merge_panel.merge_box.hide();
+            else this._merge_panel.merge_box.show();
         }
         else {
             this._merge_panel.hide();
