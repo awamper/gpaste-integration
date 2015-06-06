@@ -205,33 +205,83 @@ const GPasteIntegrationButton = new Lang.Class({
         }
     },
 
-    _flash_icon: function(style_pseudo_class) {
-        let icon = new St.Icon({
+    _flash_icon: function(style_pseudo_class, icon_name) {
+        let color_icon = new St.Icon({
             icon_name: Utils.ICONS.indicator,
             style_class: 'system-status-icon gpaste-system-status-icon',
             opacity: 0,
             visible: true
         });
-        icon.add_style_pseudo_class(style_pseudo_class);
-
-        this._icons_table.add(icon, {
+        color_icon.add_style_pseudo_class(style_pseudo_class);
+        this._icons_table.add(color_icon, {
             row: 0,
             col: 0
         });
 
-        Tweener.addTween(icon, {
-            time: 0.4,
+        if(!icon_name) {
+            Tweener.addTween(color_icon, {
+                time: 0.4,
+                transition: 'easeInOutExpo',
+                opacity: 255,
+                onComplete: Lang.bind(this, function() {
+                    Tweener.addTween(color_icon, {
+                        time: 0.6,
+                        transition: 'easeOutCirc',
+                        opacity: 0,
+                        onComplete: Lang.bind(this, function() {
+                            color_icon.destroy();
+                        })
+                    });
+                })
+            });
+
+            return;
+        }
+
+        let [indicator_x, indicator_y] = this.actor.get_transformed_position();
+        let flash_icon = new St.Icon({
+            icon_name: icon_name,
+            icon_size: 50,
+            style_class: 'system-status-icon gpaste-system-status-icon',
+            opacity: 0,
+            translation_x: indicator_x,
+            translation_y: Main.panel.actor.height
+        });
+        flash_icon.set_pivot_point(0.5, 0.5);
+        flash_icon.add_style_pseudo_class(style_pseudo_class);
+        Main.uiGroup.add_child(flash_icon);
+
+        Tweener.removeTweens(flash_icon);
+        Tweener.addTween(flash_icon, {
+            time: 0.6,
             transition: 'easeInOutExpo',
             opacity: 255,
             onComplete: Lang.bind(this, function() {
-                Tweener.addTween(icon, {
-                    time: 0.6,
-                    transition: 'easeOutCirc',
-                    opacity: 0,
+                Tweener.addTween(color_icon, {
+                    time: 0.4,
+                    transition: 'easeInOutExpo',
+                    opacity: 255,
                     onComplete: Lang.bind(this, function() {
-                        icon.destroy();
+                        Tweener.addTween(color_icon, {
+                            time: 0.6,
+                            transition: 'easeOutCirc',
+                            opacity: 0,
+                            onComplete: Lang.bind(this, function() {
+                                color_icon.destroy();
+                            })
+                        });
                     })
                 });
+                Tweener.addTween(flash_icon, {
+                    time: 0.4,
+                    scale_x: 0.5,
+                    scale_y: 0.5,
+                    translation_y: -30,
+                    opacity: 0,
+                    onComplete: Lang.bind(this, function() {
+                        flash_icon.destroy();
+                    })
+                })
             })
         });
     },
@@ -259,22 +309,26 @@ const GPasteIntegrationButton = new Lang.Class({
             return;
         }
 
-        let style_pseudo_class;
+        let style_pseudo_class, icon_name;
 
         if(change_type === GPasteHistory.CHANGE_TYPE.ADDED) {
             style_pseudo_class = 'added';
+            icon_name = 'bookmark-new-symbolic';
         }
         else if(change_type === GPasteHistory.CHANGE_TYPE.REMOVED) {
             style_pseudo_class = 'removed';
+            icon_name = 'user-trash-symbolic';
         }
         else if(change_type === GPasteHistory.CHANGE_TYPE.LIFTED) {
             style_pseudo_class = 'lifted';
+            icon_name = 'go-top-symbolic';
         }
         else {
             style_pseudo_class = 'cleared';
+            icon_name = '';
         }
 
-        this._flash_icon(style_pseudo_class);
+        this._flash_icon(style_pseudo_class, icon_name);
     },
 
     _onEvent: function(actor, event) {
