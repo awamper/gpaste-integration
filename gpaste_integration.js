@@ -145,7 +145,10 @@ const GPasteIntegration = new Lang.Class({
         );
         this._list_view.connect(
             'long-press',
-            Lang.bind(this, this._alt_activate_selected)
+            Lang.bind(this, function(list_view, button, display, model, index) {
+                let history_item = model.get(index);
+                this._alt_activate_selected(history_item);
+            })
         );
         this._list_view.connect(
             'toggled',
