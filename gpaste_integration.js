@@ -885,13 +885,12 @@ const GPasteIntegration = new Lang.Class({
     _show_items: function(history_items) {
         this._list_model.set_items(history_items);
         this._list_view.select_first_visible();
+        if(this._merge_queue_hashes.length < 1) return;
 
-        if(this._merge_queue_hashes.length > 0) {
-            for each(let item in history_items) {
-                if(this._merge_queue_hashes.indexOf(item.hash) !== -1) {
-                    this._list_view.check(item.index, true);
-                }
-            }
+        for(let index in this._list_model.items) {
+            let hash = this._list_model.get(index).hash;
+            let hash_checked = this._merge_queue_hashes.indexOf(hash) !== -1;
+            if(hash_checked) this._list_view.check(index, true);
         }
     },
 
