@@ -1038,6 +1038,9 @@ const GPasteIntegration = new Lang.Class({
             GPasteClient.get_client().empty();
             this.hide();
         }
+        else {
+            this._list_view._preload_items();
+        }
     },
 
     _upload_selected_item: function(history_item) {
