@@ -176,6 +176,11 @@ const GPasteIntegration = new Lang.Class({
             'clicked',
             Lang.bind(this, function() {
                 this.reset_selection();
+
+                if(this._search_entry.flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_CHECKED) {
+                    this._search_entry.clear();
+                    this.actor.grab_key_focus();
+                }
             })
         );
         this._merge_panel.delete_button.connect(
@@ -925,11 +930,16 @@ const GPasteIntegration = new Lang.Class({
             this._list_view.select_first_visible();
         }
 
-        this._fuzzy_search.filter(
-            term,
-            this._history.get_items(),
-            Lang.bind(this, on_filter_result)
-        );
+        if(this._search_entry.flag === GPasteSearchEntry.SEARCH_FLAGS.ONLY_CHECKED) {
+            this._show_only_checked();
+        }
+        else {
+            this._fuzzy_search.filter(
+                term,
+                this._history.get_items(),
+                Lang.bind(this, on_filter_result)
+            );
+        }
     },
 
     _show_activate_animation: function(display) {
@@ -1070,6 +1080,17 @@ const GPasteIntegration = new Lang.Class({
                 this._imgur_uploader.upload(raw, content_type);
             })
         );
+    },
+
+    _show_only_checked: function() {
+        let history_items = [];
+
+        for each(let hash in this._merge_queue_hashes) {
+            let history_item = this._history.get_by_hash(hash);
+            if(history_item !== null) history_items.push(history_item);
+        }
+
+        this._show_items(history_items);
     },
 
     show_all: function() {
