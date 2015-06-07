@@ -218,7 +218,7 @@ const GPasteIntegrationButton = new Lang.Class({
             col: 0
         });
 
-        if(!icon_name) {
+        if(!icon_name || this._gpaste.is_open) {
             Tweener.addTween(color_icon, {
                 time: 0.4,
                 transition: 'easeInOutExpo',
