@@ -286,7 +286,7 @@ const ContentsPreviewDialog = new Lang.Class({
         else if(e.type() === Clutter.EventType.SCROLL) {
             if(this._relative_actor && !Utils.is_pointer_inside_actor(this.actor)) {
                 this.hide(false);
-                return false;
+                return Clutter.EVENT_PROPAGATE;
             }
 
             let direction = e.get_scroll_direction();
@@ -298,7 +298,7 @@ const ContentsPreviewDialog = new Lang.Class({
                 this._scroll_step_down();
             }
 
-            return true;
+            return Clutter.EVENT_PROPAGATE;
         }
         else if(e.type() === Clutter.EventType.MOTION) {
             if(!this._relative_actor) return false;
