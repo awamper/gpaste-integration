@@ -481,7 +481,6 @@ const ContentsPreviewDialog = new Lang.Class({
                         })
                     );
                     this._contents_view.upload_button.show();
-                    return;
                 }
 
                 history_item.get_info(
@@ -495,7 +494,13 @@ const ContentsPreviewDialog = new Lang.Class({
                         }
 
                         this._contents_view.info_view.set_text(result);
-                        if(uri === null) return;
+
+                        if(
+                            history_item.is_text_item() ||
+                            history_item.is_link_item() ||
+                            uri === null
+                        ) return;
+
                         this.show_image(uri);
 
                         if(!ImgurUploader.supported_format(raw)) return;
