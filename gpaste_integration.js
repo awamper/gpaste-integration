@@ -9,6 +9,7 @@ const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
 const Panel = imports.ui.panel;
 const Signals = imports.signals;
+const Params = imports.misc.params;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
@@ -373,7 +374,7 @@ const GPasteIntegration = new Lang.Class({
                 !this._activate_animation_running;
             if(!proceed) return;
 
-            this.show_selected_or_current_contents(true);
+            this.show_selected_or_current_contents({no_modal: true});
 
             TIMEOUT_IDS.TRACK_MOUSE = Mainloop.timeout_add(150,
                 Lang.bind(this, function() {
@@ -1261,31 +1262,51 @@ const GPasteIntegration = new Lang.Class({
         else this.show();
     },
 
-    show_selected_or_current_contents: function(no_modal) {
+    show_selected_or_current_contents: function(params) {
         if(this._contents_preview_dialog.shown) return;
 
+        params = Params.parse(params, {
+            item_index: null,
+            no_modal: false,
+            relative_actor: null,
+            side: St.Side.LEFT,
+            hide_on_scroll_outside: true
+        });
         let history_item = this._history.items[0];
-        let selected_index = this._list_view.get_selected_index();
-        let display = this._list_view.get_display(selected_index);
-        let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
         let modal = true;
+        let display = null;
 
-        if(display) {
-            history_item = display._delegate._history_item;
-            modal = false;
+        if(Utils.is_int(params.item_index)) {
+            history_item = this._history.items[params.item_index];
+        }
+        else {
+            let animation = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY);
+            let selected_index = this._list_view.get_selected_index();
+            display = this._list_view.get_display(selected_index);
 
-            if(animation) {
-                display.opacity = 20;
-                Tweener.removeTweens(display);
-                Tweener.addTween(display, {
-                    time: 0.3,
-                    transition: 'easeInBounce',
-                    opacity: 255
-                });
+            if(display) {
+                history_item = display._delegate._history_item;
+                modal = false;
+
+                if(animation) {
+                    display.opacity = 20;
+                    Tweener.removeTweens(display);
+                    Tweener.addTween(display, {
+                        time: 0.3,
+                        transition: 'easeInBounce',
+                        opacity: 255
+                    });
+                }
             }
         }
 
-        this._contents_preview_dialog.preview(history_item, display, no_modal ? false : modal);
+        this._contents_preview_dialog.preview(
+            history_item,
+            params.relative_actor || display,
+            params.side,
+            params.no_modal ? false : modal,
+            params.hide_on_scroll_outside
+        );
     },
 
     hide_clipboard_preview: function() {

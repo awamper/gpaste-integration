@@ -243,6 +243,8 @@ const ContentsPreviewDialog = new Lang.Class({
 
         this._contents_view = null;
         this._relative_actor = null;
+        this._hide_on_scroll_outside = false;
+        this._side = St.Side.LEFT;
         this._gpaste_integration = gpaste_integration;
     },
 
@@ -284,7 +286,7 @@ const ContentsPreviewDialog = new Lang.Class({
             return false;
         }
         else if(e.type() === Clutter.EventType.SCROLL) {
-            if(this._relative_actor && !Utils.is_pointer_inside_actor(this.actor)) {
+            if(this._hide_on_scroll_outside && !Utils.is_pointer_inside_actor(this.actor)) {
                 this.hide(false);
                 return Clutter.EVENT_PROPAGATE;
             }
@@ -405,8 +407,14 @@ const ContentsPreviewDialog = new Lang.Class({
                 - (this.actor.height + y + margin);
         }
 
-        this.actor.x = x - this.actor.width - margin;
-        this.actor.y = y + offset_y - margin;
+        if(this._side === St.Side.LEFT) {
+            this.actor.x = x - this.actor.width - margin;
+            this.actor.y = y + offset_y - margin;
+        }
+        else if(this._side === St.Side.BOTTOM) {
+            this.actor.x = Math.round(x - this.actor.width / 2);
+            this.actor.y = y + this._relative_actor.height + margin;
+        }
     },
 
     clear: function() {
@@ -419,10 +427,12 @@ const ContentsPreviewDialog = new Lang.Class({
         this._contents_view = null;
     },
 
-    preview: function(history_item, relative_actor, modal) {
+    preview: function(history_item, relative_actor, side, modal, hide_on_scroll_outside) {
         this.clear();
 
         modal === true ? this.enable_modal() : this.disable_modal();
+        this._hide_on_scroll_outside = hide_on_scroll_outside;
+        this._side = side;
 
         if(relative_actor) {
             this._relative_actor = relative_actor;

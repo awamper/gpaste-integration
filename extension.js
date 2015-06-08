@@ -180,7 +180,6 @@ const GPasteIntegrationButton = new Lang.Class({
         }
 
         this._remove_timeout();
-        this._gpaste.hide_clipboard_preview();
         let timeout = Utils.SETTINGS.get_int(
             PrefsKeys.PREVIEW_ON_HOVER_TIMEOUT_KEY
         );
@@ -188,14 +187,20 @@ const GPasteIntegrationButton = new Lang.Class({
             timeout,
             Lang.bind(this, function() {
                 TIMEOUT_IDS.SHOW_PREVIEW = 0;
-                this._gpaste.show_selected_or_current_contents(true);
+                let params = {
+                    item_index: 0,
+                    no_modal: false,
+                    relative_actor: this.actor,
+                    side: St.Side.BOTTOM,
+                    hide_on_scroll_outside: false
+                };
+                this._gpaste.show_selected_or_current_contents(params);
             })
         );
     },
 
     _on_leave: function() {
         this._remove_timeout();
-        this._gpaste.hide_clipboard_preview();
     },
 
     _remove_timeout: function() {
@@ -504,7 +509,9 @@ const GPasteIntegrationButton = new Lang.Class({
             Shell.ActionMode.MESSAGE_TRAY |
             Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
-                this._gpaste.show_selected_or_current_contents();
+                this._gpaste.show_selected_or_current_contents({
+                    hide_on_scroll_outside: false
+                });
             })
         );
         Main.wm.addKeybinding(
