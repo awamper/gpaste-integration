@@ -36,13 +36,18 @@ const FpasteUploader = new Lang.Class({
             this.emit('error', 'Text is blank.');
         }
 
-        let url = (
-            '%s/?paste_private=yes&api_submit=true'.format(BASE_URL) +
+        let params = (
+            'paste_private=yes&api_submit=true' +
             '&mode=json&paste_data=%s'.format(encodeURIComponent(text)) +
             '&paste_lang=text&paste_user=&paste_password'
         );
-
-        let request = Soup.Message.new('GET', url);
+        let request = Soup.Message.new('POST', BASE_URL);
+        request.set_request(
+            'application/x-www-form-urlencoded',
+            Soup.MemoryUse.COPY,
+            params,
+            params.length
+        );
         HTTP_SESSION.queue_message(request,
             Lang.bind(this, function(http_session, message) {
                 if(message.status_code !== Soup.KnownStatusCode.OK) {
