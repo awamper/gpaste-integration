@@ -207,6 +207,13 @@ const PopupDialog = new Lang.Class({
         });
         this._event_blocker.hide();
         Main.uiGroup.insert_child_below(this._event_blocker, this.actor);
+
+        if(this.shown) {
+            Main.pushModal(this.actor, {
+                actionMode: Shell.ActionMode.NORMAL
+            });
+            this._event_blocker.show();
+        }
     },
 
     disable_modal: function() {
