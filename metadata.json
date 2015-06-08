@@ -2,7 +2,6 @@
   "description": "Integration GPaste with gnome-shell.\nLeft-click or <Enter> - activate element.\nRight-click or <Right> - check (to delete or merge).\n<Delete> - delete element.\nLong press or <Ctrl>Enter - alternative activation (open uri)\n<Ctrl>S - upload item (texts to fpaste.org, images to imgur.com)\n<Ctrl>D - pin element\n<Ctrl><Shift>A - check/uncheck all\n<Up>/<Down> - select.\n<Ctrl>+1-9 - activate one of the first nine visible.\n<Super>z - clipboard contents preview.\n<Super>Q - quick selection mode.\n<Super><Shift>Q - show pinned items.\n\nSearch flags:\n'-f' to search only files\n'-t' - text\n'-l' - links\n'-c' - show only checked items\n\nRequires gpaste and gpaste-applet.",
   "name": "GPaste Integration",
   "shell-version": [
-    "3.15.90",
     "3.16"
   ],
   "url": "https://github.com/awamper/gpaste-integration",
