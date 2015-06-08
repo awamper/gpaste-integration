@@ -767,7 +767,7 @@ const GPasteIntegration = new Lang.Class({
 
     _on_fpaste_error: function(uploader, error) {
         this._panel_progress_bar.hide();
-        Main.notify(error);
+        Main.notifyError(error);
     },
 
     _on_fpaste_done: function(uploader, result_url) {
