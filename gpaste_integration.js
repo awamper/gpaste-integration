@@ -369,10 +369,8 @@ const GPasteIntegration = new Lang.Class({
         }
         else {
             let proceed =
-                Utils.SETTINGS.get_boolean(PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_KEY) && (
-                change_type === GPasteHistory.CHANGE_TYPE.ADDED ||
-                change_type === GPasteHistory.CHANGE_TYPE.REMOVED
-            );
+                Utils.SETTINGS.get_boolean(PrefsKeys.PREVIEW_CLIPBOARD_ON_CHANGE_KEY) &&
+                !this._activate_animation_running;
             if(!proceed) return;
 
             this.show_selected_or_current_contents(true);
