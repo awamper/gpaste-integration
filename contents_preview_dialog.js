@@ -458,6 +458,7 @@ const ContentsPreviewDialog = new Lang.Class({
                     this._contents_view.activate_button.connect('clicked',
                         Lang.bind(this, function() {
                             this._gpaste_integration._alt_activate_selected(history_item);
+                            this.hide(false);
                         })
                     );
                     this._contents_view.activate_button.show();
@@ -478,6 +479,7 @@ const ContentsPreviewDialog = new Lang.Class({
                     this._contents_view.upload_button.connect('clicked',
                         Lang.bind(this, function() {
                             this._gpaste_integration._upload_selected_item(history_item);
+                            this.hide(false);
                         })
                     );
                     this._contents_view.upload_button.show();
@@ -508,6 +510,7 @@ const ContentsPreviewDialog = new Lang.Class({
                         this._contents_view.upload_button.connect('clicked',
                             Lang.bind(this, function() {
                                 this._gpaste_integration._upload_selected_item(history_item);
+                                this.hide(false);
                             })
                         );
                     })
