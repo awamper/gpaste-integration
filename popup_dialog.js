@@ -200,9 +200,9 @@ const PopupDialog = new Lang.Class({
         this._event_blocker = new St.Bin({
             opacity: 0,
             x: Main.uiGroup.x,
-            y: Main.uiGroup.y,
+            y: Main.uiGroup.y + Main.panel.actor.height,
             width: Main.uiGroup.width,
-            height: Main.uiGroup.height,
+            height: Main.uiGroup.height - Main.panel.actor.height,
             reactive: true
         });
         this._event_blocker.hide();
