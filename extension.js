@@ -509,9 +509,23 @@ const GPasteIntegrationButton = new Lang.Class({
             Shell.ActionMode.MESSAGE_TRAY |
             Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
-                this._gpaste.show_selected_or_current_contents({
-                    hide_on_scroll_outside: false
-                });
+                if(this._gpaste._contents_preview_dialog.shown) {
+                    if(GPasteIntegration.TIMEOUT_IDS.TRACK_MOUSE > 0) {
+                        Mainloop.source_remove(GPasteIntegration.TIMEOUT_IDS.TRACK_MOUSE);
+                        GPasteIntegration.TIMEOUT_IDS.TRACK_MOUSE = 0;
+                    }
+                    if(GPasteIntegration.TIMEOUT_IDS.NEW_ITEM_TIMEOUT > 0) {
+                        Mainloop.source_remove(GPasteIntegration.TIMEOUT_IDS.NEW_ITEM_TIMEOUT);
+                        GPasteIntegration.TIMEOUT_IDS.NEW_ITEM_TIMEOUT = 0;
+                    }
+
+                    this._gpaste._contents_preview_dialog.enable_modal();
+                }
+                else {
+                    this._gpaste.show_selected_or_current_contents({
+                        hide_on_scroll_outside: false
+                    });
+                }
             })
         );
         Main.wm.addKeybinding(
