@@ -520,6 +520,8 @@ const GPasteIntegration = new Lang.Class({
             if(index !== -1) this._merge_queue_hashes.splice(index, 1);
         }
 
+        if(this._quick_mode) return;
+
         if(this._merge_queue_hashes.length > 0) {
             this._merge_panel.set_label(
                 'Selected %s out of %s'.format(
