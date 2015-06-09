@@ -549,6 +549,7 @@ const GPasteIntegration = new Lang.Class({
         let symbol = e.get_key_symbol();
         let ch = Utils.get_unichar(symbol);
         let number = parseInt(ch);
+        let code = e.get_key_code();
 
         if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
             this._list_view.show_shortcuts();
@@ -565,8 +566,9 @@ const GPasteIntegration = new Lang.Class({
             this.hide(!this._quick_mode);
             return true;
         }
-        else if(symbol === Clutter.Up) {
+        else if(symbol === Clutter.Up || (this._quick_mode && code === 25)) {
             let selected_index = this._list_view.get_selected_index();
+            if(this._quick_mode && selected_index === 6 && code === 25) return true;
 
             if(selected_index !== -1) {
                 this._list_view.select_previous();
@@ -609,7 +611,7 @@ const GPasteIntegration = new Lang.Class({
             );
             return true;
         }
-        else if(ch) {
+        else if(ch && !this._quick_mode) {
             this._search_entry.set_text(ch);
             this._search_entry.grab_key_focus();
             return true;

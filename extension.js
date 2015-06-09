@@ -536,7 +536,27 @@ const GPasteIntegrationButton = new Lang.Class({
             Shell.ActionMode.MESSAGE_TRAY |
             Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
-                this._gpaste.quick_mode();
+                if(!this._gpaste._quick_mode) {
+                    this._gpaste.quick_mode();
+                }
+                else {
+                    let selected_index = this._gpaste._list_view.get_selected_index();
+
+                    if(selected_index !== -1) {
+                        let result = this._gpaste._list_view.select_next();
+                        if(!result) {
+                            this._gpaste._list_view.reset_scroll();
+                            if(!this._gpaste._list_view.select_index(6)) {
+                                this._gpaste._list_view.select_first_visible();
+                            }
+                        }
+                    }
+                    else {
+                        if(!this._gpaste._list_view.select_index(6)) {
+                            this._gpaste._list_view.select_first_visible();
+                        }
+                    }
+                }
             })
         );
         Main.wm.addKeybinding(

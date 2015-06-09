@@ -565,6 +565,13 @@ const ListView = new Lang.Class({
         this.emit('selected', actor);
     },
 
+    select_index: function(index) {
+        let display = this._displays[index];
+        if(!display) return false;
+        this.select(display);
+        return true;
+    },
+
     check: function(index, no_signal) {
         let display = this.get_display(index);
         if(!display) return;
