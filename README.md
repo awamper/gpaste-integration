@@ -19,6 +19,7 @@ Press 1-9 - activate one of the first nine visible.
 Q or \<Down\> - select next.  
 W or \<Up\> - select previous.  
 Release \<Super\> or press \<Enter\> to activate selected item.
+if there is more than one checked items, checked items will be merged.
 
 ## Search flags
 "-f" to search only files  
