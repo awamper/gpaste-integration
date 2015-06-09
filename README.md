@@ -9,8 +9,16 @@ Long press or \<Ctrl\>Enter - alternative activation (open uri)
 \<Up\>/\<Down\> - select.  
 \<Ctrl\>+1-9 - activate one of the first nine visible.  
 \<Super\>z - clipboard contents preview.  
-\<Super\>Q - quick selection mode.  
 \<Super\>\<Shift\>Q - show pinned items.
+
+## Quick mode
+\<Super\>Q - show.  
+\<Escape\> - cancel.  
+While holding \<Super\>:  
+Press 1-9 - activate one of the first nine visible.  
+Q or \<Down\> - select next.  
+W or \<Up\> - select previous.  
+Release \<Super\> or press \<Enter\> to activate selected item.
 
 ## Search flags
 "-f" to search only files  
