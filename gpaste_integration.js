@@ -629,6 +629,12 @@ const GPasteIntegration = new Lang.Class({
 
         if(this._quick_mode && (symbol === Clutter.Super_R || symbol == Clutter.Super_L)) {
             this._quick_mode = false;
+
+            if(this._merge_queue_hashes.length > 1) {
+                this._merge_checked_items();
+                return false;
+            }
+
             if(e.has_control_modifier()) this._alt_activate_selected();
             else this._activate_selected();
             this.hide(false);
