@@ -9,7 +9,9 @@ Long press or \<Ctrl\>Enter - alternative activation (open uri)
 \<Up\>/\<Down\> - select.  
 \<Ctrl\>+1-9 - activate one of the first nine visible.  
 \<Super\>z - clipboard contents preview.  
-\<Super\>\<Shift\>Q - show pinned items.
+\<Super\>\<Shift\>Q - show pinned items.  
+\<Ctrl\>\<Tab\> - switch to next history (\<Escape\> to close switcher).  
+\<Ctrl\>\<Shift\>\<Tab\> - switch to prev history.
 
 ## Quick mode
 \<Super\>Q - show.  
