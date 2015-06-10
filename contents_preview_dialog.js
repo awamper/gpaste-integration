@@ -276,6 +276,10 @@ const ContentsPreviewDialog = new Lang.Class({
             }
 
             if(symbol === Clutter.Control_L || symbol === Clutter.Control_R) {
+                if(this._contents_view && Utils.is_blank(this._contents_view.selection)) {
+                    return false;
+                }
+
                 let clipboard = St.Clipboard.get_default();
                 clipboard.set_text(
                     St.ClipboardType.CLIPBOARD,
