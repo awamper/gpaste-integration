@@ -661,6 +661,11 @@ const GPasteIntegration = new Lang.Class({
         else if(symbol === Clutter.KEY_Control_L || symbol === Clutter.KEY_Control_R) {
             this._list_view.hide_shortcuts();
 
+            if(this._history_switcher.shown) {
+                this._history_switcher.switch_to_hovered();
+                this._history_switcher.hide()
+            }
+
             return true;
         }
         else if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
@@ -706,6 +711,14 @@ const GPasteIntegration = new Lang.Class({
         else if(symbol === Clutter.Right) {
             let selected_index = this._list_view.get_selected_index();
             if(selected_index !== -1) this._list_view.toggle_check(selected_index);
+
+            return true;
+        }
+        else if(e.has_control_modifier() && Utils.symbol_is_tab(symbol)) {
+            this._list_view.hide_shortcuts();
+
+            if(e.has_shift_modifier()) this._history_switcher.prev();
+            else this._history_switcher.next();
 
             return true;
         }

@@ -232,3 +232,12 @@ function wordwrap(str, width, brk, cut) {
 
     return str.match(RegExp(regex, 'g')).join(brk);
 }
+
+function symbol_is_tab(symbol) {
+    return (
+        symbol === Clutter.Tab ||
+        symbol === Clutter.KEY_Tab ||
+        symbol === Clutter.KEY_KP_Tab ||
+        symbol === Clutter.KEY_ISO_Left_Tab
+    );
+}

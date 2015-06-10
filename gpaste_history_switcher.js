@@ -1,5 +1,6 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
+const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -83,12 +84,34 @@ const GpasteHistorySwitcher = new Lang.Class({
         });
         this.actor.add_child(this._box);
 
+        this._history_items = [];
+        this._show_in_center = false;
         this._gpaste_integration = gpaste_integration;
         this._last_history_name = GPasteClient.get_client().history_name;
     },
 
+    _reposition: function() {
+        if(this._show_in_center) {
+            let [x, y] = this._gpaste_integration.actor.get_transformed_position();
+            this.actor.x = Math.round(
+                x -
+                this.actor.width / 2 +
+                this._gpaste_integration.actor.width / 2
+            );
+            this.actor.y = Math.round(
+                y -
+                this.actor.height / 2 +
+                this._gpaste_integration.actor.height / 2
+            );
+        }
+        else {
+            this.parent();
+        }
+    },
+
     _load_histories: function() {
         this._box.destroy_all_children();
+        this._history_items = [];
 
         GPasteClient.get_client().list_histories(
             Lang.bind(this, function(histories) {
@@ -97,6 +120,7 @@ const GpasteHistorySwitcher = new Lang.Class({
                 for(let i = 0; i < histories.length; i++) {
                     let reactive = this._last_history_name === histories[i] ? false : true;
                     let history = new GpasteHistorySwitcherItem(histories[i], reactive);
+                    this._history_items.push(history);
 
                     history.on_clicked = Lang.bind(this, function(history_switcher_item) {
                         this._gpaste_integration.history.switch_history(
@@ -153,9 +177,114 @@ const GpasteHistorySwitcher = new Lang.Class({
         );
     },
 
+    _get_hovered_history: function() {
+        for each(let item in this._history_items) {
+            if(item.actor.has_style_pseudo_class('hover')) {
+                return item.name;
+            }
+        }
+
+        return null;
+    },
+
+    _hover_first_inactive: function() {
+        for each(let item in this._history_items) {
+            if(!item.actor.has_style_pseudo_class('selected')) {
+                item.actor.add_style_pseudo_class('hover');
+                return item.name;
+            }
+        }
+
+        return null;
+    },
+
+    _hover_name: function(name) {
+        let result = false;
+
+        for each(let item in this._history_items) {
+            if(item.name === name) {
+                item.actor.add_style_pseudo_class('hover');
+                result = true;
+            }
+            else {
+                item.actor.remove_style_pseudo_class('hover');
+            }
+        }
+
+        return result;
+    },
+
     toggle: function() {
         if(this.actor.visible) this.hide();
         else this.show();
+    },
+
+    next: function() {
+        this.disable_modal();
+        if(!this.shown) {
+            this._show_in_center = true;
+            this.show();
+        }
+
+        let hovered = this._get_hovered_history();
+        if(!hovered) hovered = this._hover_first_inactive();
+
+        GPasteClient.get_client().list_histories(
+            Lang.bind(this, function(histories) {
+                histories.sort();
+                let hovered_index = histories.indexOf(hovered);
+                let next_index = hovered_index + 1;
+                let history_item = this._history_items[next_index];
+
+                if(history_item) {
+                    if(history_item.actor.has_style_pseudo_class('selected')) {
+                        next_index += 1;
+                    }
+                }
+
+                if(next_index === histories.length) next_index = 0;
+                let next_history = histories[next_index];
+                this._hover_name(next_history);
+            })
+        );
+    },
+
+    prev: function() {
+        this.disable_modal();
+        if(!this.shown) {
+            this._show_in_center = true;
+            this.show();
+        }
+
+        let hovered = this._get_hovered_history();
+        if(!hovered) hovered = this._hover_first_inactive();
+
+        GPasteClient.get_client().list_histories(
+            Lang.bind(this, function(histories) {
+                histories.sort();
+                let hovered_index = histories.indexOf(hovered);
+                let prev_index = hovered_index - 1;
+                let history_item = this._history_items[prev_index];
+
+                if(history_item) {
+                    if(history_item.actor.has_style_pseudo_class('selected')) {
+                        prev_index -= 1;
+                    }
+                }
+
+                if(prev_index < 0) prev_index = histories.length - 1;
+                let prev_history = histories[prev_index];
+                this._hover_name(prev_history);
+            })
+        );
+    },
+
+    switch_to_hovered: function() {
+        let hovered = this._get_hovered_history();
+        if(!hovered) return;
+
+        this._gpaste_integration.history.switch_history(hovered);
+        this._last_history_name = hovered;
     },
 
     show: function() {
@@ -164,6 +293,12 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     hide: function() {
+        for each(let item in this._history_items) {
+            if(item.actor.has_style_pseudo_class('hover')) {
+                item.actor.remove_style_pseudo_class('hover');
+            }
+        }
+
         if(TIMEOUT_IDS.BUTTON_ENTER !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.BUTTON_ENTER);
             TIMEOUT_IDS.BUTTON_ENTER = 0;
@@ -173,6 +308,7 @@ const GpasteHistorySwitcher = new Lang.Class({
             TIMEOUT_IDS.BUTTON_LEAVE = 0;
         }
 
+        this._show_in_center = false;
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
     }
 });
