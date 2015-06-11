@@ -710,7 +710,14 @@ const GPasteIntegration = new Lang.Class({
         }
         else if(symbol === Clutter.Right) {
             let selected_index = this._list_view.get_selected_index();
-            if(selected_index !== -1) this._list_view.toggle_check(selected_index);
+
+            if(selected_index !== -1) {
+                this._list_view.toggle_check(selected_index);
+
+                let display = this._list_view.get_display(selected_index);
+                if(!display.select_toggle.checked) display.select_toggle.hide();
+
+            }
 
             return true;
         }
