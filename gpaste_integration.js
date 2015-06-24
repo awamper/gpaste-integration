@@ -684,6 +684,11 @@ const GPasteIntegration = new Lang.Class({
             return true;
         }
         else if(symbol == Clutter.Delete) {
+            if(this._merge_queue_hashes.length > 1) {
+                this._delete_checked_items();
+                return true;
+            }
+
             let selected_index = this._list_view.get_selected_index();
 
             if(selected_index !== -1) {
