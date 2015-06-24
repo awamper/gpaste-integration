@@ -77,7 +77,6 @@ const GpasteHistorySwitcher = new Lang.Class({
         this.parent({
             modal: true
         });
-        this.actor.set_pivot_point(1, 1);
 
         this._box = new St.BoxLayout({
             style_class: 'gpaste-history-switcher-dialog',
@@ -307,6 +306,13 @@ const GpasteHistorySwitcher = new Lang.Class({
                 let blur_effect = new Clutter.BlurEffect();
                 actor.add_effect_with_name(EFFECT_NAME, blur_effect);
             }
+        }
+
+        if(!this._show_in_center) {
+            this.actor.set_pivot_point(1, 1);
+        }
+        else {
+            this.actor.set_pivot_point(0.5, 0.5);
         }
 
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
