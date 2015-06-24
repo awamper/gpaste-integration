@@ -289,31 +289,34 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     show: function() {
-        if(!this.shown && this._show_in_center) {
-            let actor = this._gpaste_integration._list_view.actor;
-
-            let desaturate_effect = new Clutter.DesaturateEffect();
-            desaturate_effect.set_factor(0);
-            actor.add_effect_with_name(EFFECT_NAME, desaturate_effect);
-            Tweener.removeTweens(desaturate_effect);
-            Tweener.addTween(desaturate_effect, {
-                delay: 0.5,
-                time: 2,
-                factor: 1
-            });
-
-            for(let i = 0; i < 5; i++) {
-                let blur_effect = new Clutter.BlurEffect();
-                actor.add_effect_with_name(EFFECT_NAME, blur_effect);
-            }
-        }
+        let actor = this._gpaste_integration._list_view.actor;
+        let tweener_props = {
+            time: 2,
+            delay: 0.5,
+            factor: 1
+        };
 
         if(!this._show_in_center) {
             this.actor.set_pivot_point(1, 1);
+            tweener_props.delay = 0;
+
         }
         else {
             this.actor.set_pivot_point(0.5, 0.5);
+            if(!this.shown) {
+                for(let i = 0; i < 5; i++) {
+                    let blur_effect = new Clutter.BlurEffect();
+                    actor.add_effect_with_name(EFFECT_NAME, blur_effect);
+                }
+            }
         }
+
+        let desaturate_effect = new Clutter.DesaturateEffect();
+        desaturate_effect.set_factor(0);
+        actor.add_effect_with_name(EFFECT_NAME, desaturate_effect);
+
+        Tweener.removeTweens(desaturate_effect);
+        Tweener.addTween(desaturate_effect, tweener_props);
 
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
         this._load_histories();
