@@ -289,6 +289,7 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     show: function() {
+        let enable_effects = Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_EFFECTS_KEY);
         let actor = this._gpaste_integration._list_view.actor;
         let tweener_props = {
             time: 2,
@@ -303,7 +304,7 @@ const GpasteHistorySwitcher = new Lang.Class({
         }
         else {
             this.actor.set_pivot_point(0.5, 0.5);
-            if(!this.shown) {
+            if(!this.shown && enable_effects) {
                 for(let i = 0; i < 5; i++) {
                     let blur_effect = new Clutter.BlurEffect();
                     actor.add_effect_with_name(EFFECT_NAME, blur_effect);
@@ -311,12 +312,14 @@ const GpasteHistorySwitcher = new Lang.Class({
             }
         }
 
-        let desaturate_effect = new Clutter.DesaturateEffect();
-        desaturate_effect.set_factor(0);
-        actor.add_effect_with_name(EFFECT_NAME, desaturate_effect);
+        if(enable_effects) {
+            let desaturate_effect = new Clutter.DesaturateEffect();
+            desaturate_effect.set_factor(0);
+            actor.add_effect_with_name(EFFECT_NAME, desaturate_effect);
 
-        Tweener.removeTweens(desaturate_effect);
-        Tweener.addTween(desaturate_effect, tweener_props);
+            Tweener.removeTweens(desaturate_effect);
+            Tweener.addTween(desaturate_effect, tweener_props);
+        }
 
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
         this._load_histories();

@@ -33,3 +33,4 @@ const MERGE_DECORATOR_KEY = 'merge-decorator';
 const MERGE_SEPARATOR_KEY = 'merge-separator';
 const PREVIEW_POSITION_X_KEY = 'preview-position-x';
 const PREVIEW_POSITION_Y_KEY = 'preview-position-y';
+const ENABLE_EFFECTS_KEY = 'enable-effects';
