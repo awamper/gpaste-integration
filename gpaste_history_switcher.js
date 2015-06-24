@@ -3,6 +3,7 @@ const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Tweener = imports.ui.tweener;
 
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
@@ -10,6 +11,7 @@ const GPasteClient = Me.imports.gpaste_client;
 const PopupDialog = Me.imports.popup_dialog;
 const PrefsKeys = Me.imports.prefs_keys;
 
+const EFFECT_NAME = 'GPasteHistorySwitcher effects';
 const BUTTON_TIMEOUT_MS = 300;
 const TIMEOUT_IDS = {
     BUTTON_ENTER: 0,
@@ -288,6 +290,25 @@ const GpasteHistorySwitcher = new Lang.Class({
     },
 
     show: function() {
+        if(!this.shown && this._show_in_center) {
+            let actor = this._gpaste_integration._list_view.actor;
+
+            let desaturate_effect = new Clutter.DesaturateEffect();
+            desaturate_effect.set_factor(0);
+            actor.add_effect_with_name(EFFECT_NAME, desaturate_effect);
+            Tweener.removeTweens(desaturate_effect);
+            Tweener.addTween(desaturate_effect, {
+                delay: 0.5,
+                time: 2,
+                factor: 1
+            });
+
+            for(let i = 0; i < 5; i++) {
+                let blur_effect = new Clutter.BlurEffect();
+                actor.add_effect_with_name(EFFECT_NAME, blur_effect);
+            }
+        }
+
         this.parent(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_ANIMATIONS_KEY));
         this._load_histories();
     },
@@ -306,6 +327,26 @@ const GpasteHistorySwitcher = new Lang.Class({
         if(TIMEOUT_IDS.BUTTON_LEAVE !== 0) {
             Mainloop.source_remove(TIMEOUT_IDS.BUTTON_LEAVE);
             TIMEOUT_IDS.BUTTON_LEAVE = 0;
+        }
+
+        let actor = this._gpaste_integration._list_view.actor;
+        for each(let effect in actor.get_effects()) {
+            if(effect.name !== EFFECT_NAME) continue;
+
+            if(effect instanceof Clutter.DesaturateEffect) {
+                let desaturate_effect = effect;
+                Tweener.removeTweens(desaturate_effect);
+                Tweener.addTween(desaturate_effect, {
+                    time: 2,
+                    factor: 0,
+                    onComplete: Lang.bind(this, function() {
+                        actor.remove_effect(desaturate_effect);
+                    })
+                });
+            }
+            else {
+                actor.remove_effect(effect);
+            }
         }
 
         this._show_in_center = false;
