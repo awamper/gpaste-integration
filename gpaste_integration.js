@@ -743,7 +743,7 @@ const GPasteIntegration = new Lang.Class({
         let symbol = e.get_key_symbol();
         let ctrl = (e.get_state() & Clutter.ModifierType.CONTROL_MASK)
 
-        if(symbol === Clutter.Escape) {
+        if(symbol === Clutter.Escape && !this._history_switcher.shown) {
             if(ctrl) {
                 this.hide();
             }
