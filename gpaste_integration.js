@@ -648,6 +648,7 @@ const GPasteIntegration = new Lang.Class({
             return true;
         }
         else if(code === 39 && e.has_control_modifier()) {
+            if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_UPLOAD_KEY)) return true;
             this._upload_selected_item();
 
             return true;

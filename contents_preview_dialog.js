@@ -100,16 +100,19 @@ const ContentsPreviewView = new Lang.Class({
             style_class: 'gpaste-preview-activate-button',
             visible: false
         });
-        info_box.add(this.upload_button, {
-            row: 0,
-            col: 1,
-            x_expand: false,
-            x_fill: false,
-            x_align: St.Align.START,
-            y_expand: false,
-            y_fill: false,
-            y_align: St.Align.MIDDLE
-        });
+
+        if(Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_UPLOAD_KEY)) {
+            info_box.add(this.upload_button, {
+                row: 0,
+                col: 1,
+                x_expand: false,
+                x_fill: false,
+                x_align: St.Align.START,
+                y_expand: false,
+                y_fill: false,
+                y_align: St.Align.MIDDLE
+            });
+        }
 
         this.info_view = new ItemInfoView.ItemInfoView({
             label_style_class: 'gpaste-item-box-info-label'

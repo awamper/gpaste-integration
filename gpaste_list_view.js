@@ -5,6 +5,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const ListView = Me.imports.list_view;
 const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
 const ImgurUploader = Me.imports.imgur_uploader;
 
 const GPasteListView = new Lang.Class({
@@ -32,6 +33,11 @@ const GPasteListView = new Lang.Class({
     },
 
     _add_display_buttons: function(display) {
+        if(!Utils.SETTINGS.get_boolean(PrefsKeys.ENABLE_UPLOAD_KEY)) {
+            this.parent(display);
+            return;
+        }
+
         let history_item = display._delegate._history_item;
         if(
             history_item.is_file_item() &&

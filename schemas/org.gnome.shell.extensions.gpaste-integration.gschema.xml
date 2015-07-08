@@ -147,5 +147,9 @@
         <default>true</default>
     </key>
 
+    <key type="b" name="enable-upload">
+        <default>true</default>
+    </key>
+
   </schema>
 </schemalist>

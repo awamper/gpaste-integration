@@ -395,6 +395,10 @@ const GpasteIntegrationPrefsWidget = new GObject.Class({
         let page = new PrefsGrid(this._settings);
 
         page.add_boolean(
+            'Upload button:',
+            PrefsKeys.ENABLE_UPLOAD_KEY
+        );
+        page.add_boolean(
             'Effects',
             PrefsKeys.ENABLE_EFFECTS_KEY
         );
